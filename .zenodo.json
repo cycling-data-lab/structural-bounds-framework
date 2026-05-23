@@ -1,0 +1,39 @@
+{
+  "title": "{{repo-name}}: {{paper-title}}",
+  "description": "Companion software, data, and LaTeX source for the manuscript '{{paper-title}}' (R. Fossé and G. Pallares, in preparation for {{journal}}). The repository provides: (i) [one-sentence description of theory contribution], (ii) [one-sentence description of empirical validation], (iii) [one-sentence description of methodological contribution]. Each numbered experiment script reproduces a specific table or figure.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "MIT",
+  "keywords": [
+    "{{keyword1}}",
+    "{{keyword2}}",
+    "{{keyword3}}",
+    "{{keyword4}}",
+    "{{keyword5}}"
+  ],
+  "creators": [
+    {
+      "name": "Fossé, Rohan",
+      "affiliation": "CESI Engineering School, Montpellier, France",
+      "orcid": "0009-0002-2195-0198"
+    },
+    {
+      "name": "Pallares, Gaël",
+      "affiliation": "CESI LINEACT (EA 7527), Montpellier, France",
+      "orcid": "0009-0002-8680-604X"
+    }
+  ],
+  "communities": [
+    {"identifier": "{{community-id}}"}
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/cycling-data-lab/{{repo-name}}",
+      "relation": "isSupplementTo",
+      "scheme": "url",
+      "resource_type": "software"
+    }
+  ],
+  "language": "eng",
+  "notes": "Companion software release for the {{journal}} submission. The git tag 'v1.0' marks the snapshot submitted to {{journal}}. Reproducibility: SEED=42 master seed, dependencies pinned in requirements.txt, Python 3.12."
+}

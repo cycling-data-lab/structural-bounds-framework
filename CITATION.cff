@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use this software or the accompanying manuscript, please cite as below."
+title: "{{repo-name}}: {{paper-title}}"
+type: software
+version: "0.1-draft"
+date-released: "{{YYYY-MM-DD}}"
+authors:
+  - family-names: "Fossé"
+    given-names: "Rohan"
+    orcid: "https://orcid.org/0009-0002-2195-0198"
+    affiliation: "CESI Engineering School, Montpellier, France"
+    email: "rfosse@cesi.fr"
+  - family-names: "Pallares"
+    given-names: "Gaël"
+    orcid: "https://orcid.org/0009-0002-8680-604X"
+    affiliation: "CESI LINEACT (EA 7527), Montpellier, France"
+repository-code: "https://github.com/cycling-data-lab/{{repo-name}}"
+url: "https://github.com/cycling-data-lab/{{repo-name}}"
+license: MIT
+keywords:
+  - "{{keyword1}}"
+  - "{{keyword2}}"
+  - "{{keyword3}}"
+  - "{{keyword4}}"
+  - "{{keyword5}}"
+abstract: >-
+  {{One- to three-sentence abstract for citation indexes.}}
+preferred-citation:
+  type: article
+  title: "{{paper-title}}"
+  authors:
+    - family-names: "Fossé"
+      given-names: "Rohan"
+      orcid: "https://orcid.org/0009-0002-2195-0198"
+    - family-names: "Pallares"
+      given-names: "Gaël"
+      orcid: "https://orcid.org/0009-0002-8680-604X"
+  journal: "{{journal}}"
+  year: {{year}}
+  notes: "In preparation; preprint at the repository URL."

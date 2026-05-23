@@ -1,0 +1,218 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+% !BIB TS-program = bibtex
+%
+% ============================================================================
+% paper.tex -- {{paper-title}}
+%
+% Target  : {{journal}} (IOP Publishing)
+% Class   : iopjournal.cls (2024/01/31), supplied by IOP at
+%   https://publishingsupport.iopscience.iop.org/questions/latex-template/
+% Authors : {{authors}}, CESI LINEACT, {{year}}.
+%
+% Companion files :
+%   paper_si.tex                 -- Supplementary Information
+%   references/references.bib    -- BibTeX
+%   figures/                     -- publication figures (PDF)
+%   experiments/d{NN}_{name}.py  -- reproducible scripts
+%
+% Compile :
+%   pdflatex paper.tex
+%   bibtex   paper
+%   pdflatex paper.tex
+%   pdflatex paper.tex
+% ============================================================================
+\documentclass{iopjournal}      % add [anonymous] for double-anonymous review
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{csquotes}
+\usepackage{amssymb,amsmath,amstext,amsthm}
+
+\graphicspath{{figures/}}
+
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{enumitem}
+\setlist{topsep=2pt,itemsep=2pt,parsep=0pt}
+\usepackage{url}
+
+% IOP accepts either Vancouver (numbered) or Harvard (author-year).
+% Defaulting to author-year + plainnat ; switch to iopart-num for numeric.
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+
+% Patch \orcid to a text fallback if the orcid.pdf image is missing.
+\IfFileExists{orcid.pdf}{}{%
+  \renewcommand{\orcid}[1]{\textsuperscript{\href{https://orcid.org/##1}{\textsf{[ORCID]}}}}%
+}
+
+% Running-header customisation : IOP class hardcodes "Journal vv (yyyy) aaaaaa"
+% and "Author et al" ; override for the target journal.
+\usepackage{fancyhdr}
+\fancyhead[L]{{\small \sf IOP Publishing}\hspace{5mm}%
+              {\it {{journal-short}}}\ \textbf{vv} (yyyy) aaaaaa}
+\fancyhead[R]{{{lead-author-surname}} {\it et al}\ }
+\fancyhead[C]{}
+
+% Anti-widow / orphan
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+\raggedbottom
+
+% Patch \articletype : replace the hardcoded "Journal Name" banner.
+\makeatletter
+\renewcommand{\articletype}[1]{%
+   {\vspace*{-8mm}\noindent \Large \sf {{journal}}}%
+   \vspace*{8mm} \noindent\reversemarginpar
+   \marginpar{\vspace{-3mm} {\color{gray}\hrule} \ \\ Crossmark\\
+       {\color{gray}\hrule} \ \\
+       \tiny {\sf RECEIVED} {\small \\ dd Month yyyy}\\ \\
+       {\sf REVISED} {\small \\ dd Month yyyy}}%
+   {\scriptsize \sf{\bfseries \MakeUppercase{#1}}}}
+\makeatother
+
+% Theorem environments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+% Bold-math shortcuts (delete what you don't need)
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bphi}{\boldsymbol{\phi}}
+
+% Editorial-placeholder marker used while drafting (renders less alarmingly
+% than \textbf{[TODO]} ; reviewers will read it as a release-candidate
+% placeholder rather than a substantive gap).  Remove all uses before v1.0.
+\newcommand{\Todo}[1]{\textbf{[To confirm: #1]}}
+
+% =========================================================================
+\begin{document}
+
+\articletype{Paper}     % or "Letter", "Topical Review"
+
+\title{{{paper-title}}}
+
+\author{{{lead-author-name}}$^{1,*}$\orcid{{{lead-author-orcid-id}}},
+        {{co-author-name}}$^{2}$\orcid{{{co-author-orcid-id}}}}
+
+\affil{$^{1}$ {{lead-author-affiliation}}
+       \quad$^{2}$ {{co-author-affiliation}}\\[0.2em]
+       $^{*}$ Author to whom any correspondence should be addressed.}
+
+\email{{{lead-author-email}}}
+
+\keywords{{{keyword1}}; {{keyword2}}; {{keyword3}}; {{keyword4}}; {{keyword5}}}
+
+\begin{abstract}
+\Todo{Write the abstract.  Target $\sim 250$ words.  Open with the
+problem in one sentence, state the contribution in the second, give
+the headline number (effect size + significance) in the third, and
+close with the operational reading.}
+\end{abstract}
+
+% =========================================================================
+\section{Introduction}
+\label{sec:intro}
+
+\Todo{Write Introduction.  Three paragraphs.  (1) The problem and why
+existing approaches are insufficient.  (2) Our contribution at the
+sentence-level.  (3) Roadmap of the paper.}
+
+% =========================================================================
+\section{Setup and notation}
+\label{sec:setup}
+
+\Todo{Formal setup.  Define the objects, the loss, the protocol.}
+
+% =========================================================================
+\section{Main result}
+\label{sec:main}
+
+\Todo{State the main theorem / claim with a half-page proof sketch ;
+defer the full proof to the SI if longer than two pages.}
+
+% =========================================================================
+\section{Empirical validation}
+\label{sec:empirics}
+
+\Todo{Multi-pillar evidence architecture works well : (i) primary
+predictive validation, (ii) robustness pillar, (iii) encoder
+discrimination, (iv) falsifiability test against a topology-matched
+null.  Convergence of independent statistics is the warrant.}
+
+% =========================================================================
+\section{Related work}
+\label{sec:related}
+
+\Todo{Position the contribution at the empty intersection of two
+existing literatures.  One paragraph per closest adjacent result with
+explicit "what we add" sentence.}
+
+% =========================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\Todo{Operational reading + connections to adjacent fields.}
+
+% =========================================================================
+\section{Limitations and future work}
+\label{sec:limits}
+
+\Todo{Be explicit about scope.  Address the obvious hostile-reviewer
+objections (graph-construction sensitivity, sample size, benchmark
+restrictions) with concrete theorem-level defenses where possible.}
+
+% =========================================================================
+\section{Methods}
+\label{sec:methods}
+
+\Todo{Reproducibility-grade Methods.  Data, encoders, splits,
+statistical procedures, software stack with version pins.}
+
+% =========================================================================
+% Back matter -- iopjournal native commands.  Each takes its content as
+% a single argument and emits the appropriate heading.  Under
+% [anonymous] the contents (except \suppdata) are auto-redacted.
+% =========================================================================
+
+\ack{\Todo{Acknowledgements text.}}
+
+\funding{\Todo{Funding sources and grant numbers.}}
+
+\roles{\Todo{CRediT role assignments per author.}}
+
+\data{All data sources and per-experiment derived outputs are
+released under the MIT licence at
+\url{https://github.com/cycling-data-lab/{{repo-name}}}.  A frozen
+Zenodo snapshot of the v1.0 release tag is deposited at
+\url{https://doi.org/10.5281/zenodo.XXXXXXX} \Todo{substitute the
+issued Zenodo DOI after the first release}.}
+
+\section*{Reproducibility}
+Each table and figure is produced by a numbered script
+\texttt{experiments/d<NN>\_<name>.py} that consumes a known input
+cache, writes to a named output JSON, and pins \texttt{SEED=42}.
+\Todo{Add experiment-specific reproducibility detail here.}
+
+\section*{Competing interests}
+The authors declare no competing financial or non-financial interests.
+
+% =========================================================================
+\section*{References}
+\bibliography{references/references}
+
+\end{document}

@@ -1,0 +1,23 @@
+# Python 3.12 required.  Pin versions to match a known-good environment.
+
+# Numeric core
+numpy>=2.0
+scipy>=1.14
+pandas>=2.2
+
+# Machine learning
+scikit-learn>=1.5
+lightgbm>=4.5
+
+# Plotting (Paul Tol palette via experiments/_plot_style.py)
+matplotlib>=3.9
+
+# Domain-specific (uncomment / add as needed)
+# matminer>=0.9               # MatBench, Magpie features
+# pymatgen>=2024.0            # crystal structures, Composition objects
+# chgnet>=0.3                 # foundation-model crystal embeddings
+# osmnx>=1.9                  # OpenStreetMap pipelines
+# gbfs-client>=0.2            # GBFS feed access
+
+# Reproducibility helpers
+tqdm>=4.66

@@ -1,0 +1,121 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+% !BIB TS-program = bibtex
+%
+% ============================================================================
+% paper_si.tex -- Supplementary Information for "{{paper-title}}"
+%
+% Compiles independently with iopjournal.cls + references/references.bib.
+% ============================================================================
+\documentclass{iopjournal}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{csquotes}
+\usepackage{amssymb,amsmath,amstext,amsthm}
+
+\graphicspath{{figures/}}
+
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{enumitem}
+\setlist{topsep=2pt,itemsep=2pt,parsep=0pt}
+\usepackage{url}
+
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+
+\IfFileExists{orcid.pdf}{}{%
+  \renewcommand{\orcid}[1]{\textsuperscript{\href{https://orcid.org/##1}{\textsf{[ORCID]}}}}%
+}
+
+\usepackage{fancyhdr}
+\fancyhead[L]{{\small \sf IOP Publishing}\hspace{5mm}%
+              {\it {{journal-short}}}\ \textbf{vv} (yyyy) aaaaaa
+              \hspace{2mm}\textsf{(SI)}}
+\fancyhead[R]{{{lead-author-surname}} {\it et al}\ (SI)}
+\fancyhead[C]{}
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+\raggedbottom
+
+\makeatletter
+\renewcommand{\articletype}[1]{%
+   {\vspace*{-8mm}\noindent \Large \sf {{journal}}%
+       \hspace{1em}\normalsize\itshape Supplementary Information}%
+   \vspace*{8mm} \noindent\reversemarginpar
+   \marginpar{\vspace{-3mm} {\color{gray}\hrule} \ \\ Crossmark\\
+       {\color{gray}\hrule} \ \\
+       \tiny {\sf RECEIVED} {\small \\ dd Month yyyy}\\ \\
+       {\sf REVISED} {\small \\ dd Month yyyy}}%
+   {\scriptsize \sf{\bfseries \MakeUppercase{#1}}}}
+\makeatother
+
+% SI appendix-style numbering : Section A, A.1, etc.
+\renewcommand{\thesection}{\Alph{section}}
+\renewcommand{\thesubsection}{\Alph{section}.\arabic{subsection}}
+\renewcommand{\theequation}{\Alph{section}.\arabic{equation}}
+\renewcommand{\thetable}{\Alph{section}.\arabic{table}}
+\renewcommand{\thefigure}{\Alph{section}.\arabic{figure}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\renewcommand{\thetheorem}{\Alph{section}.\arabic{theorem}}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\by}{\mathbf{y}}
+
+% Cross-refs to the main paper -- rendered as visible markers.
+\newcommand{\maintext}[1]{(main text, Sec.~#1)}
+\newcommand{\Todo}[1]{\textbf{[To confirm: #1]}}
+
+\begin{document}
+
+\articletype{Supplementary Information}
+
+\title{Supplementary Information for ``{{paper-title}}''}
+
+\author{{{lead-author-name}}$^{1,*}$\orcid{{{lead-author-orcid-id}}},
+        {{co-author-name}}$^{2}$\orcid{{{co-author-orcid-id}}}}
+
+\affil{$^{1}$ {{lead-author-affiliation}}
+       \quad$^{2}$ {{co-author-affiliation}}\\[0.2em]
+       $^{*}$ Author to whom any correspondence should be addressed.}
+
+\email{{{lead-author-email}}}
+
+\begin{abstract}
+This supplementary information accompanies the manuscript
+\emph{{{paper-title}}} \maintext{1--7}.  It provides \Todo{list the
+appendices A, B, C, ... with one-sentence summaries.}
+\end{abstract}
+
+% ============================================================================
+\section{{{appendix-A-title}}}
+\label{sec:si-A}
+
+\Todo{Content of Appendix A.}
+
+% ============================================================================
+\section{{{appendix-B-title}}}
+\label{sec:si-B}
+
+\Todo{Content of Appendix B.}
+
+% ============================================================================
+\section*{References}
+\bibliography{references/references}
+
+\end{document}
