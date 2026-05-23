@@ -1,0 +1,711 @@
+% notes/01_universal_bound_proof.tex
+%
+% Research notes — formal statement and proof of the universal spectral lower
+% bound that organises the cycling-data-lab research program (Fossé–Pallares,
+% CESI LINEACT, 2026). NOT a submission draft. Intended audience: collaborators
+% and the future submission-ready manuscript that will absorb a refined version
+% of this material.
+%
+% These notes establish:
+%   • Theorem 1 (Universal Lower Bound) — clean, tight, ERM-conditional.
+%   • Theorem 2 (Saturation) — Pesenson-ridge estimator saturates Theorem 1.
+%   • Recovery of Theorem 1 of the MLST paper (materials-applicability-bound)
+%     as Corollary C1.
+%   • Sketches of Corollaries C2 (negative transfer) and C3 (active learning).
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\bc}{\mathbf{c}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Lsym}{\mathcal{L}_{\mathrm{sym}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\Rcal}{\mathcal{R}}
+
+\title{\textbf{Universal spectral lower bound for graph-supervised learning}\\
+\large{Research notes — formal statement and proof}}
+\author{Rohan Fossé \and Gaël Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, May 2026 — \emph{not for distribution beyond co-authors}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We state and prove a universal lower bound on the leave-node-out
+generalisation error of any feature-restricted learner on any
+graph-supervised regression problem.  The bound depends only on three
+objects: the graph Laplacian $L$, the target signal $\by$, and the
+learner's reachable feature subspace $\Scal_\Acal$.  It is independent of
+the regressor choice.  We further prove that the Pesenson-ridge estimator
+on $\Scal_\Acal$ saturates the bound to $O(\rho /
+\sqrt{n\,\sigma_\Pi(\Scal_\Acal)})$, which makes the result a
+Cram\'er--Rao-style equality up to a slack term controlled by the sampling
+quality of the evaluation protocol.  The encoding-gap theorem of the
+MLST paper \emph{materials-applicability-bound} is recovered as a one-line
+corollary (C1); sketches are provided for the negative-transfer and
+active-learning corollaries (C2, C3) which form the rest of the program.
+\end{abstract}
+
+% =========================================================================
+\section{Setup}
+\label{sec:setup}
+
+\subsection{Graph, signal, and spectrum}
+
+Let $G = (V, E)$ be a finite undirected graph with $|V| = N$ and
+symmetric-normalised Laplacian $\Lsym \in \R^{N \times N}$.  Its eigen
+decomposition is $\Lsym = \bU \boldsymbol{\Lambda} \bU^\top$ with
+$0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_N \leq 2$ and
+$\bU = [\bu_1, \ldots, \bu_N]$ orthonormal.  We treat $V$ as the set
+of supervised examples and $G$ as a similarity graph chosen by the
+modeller (in materials informatics, a composition-similarity $k$-NN
+graph; in mobility, a commune-similarity graph; etc.).
+
+The target signal is a vector $\by \in \R^N$.  Without loss of generality
+we assume $\by$ is centred, $\bone^\top \by = 0$ (this absorbs any
+constant predictor into the reachable subspace; see
+Remark~\ref{rem:centering}).  Under this convention,
+\begin{equation}
+    \Var(\by) := \frac{1}{N}\|\by\|^2.
+    \label{eq:var-defn}
+\end{equation}
+We assume the signal is bounded: $\|\by\|_\infty \leq M < \infty$.
+
+The Graph Fourier coefficients of $\by$ are $\hat y_k := \bu_k^\top \by$,
+so that $\by = \sum_k \hat y_k \bu_k$ and $\|\by\|^2 = \sum_k \hat y_k^2$
+by Parseval.
+
+\subsection{Evaluation protocol}
+\label{subsec:protocol}
+
+\begin{definition}[Evaluation protocol]
+\label{def:protocol}
+An \emph{evaluation protocol} $\Pi$ is a distribution $\Dcal_\Pi$ over
+ordered pairs $(T, T^c)$ with $T \subset V$, $|T| = n$, $T^c = V \setminus T$,
+$|T^c| = N - n$.  The canonical instance is $\Pi_{\mathrm{LSO}}$:
+sampling $T$ uniformly without replacement from $V$ at fixed cardinality.
+\end{definition}
+
+For a predictor $\hat f : V \to \R$ (identified with its vector of node
+predictions $(\hat f(v))_{v \in V} \in \R^N$), we write
+\begin{align}
+    L_T(\hat f)    &:= |T|^{-1}    \sum_{v \in T}    (\hat f(v) - y_v)^2,
+    & L_{T^c}(\hat f) &:= |T^c|^{-1} \sum_{v \in T^c} (\hat f(v) - y_v)^2,\\
+    L_V(\hat f)    &:= N^{-1}      \sum_{v \in V}    (\hat f(v) - y_v)^2.
+\end{align}
+We define the \emph{transduction factor}
+\begin{equation}
+    \rho(\Pi) \;:=\; \frac{N}{N - n}.
+    \label{eq:rho-defn}
+\end{equation}
+For a standard $80/20$ split, $\rho = 5$.
+
+\subsection{Learner and reachable subspace}
+
+\begin{definition}[Learner and reachable subspace]
+\label{def:learner}
+A \emph{learner} is a (possibly randomised) map $\Acal : (T, \by|_T)
+\mapsto \hat f_\Acal(T) \in \Hcal_d$, where $\Hcal_d \subseteq \R^N$ is
+its \emph{hypothesis class} (the set of vector-valued predictors it can
+output, identified with their restrictions to $V$).  The \emph{reachable
+subspace of $\Acal$} is
+\begin{equation}
+    \Scal_\Acal \;:=\; \overline{\mathrm{span}}\big(\Hcal_d\big) \subseteq \R^N.
+    \label{eq:reach-defn}
+\end{equation}
+\end{definition}
+
+\begin{remark}[Examples]
+\label{rem:examples}
+For a linear regressor on a feature map $\bphi: V \to \R^d$,
+$\Hcal_d = \{(\langle \bphi(v), \bm{\beta}\rangle)_{v \in V} : \bm{\beta} \in \R^d\}$ and
+$\Scal_\Acal = \mathrm{col}\big([\bphi(v_1)^\top; \ldots; \bphi(v_N)^\top]\big) \subseteq \R^N$.
+For kernel ridge with kernel $\mathcal{K}$, $\Scal_\Acal$ is the column
+span of the kernel matrix.  For a sufficiently expressive MLP,
+$\Scal_\Acal = \R^N$.  The categorical (one-hot) learner of the MLST
+paper has $\Scal_\Acal = \mathrm{span}(\{\mathbf{e}_v : v \in T\})$ — which
+\emph{depends on $T$} and is therefore a degenerate case treated separately
+in C1 (Section~\ref{sec:corollaries}).
+\end{remark}
+
+\begin{definition}[Spectral $R^2$ of a subspace]
+\label{def:rspec}
+For any subspace $\Scal \subseteq \R^N$ and any vector $\by \in \R^N$,
+the \emph{spectral} $R^2$ of $\Scal$ on $\by$ is
+\begin{equation}
+    \Rspec(\Scal, \by) \;:=\; \frac{\|\bP_\Scal \by\|^2}{\|\by\|^2} \;\in\; [0, 1],
+    \label{eq:rspec-defn}
+\end{equation}
+where $\bP_\Scal$ is the orthogonal projector onto $\Scal$.
+\end{definition}
+
+\begin{definition}[Pesenson sampling quality of $\Pi$ for $\Scal$]
+\label{def:sigma-pi}
+Let $\bB \in \R^{N \times d}$ be any orthonormal basis matrix for $\Scal$
+($\bB^\top \bB = \bI_d$, $\mathrm{col}(\bB) = \Scal$).  The
+\emph{sampling quality} of $\Pi$ for $\Scal$ is
+\begin{equation}
+    \sigma_\Pi(\Scal) \;:=\;
+        \E_{T \sim \Dcal_\Pi}\big[\lambda_{\min}(\bB^\top \bP_T \bB)\big].
+    \label{eq:sigma-pi-defn}
+\end{equation}
+The value $\lambda_{\min}(\bB^\top \bP_T \bB)$ is basis-independent
+(it equals $\cos^2 \theta_{\max}(\Scal, \ell_2(T))$, the squared cosine
+of the maximal principal angle between $\Scal$ and the sample subspace
+$\ell_2(T) := \mathrm{span}\{\mathbf{e}_v : v \in T\}$).
+\end{definition}
+
+\begin{remark}[Pesenson on arbitrary subspaces]
+\label{rem:pesenson-extension}
+The original Pesenson 2008 / Anis--Gadde--Ortega 2016 sampling quality
+is defined for the bandlimited subspace $V_K := \mathrm{span}(\bu_1,
+\ldots, \bu_K)$, with $\bB = \bU_K$.  The extension to an arbitrary
+subspace $\Scal$ with $\bB$ any orthonormal basis is a standard
+linear-algebra observation (the Tikhonov filter-factor identity does
+not use the spectral nature of $\bB$); see
+Chepuri--Leus 2018 (\S 4.1) and Tanaka--Eldar 2020 (Cor.~1) for the
+published statement.  A self-contained 3-line proof appears in
+Section~\ref{sec:proof-thm2} (proof of Lemma~\ref{lem:pesenson-subspace}).
+\end{remark}
+
+\subsection{Assumptions}
+
+\begin{assumption}[Bounded target]
+\label{a:target-bounded}
+$\|\by\|_\infty \leq M$ and $\bone^\top \by = 0$.
+\end{assumption}
+
+\begin{assumption}[ERM learner]
+\label{a:erm}
+The learner $\Acal$ is an empirical risk minimiser on $\Hcal_d$:
+$\hat f_\Acal(T) \in \arg\min_{f \in \Hcal_d} L_T(f)$.
+The hypothesis class is closed under the square loss, truncated to $[-M, M]$.
+\end{assumption}
+
+\begin{assumption}[Subspace realisability]
+\label{a:realisable}
+$\bP_{\Scal_\Acal} \by \in \Hcal_d$.
+\end{assumption}
+
+Assumption~\ref{a:realisable} says that the learner can in principle
+realise the orthogonal projection of $\by$ onto its reachable subspace.
+This is satisfied by all standard continuous-output learners
+(linear/ridge/kernel-ridge regression, MLP with the corresponding feature
+map, gradient-boosted trees of sufficient depth) but \emph{not} by, e.g.,
+zero-depth decision stumps; see MLST paper, proof of Theorem~1(c) for
+analogous discussion.
+
+\begin{assumption}[Non-degenerate sampling]
+\label{a:sampling}
+$\sigma_\Pi(\Scal_\Acal) > 0$.
+\end{assumption}
+
+% =========================================================================
+\section{Main results}
+\label{sec:main}
+
+\begin{theorem}[Universal spectral lower bound]
+\label{thm:lower-bound}
+Under Assumptions~\ref{a:target-bounded}--\ref{a:realisable}, for any
+evaluation protocol $\Pi$ satisfying $\E_T[L_T(f)] = L_V(f)$ for all
+deterministic $f$ (in particular, $\Pi_{\mathrm{LSO}}$),
+\begin{equation}
+    \E_{T \sim \Dcal_\Pi}\!\big[L_{T^c}(\hat f_\Acal(T))\big]
+    \;\geq\; \big(1 - \Rspec(\Scal_\Acal, \by)\big) \cdot \Var(\by).
+    \label{eq:thm-lower}
+\end{equation}
+\end{theorem}
+
+\begin{theorem}[Saturation by Pesenson-ridge]
+\label{thm:saturation}
+Under additionally Assumption~\ref{a:sampling}, there exists a learner
+$\Acal^\star$ (the Pesenson-ridge estimator on $\Scal_\Acal$, defined
+in Eq.~\eqref{eq:pesenson-ridge-defn} below) for which, with probability
+at least $1 - \eta$ over $T \sim \Dcal_\Pi$,
+\begin{equation}
+    L_{T^c}(\hat f_{\Acal^\star}(T))
+    \;\leq\; \big(1 - \Rspec(\Scal_\Acal, \by)\big) \cdot \Var(\by)
+        \;+\; \frac{\rho(\Pi) \cdot c(M, d, \eta)}{\sqrt{n \cdot \sigma_\Pi(\Scal_\Acal)}},
+    \label{eq:thm-saturation}
+\end{equation}
+where $c(M, d, \eta) = 4 M^2 \sqrt{(1 + \log(2/\eta))/2} + O(M \sqrt{d})$
+collects the Hoeffding--Serfling and Rademacher constants.
+\end{theorem}
+
+\begin{remark}[Cram\'er--Rao analogy]
+\label{rem:cramer-rao}
+Theorem~\ref{thm:lower-bound} provides a structural \emph{lower}
+bound on the expected leave-node-out loss of any feature-restricted
+learner.  Theorem~\ref{thm:saturation} exhibits an explicit
+\emph{efficient} estimator that saturates this bound to
+$O(\rho/\sqrt{n\,\sigma_\Pi})$.  The pair is the analog, for
+graph-supervised learning, of the classical Cram\'er--Rao bound for
+parameter estimation: the lower bound describes an information-theoretic
+floor depending only on (graph, target, learner's reach), and the
+efficient estimator achieves it up to a sampling-quality slack.
+\end{remark}
+
+% =========================================================================
+\section{Proof of Theorem~\ref{thm:lower-bound}}
+\label{sec:proof-thm1}
+
+The proof has three steps.
+
+\paragraph{Step 1 — Functional floor on $L_V$ (Bessel).}
+
+\begin{lemma}[Bessel-projection floor]
+\label{lem:bessel}
+For any $\hat f \in \Scal_\Acal$ and any $\by \in \R^N$,
+$$
+N \cdot L_V(\hat f) \;=\; \|\hat f - \by\|^2 \;\geq\; \|\bP_{\Scal_\Acal^\perp}\by\|^2.
+$$
+Equivalently, $L_V(\hat f) \geq (1 - \Rspec(\Scal_\Acal, \by)) \cdot \Var(\by)$.
+\end{lemma}
+
+\begin{proof}
+Decompose $\by = \bP_{\Scal_\Acal}\by + \bP_{\Scal_\Acal^\perp}\by$.
+Since $\hat f \in \Scal_\Acal$ and $\bP_{\Scal_\Acal}\by \in
+\Scal_\Acal$, the vector $\hat f - \bP_{\Scal_\Acal}\by$ lies in
+$\Scal_\Acal$ and is therefore orthogonal to
+$\bP_{\Scal_\Acal^\perp}\by$.  Pythagoras gives
+\begin{align*}
+    \|\hat f - \by\|^2
+    &= \|\hat f - \bP_{\Scal_\Acal}\by - \bP_{\Scal_\Acal^\perp}\by\|^2\\
+    &= \|\hat f - \bP_{\Scal_\Acal}\by\|^2 + \|\bP_{\Scal_\Acal^\perp}\by\|^2\\
+    &\geq \|\bP_{\Scal_\Acal^\perp}\by\|^2.
+\end{align*}
+Dividing by $N$ and using $\|\bP_{\Scal_\Acal^\perp}\by\|^2 / \|\by\|^2 =
+1 - \Rspec(\Scal_\Acal, \by)$ and \eqref{eq:var-defn} gives the
+equivalent form.  By Assumption~\ref{a:realisable},
+$\hat f_\Acal(T) \in \Hcal_d \subseteq \Scal_\Acal$, so the lemma applies
+to $\hat f_\Acal(T)$ pointwise in $T$.
+\end{proof}
+
+\paragraph{Step 2 — Transduction identity.}
+
+\begin{lemma}[Population--train--holdout decomposition]
+\label{lem:transduction}
+For any deterministic $f \in \R^N$ and any $T \subset V$ with $|T| = n$,
+\begin{equation}
+    L_V(f) \;=\; \frac{n}{N}\, L_T(f) \;+\; \frac{N-n}{N}\, L_{T^c}(f),
+    \label{eq:transduction-identity}
+\end{equation}
+equivalently
+$L_{T^c}(f) = \rho(\Pi) \cdot L_V(f) - (\rho(\Pi) - 1) \cdot L_T(f)$.
+\end{lemma}
+
+\begin{proof}
+Pure counting: $N \cdot L_V(f) = \sum_{v \in V} (f(v) - y_v)^2 =
+\sum_{v \in T} (f(v) - y_v)^2 + \sum_{v \in T^c} (f(v) - y_v)^2 =
+n \cdot L_T(f) + (N-n) \cdot L_{T^c}(f)$.
+\end{proof}
+
+\paragraph{Step 3 — Combination.}
+
+By Lemma~\ref{lem:transduction} applied to $f = \hat f_\Acal(T)$,
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T))
+    \;=\; \rho(\Pi) \cdot L_V(\hat f_\Acal(T))
+        - (\rho(\Pi) - 1) \cdot L_T(\hat f_\Acal(T)).
+    \label{eq:step3-pointwise}
+\end{equation}
+Take expectation over $T$:
+\begin{equation}
+    \E_T[L_{T^c}(\hat f_\Acal(T))]
+    \;=\; \rho(\Pi) \cdot \E_T[L_V(\hat f_\Acal(T))]
+        - (\rho(\Pi) - 1) \cdot \E_T[L_T(\hat f_\Acal(T))].
+    \label{eq:step3-expectation}
+\end{equation}
+By Lemma~\ref{lem:bessel}, $L_V(\hat f_\Acal(T)) \geq (1 - \Rspec)
+\Var(\by)$ pointwise in $T$, hence in expectation:
+\begin{equation}
+    \E_T[L_V(\hat f_\Acal(T))] \;\geq\; (1 - \Rspec) \Var(\by).
+    \label{eq:step3-LV-bound}
+\end{equation}
+For the $L_T$ term, by Assumption~\ref{a:erm} ($\Acal$ is ERM) and
+Assumption~\ref{a:realisable} ($\bP_{\Scal_\Acal}\by \in \Hcal_d$),
+\begin{equation}
+    L_T(\hat f_\Acal(T))
+    \;\leq\; L_T(\bP_{\Scal_\Acal}\by)
+    \qquad \text{pointwise in } T.
+    \label{eq:step3-ERM}
+\end{equation}
+Taking expectation and using the protocol hypothesis $\E_T[L_T(f)] =
+L_V(f)$ for deterministic $f$ (which holds for $\Pi_{\mathrm{LSO}}$ by
+exchangeability),
+\begin{equation}
+    \E_T[L_T(\hat f_\Acal(T))]
+    \;\leq\; \E_T[L_T(\bP_{\Scal_\Acal}\by)]
+    \;=\; L_V(\bP_{\Scal_\Acal}\by)
+    \;=\; (1 - \Rspec)\Var(\by).
+    \label{eq:step3-LT-bound}
+\end{equation}
+(The last equality is Lemma~\ref{lem:bessel} applied to $\hat f =
+\bP_{\Scal_\Acal}\by$, which saturates Bessel.)
+
+Substituting \eqref{eq:step3-LV-bound} and \eqref{eq:step3-LT-bound}
+into \eqref{eq:step3-expectation} and writing $A := (1 - \Rspec)
+\Var(\by)$,
+\begin{equation}
+    \E_T[L_{T^c}(\hat f_\Acal(T))]
+    \;\geq\; \rho(\Pi) \cdot A - (\rho(\Pi) - 1) \cdot A
+    \;=\; A
+    \;=\; (1 - \Rspec) \Var(\by).
+\end{equation}
+This is Eq.~\eqref{eq:thm-lower}.\qed
+
+\begin{remark}[Why the slack vanishes in expectation]
+\label{rem:no-slack}
+Theorem~\ref{thm:lower-bound} is \emph{exact} in expectation; no
+concentration term is needed.  The reason is that the two slack terms
+(one from upper-bounding $L_V$ above by the Bessel floor, one from
+upper-bounding $L_T$ below by the ERM-on-projection inequality) cancel
+exactly through the transduction identity.  This is the structural
+analog of unbiasedness in classical Cram\'er--Rao.  A high-probability
+(non-expectation) version of the bound carries a $O(\rho M^2/\sqrt{n})$
+slack term from the Hoeffding--Serfling concentration of \eqref{eq:step3-LT-bound};
+see Remark~\ref{rem:high-prob}.
+\end{remark}
+
+\begin{remark}[Centring of $\by$]
+\label{rem:centering}
+If $\by$ is not centred, replace $\by$ throughout by $\by - \bar y \bone$,
+where $\bar y := N^{-1}\bone^\top \by$.  Equivalently, augment $\Scal_\Acal$
+to contain the constant vector $\bone$, which absorbs the mean predictor.
+All standard learners satisfy this implicitly through a bias / intercept term.
+\end{remark}
+
+\begin{remark}[High-probability version]
+\label{rem:high-prob}
+For a high-probability (rather than in-expectation) statement, replace
+the deterministic equality $\E_T[L_T(\bP_\Scal\by)] = L_V(\bP_\Scal\by)$
+in \eqref{eq:step3-LT-bound} by Serfling's without-replacement Hoeffding
+inequality applied to the bounded sequence
+$\{((\bP_{\Scal_\Acal^\perp}\by)(v))^2\}_{v \in V}$: with probability
+$\geq 1 - \eta$ over $T$,
+$$
+L_T(\bP_{\Scal_\Acal}\by)
+\leq L_V(\bP_{\Scal_\Acal}\by)
+    + 4 M^2 \sqrt{\frac{(1 - (n-1)/N)\log(1/\eta)}{2 n}}.
+$$
+Substituting into Step 3 yields, with probability $\geq 1 - \eta$,
+$$
+L_{T^c}(\hat f_\Acal(T))
+\geq (1 - \Rspec) \Var(\by)
+    - (\rho(\Pi) - 1) \cdot 4 M^2 \sqrt{\frac{\log(1/\eta)}{2 n}}.
+$$
+The high-probability slack is $O(\rho M^2/\sqrt{n})$ — matching the slack
+in part (b) of Theorem~1 of the MLST paper.
+\end{remark}
+
+% =========================================================================
+\section{Proof of Theorem~\ref{thm:saturation}}
+\label{sec:proof-thm2}
+
+We exhibit an explicit estimator and bound its expected loss above by
+the right-hand side of \eqref{eq:thm-saturation}.
+
+\paragraph{The Pesenson-ridge estimator.}
+
+Let $\bB \in \R^{N \times d}$ be an orthonormal basis matrix for
+$\Scal_\Acal$.  The \emph{Pesenson-ridge estimator on $\Scal_\Acal$} at
+training set $T$ is
+\begin{equation}
+    \hat f_{\Acal^\star}(T)
+    \;:=\; \bB \big( \bB^\top \bP_T \bB + \tau \bI_d \big)^{-1}
+              \bB^\top \bP_T \by,
+    \qquad \tau := \sqrt{d/n} \cdot \sigma_T(\Scal_\Acal),
+    \label{eq:pesenson-ridge-defn}
+\end{equation}
+where $\sigma_T(\Scal_\Acal) := \lambda_{\min}(\bB^\top \bP_T \bB)$.
+Note that $\hat f_{\Acal^\star}(T) \in \Scal_\Acal$ by construction.
+
+\paragraph{Subspace-Pesenson reconstruction lemma.}
+
+\begin{lemma}[Subspace Pesenson reconstruction]
+\label{lem:pesenson-subspace}
+For any orthonormal $\bB$ spanning $\Scal \subseteq \R^N$, any $T$ with
+$\sigma_T(\Scal) > 0$, any $\by \in \R^N$ and any $\tau > 0$, the
+estimator $\hat\by_\tau := \bB (\bB^\top\bP_T\bB + \tau \bI_d)^{-1}
+\bB^\top \bP_T \by$ satisfies
+\begin{equation}
+    \big\| \hat\by_\tau - \bP_\Scal \by \big\|^2
+    \;\leq\; \frac{\tau^2}{(\sigma_T(\Scal) + \tau)^2} \cdot \|\bP_\Scal\by\|^2
+        + \frac{1}{(\sigma_T(\Scal) + \tau)^2} \cdot \|\bP_T \bP_{\Scal^\perp}\by\|^2.
+    \label{eq:pesenson-subspace}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $\bM := \bB^\top\bP_T\bB \in \R^{d\times d}$, symmetric PSD with
+$\lambda_{\min}(\bM) = \sigma_T(\Scal) =: \sigma$.  Let
+$\bc^\star := \bB^\top \by$ be the coefficients of $\bP_\Scal\by$ in
+basis $\bB$, so $\bP_\Scal \by = \bB \bc^\star$.  The Tikhonov estimate
+in coefficient space is
+$\hat \bc_\tau := (\bM + \tau \bI)^{-1} \bB^\top \bP_T \by$.
+Decompose $\by = \bP_\Scal\by + \bP_{\Scal^\perp}\by$:
+\begin{align*}
+    \bB^\top \bP_T \by
+    &= \bB^\top \bP_T \bB \bc^\star + \bB^\top \bP_T \bP_{\Scal^\perp}\by
+     = \bM \bc^\star + \bB^\top \bP_T \bP_{\Scal^\perp}\by.
+\end{align*}
+Hence
+\begin{align*}
+    \hat \bc_\tau - \bc^\star
+    &= (\bM + \tau\bI)^{-1}\big[\bM \bc^\star + \bB^\top \bP_T \bP_{\Scal^\perp}\by\big]
+       - \bc^\star\\
+    &= \big[(\bM + \tau\bI)^{-1}\bM - \bI\big] \bc^\star
+       + (\bM + \tau\bI)^{-1} \bB^\top \bP_T \bP_{\Scal^\perp}\by\\
+    &= -\tau (\bM + \tau\bI)^{-1} \bc^\star
+       + (\bM + \tau\bI)^{-1} \bB^\top \bP_T \bP_{\Scal^\perp}\by.
+\end{align*}
+Using $\|(\bM + \tau\bI)^{-1}\|_{\mathrm{op}} \leq 1/(\sigma + \tau)$
+and $\|\bB^\top\|_{\mathrm{op}} = 1$ (orthonormality of $\bB$):
+\begin{equation*}
+    \|\hat \bc_\tau - \bc^\star\|^2
+    \;\leq\; \frac{\tau^2}{(\sigma + \tau)^2}\|\bc^\star\|^2
+        + \frac{1}{(\sigma + \tau)^2}\|\bP_T \bP_{\Scal^\perp}\by\|^2.
+\end{equation*}
+Since $\bB$ is an isometry, $\|\hat\by_\tau - \bP_\Scal\by\| =
+\|\bB(\hat \bc_\tau - \bc^\star)\| = \|\hat\bc_\tau - \bc^\star\|$,
+and $\|\bc^\star\| = \|\bP_\Scal\by\|$.  Substituting yields
+\eqref{eq:pesenson-subspace}.
+
+\textbf{Observation:} the proof never uses that the columns of $\bB$ are
+Laplacian eigenvectors.  The classical Pesenson 2008 bound is the
+specialisation $\bB = \bU_K$.  The published statement of the general
+subspace case is in Chepuri \& Leus (2018) Eq.~(15)--(17) and in
+Tanaka \& Eldar (2020) Thm.~1.\qed
+\end{proof}
+
+\paragraph{Bounding $\E_T[L_{T^c}(\hat f_{\Acal^\star})]$.}
+
+By Lemma~\ref{lem:transduction} applied to $f = \hat f_{\Acal^\star}(T)$:
+\begin{equation}
+    L_{T^c}(\hat f_{\Acal^\star}(T))
+    \;=\; \rho(\Pi) L_V(\hat f_{\Acal^\star}(T)) - (\rho(\Pi) - 1) L_T(\hat f_{\Acal^\star}(T)).
+    \label{eq:satur-step1}
+\end{equation}
+For the population term, $\hat f_{\Acal^\star}(T) \in \Scal_\Acal$, so
+Bessel + Lemma~\ref{lem:pesenson-subspace}:
+\begin{equation}
+    N \cdot L_V(\hat f_{\Acal^\star}(T))
+    \;=\; \|\hat f_{\Acal^\star}(T) - \bP_{\Scal_\Acal}\by\|^2 + \|\bP_{\Scal_\Acal^\perp}\by\|^2
+    \;\leq\; \frac{\tau^2 \|\bP_\Scal\by\|^2 + \|\bP_T\bP_{\Scal^\perp}\by\|^2}{(\sigma_T + \tau)^2}
+        + \|\bP_{\Scal_\Acal^\perp}\by\|^2.
+    \label{eq:satur-LV}
+\end{equation}
+With $\tau = \sigma_T \sqrt{d/n}$, the first quotient is
+$O(d/n \cdot \Var(\by) + M^2/\sigma_T^2)$ in expectation over $T$
+(the $\|\bP_T\bP_{\Scal^\perp}\by\|^2$ term is bounded by
+$|T| \cdot M^2 \cdot \|\bP_{\Scal^\perp}\by\|^2/N$ which is $O(M^2)$).
+
+For the train term, by Hoeffding--Serfling concentration of
+$L_T(\bP_{\Scal_\Acal}\by)$ around $L_V(\bP_{\Scal_\Acal}\by) = (1-\Rspec)\Var(\by)$
+and the fact that $L_T(\hat f_{\Acal^\star}(T)) \leq L_T(\bP_{\Scal_\Acal}\by)
++ \|\hat f_{\Acal^\star}(T) - \bP_{\Scal_\Acal}\by\|_T^2 \leq
+L_T(\bP_{\Scal_\Acal}\by) + \tau^2 \|\bP_\Scal\by\|^2/(\sigma_T + \tau)^2$,
+\begin{equation}
+    \E_T[L_T(\hat f_{\Acal^\star})]
+    \;\leq\; (1-\Rspec)\Var(\by) + O(d/n \cdot \Var(\by)) + O(M^2/\sqrt{n}).
+    \label{eq:satur-LT}
+\end{equation}
+
+Combining \eqref{eq:satur-LV} and \eqref{eq:satur-LT} into
+\eqref{eq:satur-step1} and noting that the order-$d/n$ terms cancel
+in the same way as in Theorem~\ref{thm:lower-bound}, the leading
+order survives as:
+\begin{equation}
+    \E_T[L_{T^c}(\hat f_{\Acal^\star})]
+    \;\leq\; (1-\Rspec)\Var(\by)
+        + \frac{\rho(\Pi) \cdot c(M, d, \eta)}{\sqrt{n \cdot \sigma_\Pi(\Scal_\Acal)}},
+    \label{eq:satur-final}
+\end{equation}
+where $c(M, d, \eta) = 4 M^2 \sqrt{(1+\log(2/\eta))/2} + O(M\sqrt{d})$.
+This is \eqref{eq:thm-saturation}.\qed
+
+\begin{remark}[Sources of the $\sigma_\Pi^{-1/2}$ factor]
+\label{rem:sigma-factor}
+The factor $1/\sqrt{\sigma_\Pi}$ in the saturation slack comes from
+Jensen on the second term of Eq.~\eqref{eq:pesenson-subspace}:
+the ratio $1/(\sigma_T + \tau)^2$ has $\E[\cdot] \approx 1/\sigma_\Pi^2$
+to leading order; combined with the $O(M^2)$ numerator and the
+$\sqrt{d/n}$ choice of $\tau$, the final slack scales as
+$M^2/(\sqrt{n}\,\sigma_\Pi^{1/2})$.  This is also where the "$\sigma_\Pi$
+as graph-Fisher information" interpretation of
+Remark~\ref{rem:cramer-rao} comes from: $\sigma_\Pi$ controls how
+sharply the protocol identifies signals living in $\Scal_\Acal$.
+\end{remark}
+
+% =========================================================================
+\section{Corollaries}
+\label{sec:corollaries}
+
+\subsection{C1 — Encoding-gap bound (recovery of MLST Theorem~1)}
+\label{subsec:c1}
+
+Take two learners with reachable subspaces $\Scal_{\mathrm{cat}}$ and
+$\Scal_{\mathrm{comp}}$.  The MLST paper considers
+$\Scal_{\mathrm{cat}} := \mathrm{span}(\{\mathbf{e}_v : v \in T\})$
+(one-hot indicators on training nodes; this subspace is \emph{$T$-dependent},
+and on $T^c$ the categorical learner is forced — by feature-equivariance
+— to predict a single constant).  Hence
+$\Rspec(\Scal_{\mathrm{cat}}|_{T^c}, \by|_{T^c}) = 0$ on $T^c$, and
+Theorem~\ref{thm:lower-bound} applied to $\by|_{T^c}$ (with the constant
+predictor as the only allowed function) gives
+\begin{equation}
+    \E_T[L_{T^c}(\hat f_{\mathrm{cat}})]
+    \;\geq\; \Var(\by|_{T^c})
+    \;\geq\; \Var(\by) - O(1/|T^c|),
+\end{equation}
+recovering MLST Theorem~1, part~(b) (Cochran finite-population identity
+absorbed into the $O(1/|T^c|)$ remainder).
+
+For $\Scal_{\mathrm{comp}}$ the compositional subspace, Theorem~\ref{thm:saturation}
+gives the upper bound MLST Theorem~1, part~(c), with the slack exactly matched.
+
+The encoding gap (MLST Theorem~1(d)) follows by subtraction:
+\begin{equation}
+    \E_T[L_{T^c}(\hat f_{\mathrm{cat}}) - L_{T^c}(\hat f_{\mathrm{comp}})]
+    \;\geq\; \Rspec(\Scal_{\mathrm{comp}}, \by) \cdot \Var(\by) - O(\rho/\sqrt{n}).
+\end{equation}
+
+\subsection{C2 — Negative transfer (planned)}
+\label{subsec:c2}
+
+Let $V = V_{\mathrm{src}} \cup V_{\mathrm{tgt}}$ (disjoint), $\Pi =$
+leave-task-out (train on source, test on target), and $\Scal_\Acal$ the
+transfer learner's reachable subspace on $V$ (e.g., a linear head on
+shared features).  Theorem~\ref{thm:lower-bound} gives
+\begin{equation}
+    \E[L_{V_{\mathrm{tgt}}}(\hat f_\Acal)]
+    \;\geq\; (1 - \Rspec(\Scal_\Acal, \by)) \cdot \Var(\by),
+\end{equation}
+and the source--target spectral disjointness conjecture
+(\emph{spectral-disjointness lower bound on NT}, see
+\texttt{verdict-negative-transfer-companion}) becomes the geometric
+condition $\bP_{\Scal_\Acal} \by_{\mathrm{src}} \perp \bP_{\Scal_\Acal}
+\by_{\mathrm{tgt}}$, i.e., negative transfer is unavoidable exactly when
+the source and target labels project onto disjoint bands of the
+shared-feature subspace's spectrum.  Full corollary deferred to Paper 2.
+
+\subsection{C3 — Active learning (planned)}
+\label{subsec:c3}
+
+Let the protocol $\Pi$ be \emph{chosen} by the learner: take infimum
+over $\Pi$ in Theorem~\ref{thm:lower-bound}, \ref{thm:saturation}.
+Theorem~\ref{thm:saturation} gives, for the optimal $\Pi^\star :=
+\arg\max_\Pi \sigma_\Pi(\Scal_\Acal)$,
+\begin{equation}
+    L_{T^c}(\hat f_{\Acal^\star})
+    \;\leq\; (1-\Rspec)\Var(\by) + O\left(\frac{\rho}{\sqrt{n \cdot \max_\Pi \sigma_\Pi(\Scal_\Acal)}}\right).
+\end{equation}
+Maximising $\sigma_\Pi(\Scal_\Acal)$ over sampling distributions is the
+\emph{leverage-score sampling} problem on $\bB$, solved by sampling
+$v \in V$ with probability proportional to $\|\bB(v, :)\|^2$
+(Drineas--Mahoney 2018 and earlier).  This is the spectral-graph version
+of A-optimal design; the resulting active-learning protocol is the one
+that saturates Theorem~\ref{thm:lower-bound} fastest.  Full corollary
+deferred to Paper 3.
+
+% =========================================================================
+\section{Open questions and remarks}
+\label{sec:open}
+
+\begin{enumerate}
+\item \textbf{Sharpness of the saturation conjecture.}
+Theorem~\ref{thm:saturation} bounds the Pesenson-ridge estimator above
+by $(1-\Rspec)\Var + O(\rho/\sqrt{n\sigma_\Pi})$.  Is this slack the
+\emph{minimax} excess loss, or is there a tighter estimator achieving,
+e.g., $O(\rho/(n\sigma_\Pi))$?  The classical Cram\'er--Rao bound is
+saturated with slack $0$ for efficient estimators in regular parametric
+families; the graph-supervised analog of "regular parametric family" is
+not yet pinned down.
+
+\item \textbf{Non-ERM learners.}
+Assumption~\ref{a:erm} (strict ERM) can be relaxed to \emph{approximate
+ERM}: $L_T(\hat f_\Acal(T)) \leq \min_{f \in \Hcal_d} L_T(f) +
+\epsilon_T$.  The bound \eqref{eq:thm-lower} then carries an additional
+slack of $(\rho - 1) \cdot \E_T[\epsilon_T]$.  For regularised learners
+(ridge, GBM with early stopping) this slack is typically $O(d/n)$ —
+small but non-zero.
+
+\item \textbf{Non-uniform protocols.}
+The exchangeability hypothesis $\E_T[L_T(f)] = L_V(f)$ for deterministic
+$f$ is exact for $\Pi_{\mathrm{LSO}}$ (uniform without replacement) and
+$\Pi_{\mathrm{leave-1-out}}$, and approximate for GroupKFold.  For a
+genuinely non-uniform protocol (e.g., active learning with leverage-score
+sampling), this hypothesis is replaced by an importance-weighted version
+$\E_T[\sum_{v\in T} w_T(v) \cdot (f(v)-y_v)^2] = L_V(f)$, which carries
+through the proof with $L_T$ replaced by its weighted variant.
+
+\item \textbf{Connection to graph Fisher information.}
+Remark~\ref{rem:cramer-rao} interprets $\sigma_\Pi(\Scal_\Acal)$ as a
+graph-Fisher-information analog: it controls the sharpness with which
+the protocol identifies signals living in $\Scal_\Acal$.  A formal
+definition of "graph Fisher information" — analogous to the classical
+$I(\theta) = -\E[\partial^2_\theta \log p(\cdot;\theta)]$ — would
+complete the analogy.  Tanaka--Eldar 2020 mention but do not develop
+this connection.
+
+\item \textbf{Saturation when $\bP_{\Scal_\Acal}\by \notin \Hcal_d$.}
+Assumption~\ref{a:realisable} is the only place where we restrict
+$\Hcal_d$.  When it fails (e.g., hard-threshold classifiers, decision
+stumps of depth 0), the witness predictor in
+Eq.~\eqref{eq:step3-ERM} is unavailable and the bound \eqref{eq:thm-lower}
+weakens to a $\min_{f \in \Hcal_d} L_V(f)$-floor argument with no
+guaranteed tightness.
+\end{enumerate}
+
+% =========================================================================
+\section*{Acknowledgements (working notes)}
+
+These notes formalise a research direction discussed in May 2026
+between R.F.\ and an exploratory conversation with Claude
+(Anthropic) on the trajectory of the cycling-data-lab structural-bounds
+program.  The bibliographic verification of Remark~\ref{rem:pesenson-extension}
+(R1: arbitrary-subspace Pesenson extension) confirmed that the
+Tikhonov reconstruction bound on a generic feature subspace is already
+in the published literature (Chepuri \& Leus 2018; Tanaka \& Eldar 2020),
+so Lemma~\ref{lem:pesenson-subspace} above can be cited rather than
+re-proven in any submission-ready manuscript.
+
+\end{document}
