@@ -84,6 +84,20 @@ corollary (C1); sketches are provided for the negative-transfer and
 active-learning corollaries (C2, C3) which form the rest of the program.
 \end{abstract}
 
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\small
+\textbf{Erratum (2026-05-24).}  Theorem~2 (saturation) is stated below
+with slack $O(\rho / \sqrt{n\,\sigma_\Pi(\Scal_\Acal)})$, but the
+$\sigma_\Pi$ factor is incorrect under the realisability assumption A3
+used throughout these notes.  The correct slack in the realisable case
+is $O(\rho \mathcal{R}_n(\Hcal_d) + \rho M^2/\sqrt{n})$ — with no
+$\sigma_\Pi$ dependence — and is established to be minimax-tight in
+\texttt{notes/02\_minimax\_saturation.tex}.  The $\sigma_\Pi$ factor
+becomes operative only in the non-realisable regime, treated separately
+in notes/02 (Conjecture~1) and the forthcoming notes/03.  Theorem~1
+(universal lower bound) is unaffected by the erratum.}}
+\end{center}
+
 % =========================================================================
 \section{Setup}
 \label{sec:setup}

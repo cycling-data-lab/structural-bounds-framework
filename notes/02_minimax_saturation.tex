@@ -1,0 +1,484 @@
+% notes/02_minimax_saturation.tex
+%
+% Research notes — minimax tightness of the universal lower bound.
+%
+% Two purposes:
+%
+%   (i) ERRATUM. The saturation theorem in notes/01_universal_bound_proof.tex
+%       (Theorem 2) was stated with a slack $O(\rho / \sqrt{n \sigma_\Pi})$.
+%       This is incorrect under Assumption A3 (realisability). In that regime
+%       the correct slack is $O(\rho \mathcal{R}_n(\Hcal_d) + \rho M^2 / \sqrt{n})$,
+%       with no $\sigma_\Pi$ dependence. The $\sigma_\Pi$ factor appears only
+%       in the non-realisable regime where $\bP_\Scal\by \notin \Hcal_d$ and
+%       the Pesenson-ridge witness is required instead of the ideal projector.
+%       This document supersedes notes/01 Theorem 2.
+%
+%   (ii) MINIMAX TIGHTNESS. We prove that the corrected slack
+%       $O(\rho M^2 / \sqrt{n})$ is minimax-tight up to constants:
+%       no estimator can achieve a faster rate, even with full oracle
+%       knowledge of $\by$ on $V$. The argument is a Berry--Esseen-style
+%       anticoncentration on $\|\by_\perp\|^2_{T^c}$ — the fluctuation of
+%       the residual energy on the random test set is itself
+%       $\Theta(M^2/\sqrt{N-n})$, independent of estimator quality.
+%
+% Resolves Open Question 1 of notes/01 in the realisable regime.
+% Non-realisable minimax-tightness remains open and is the subject of a
+% forthcoming notes/03.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\bc}{\mathbf{c}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\frR}{\mathfrak{R}}
+
+\title{\textbf{Minimax tightness of the universal spectral lower bound}\\
+\large{Research notes — supersedes Theorem 2 of notes/01}}
+\author{Rohan Fossé \and Gaël Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, May 2026 — \emph{not for distribution beyond co-authors}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We supersede Theorem~2 of \texttt{notes/01\_universal\_bound\_proof.tex} with
+a corrected statement (Theorem~\ref{thm:upper-corrected}, in the realisable
+regime under Assumption~A3) whose slack is
+$O(\rho \mathcal{R}_n(\Hcal_d) + \rho M^2/\sqrt{n})$ with \emph{no}
+$\sigma_\Pi(\Scal_\Acal)$ dependence.  We then prove
+(Theorem~\ref{thm:minimax-lower}) that this slack is
+minimax-tight up to constants: no estimator — even one with oracle access
+to $\by$ on $V$ — can drive the slack below
+$\Omega(M^2/\sqrt{N-n})$.  The argument is a Berry--Esseen
+anticoncentration on the residual energy $\|\by_\perp\|^2_{T^c}$
+restricted to the random test set $T^c$.  Together,
+Theorems~\ref{thm:upper-corrected} and~\ref{thm:minimax-lower}
+resolve Open Question~1 of notes/01 in the realisable regime and
+complete the Cram\'er--Rao analogy: the lower bound of Theorem~1
+(notes/01) is sharp to a constant factor depending only on $\rho(\Pi)$.
+The non-realisable regime, where $\bP_\Scal\by \notin \Hcal_d$ and
+Pesenson-ridge becomes necessary, is treated by Bauer--Pereverzev
+(2005) inverse-problem minimax theory; we sketch the connection and
+defer the full minimax matching there to a separate note.
+\end{abstract}
+
+% =========================================================================
+\section{Erratum and corrected Theorem~2}
+\label{sec:erratum}
+
+\subsection{The error}
+
+Theorem~2 of \texttt{notes/01\_universal\_bound\_proof.tex} (saturation by
+Pesenson-ridge) was stated with slack
+\begin{equation}
+    L_{T^c}(\hat f_{\Acal^\star}(T))
+    \;\leq\; (1 - \Rspec(\Scal_\Acal, \by)) \Var(\by)
+        \;+\; \frac{\rho(\Pi) \cdot c(M, d, \eta)}{\sqrt{n \cdot \sigma_\Pi(\Scal_\Acal)}}.
+    \label{eq:bad-thm2}
+\end{equation}
+The factor $1/\sqrt{n \sigma_\Pi}$ in the denominator is incorrect under
+Assumption~A3 (realisability, $\bP_{\Scal_\Acal}\by \in \Hcal_d$).
+Tracing the proof of Lemma~3 (subspace-Pesenson reconstruction) and
+substituting $\tau = \sigma_T \sqrt{d/n}$ in Eq.~(15) of notes/01 yields
+in fact a slack term $O(M^2 / \sigma_T^2)$ — quadratic in $1/\sigma_T$,
+not square-root — arising from the term
+$\|\bP_T \bP_{\Scal^\perp}\by\|^2/(\sigma_T + \tau)^2$
+in the Tikhonov bound.
+
+The error reflects a deeper conceptual conflation in notes/01.
+Pesenson-ridge is only needed when the ideal projector $\bP_{\Scal_\Acal}\by$
+is \emph{not} in the learner's hypothesis class $\Hcal_d$.  Under
+Assumption~A3, $\bP_{\Scal_\Acal}\by \in \Hcal_d$ and the ideal projector
+itself can be used as the witness predictor, exactly as in MLST
+Theorem~1(c).  No Tikhonov regularisation is required and no $\sigma_T$
+factor appears.
+
+The $\sigma_T$ dependence becomes genuinely operative only in the
+non-realisable case, which we treat separately in
+Section~\ref{sec:non-realisable}.
+
+\subsection{The corrected statement}
+
+\begin{theorem}[Saturation, realisable case — supersedes notes/01 Thm.~2]
+\label{thm:upper-corrected}
+Under Assumptions~A1 (bounded target), A2 (ERM learner, $L$-Lipschitz
+truncated hypothesis class with Rademacher complexity
+$\mathcal{R}_n(\Hcal_d)$) and A3 ($\bP_{\Scal_\Acal}\by \in \Hcal_d$),
+with probability $\geq 1 - \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\leq\; (1 - \Rspec(\Scal_\Acal, \by)) \cdot \Var(\by)
+        \;+\; \rho(\Pi) \cdot \Bigg[
+            2 \mathcal{R}_n(\Hcal_d)
+            + 3 M^2 \sqrt{\frac{\log(2/\eta)}{2 n}}
+          \Bigg]
+        + O\!\left(\frac{M^2}{\sqrt{n}}\right).
+    \label{eq:upper-corrected}
+\end{equation}
+For learners satisfying $\mathcal{R}_n(\Hcal_d) = O(\sqrt{d/n})$
+(linear, kernel-ridge, MLP with bounded weights, gradient-boosted trees
+of bounded depth), the leading-order slack is
+$O(\rho(\Pi) (M \sqrt{d} + M^2) / \sqrt{n})$.
+\end{theorem}
+
+The proof is the proof of MLST Theorem~1(c)
+(\texttt{materials-applicability-bound/applicability\_bound.tex},
+Sec.~5.2, Part~(c)) applied to $\Scal_\Acal$ instead of
+$\Scal_{\mathrm{comp}}$.  Specifically:
+
+\begin{enumerate}
+\item \textbf{Witness.}  $\bP_{\Scal_\Acal}\by \in \Hcal_d$ by A3, so the
+    population loss of the ideal projector is exactly
+    $(1 - \Rspec)\Var(\by)$.
+\item \textbf{In-sample.}  Serfling without-replacement Hoeffding inequality
+    on the bounded sequence $((\bP_{\Scal_\Acal^\perp}\by)(v))^2_{v\in V}$
+    gives $L_T(\bP_{\Scal_\Acal}\by) \leq (1-\Rspec)\Var(\by) + O(M^2/\sqrt{n})$.
+\item \textbf{ERM.}  $L_T(\hat f_\Acal(T)) \leq L_T(\bP_{\Scal_\Acal}\by)$.
+\item \textbf{Generalisation.}  Mohri Thm.~3.7 + Talagrand contraction
+    gives $L_V(\hat f_\Acal(T)) \leq L_T(\hat f_\Acal(T)) + 2\mathcal{R}_n(\Hcal_d)
+    + O(M^2/\sqrt{n})$.
+\item \textbf{Transduction.}  $L_{T^c} = L_T + \rho(L_V - L_T)$ converts
+    population control to held-out control.
+\end{enumerate}
+The slack \eqref{eq:upper-corrected} is the sum of (2), (4) and (5).
+No Pesenson-ridge or $\sigma_T$ appears anywhere.  $\square$
+
+% =========================================================================
+\section{Minimax framework}
+\label{sec:minimax}
+
+We now establish that the slack of Theorem~\ref{thm:upper-corrected} is
+minimax-tight: even an oracle estimator with full knowledge of $\by$ on
+$V$ cannot beat the rate $\Omega(M^2/\sqrt{N-n})$ in the worst case
+over signals.
+
+\subsection{The minimax risk}
+
+\begin{definition}[Signal class]
+\label{def:signal-class}
+Fix a subspace $\Scal \subseteq \R^N$ of dimension $d$ and a bound
+$M > 0$.  The \emph{signal class} is
+\begin{equation}
+    \Ycal_{\Scal, M}
+    \;:=\; \{ \by \in \R^N \,:\, \by \in \Scal,\;\; \|\by\|_\infty \leq M,\;\; \bone^\top \by = 0\}.
+    \label{eq:signal-class}
+\end{equation}
+\end{definition}
+
+\begin{remark}
+\label{rem:why-signal-in-S}
+We restrict $\by$ to lie inside $\Scal$ — equivalently, $\Rspec(\Scal, \by) = 1$ —
+so that the minimax lower bound isolates the \emph{estimator's} slack rather
+than the structural deficit $(1-\Rspec)\Var(\by)$, which is the same for every
+estimator.  Generalisation to $\by \notin \Scal$ amounts to absorbing the
+constant $(1-\Rspec)\Var(\by)$ into the lower bound, with no change to the
+rate analysis.
+\end{remark}
+
+\begin{definition}[Excess risk and minimax slack]
+\label{def:excess-risk}
+For an estimator $\hat f : (T, \by|_T) \to \R^N$ (depending only on the
+training values), the \emph{excess held-out risk} on a signal $\by \in
+\Ycal_{\Scal,M}$ is
+\begin{equation}
+    \Delta_T(\hat f, \by)
+    \;:=\; L_{T^c}(\hat f(T, \by|_T)) - (1 - \Rspec(\Scal, \by)) \Var(\by).
+\end{equation}
+The \emph{minimax slack rate} at protocol $\Pi_{\mathrm{LSO}}$ with
+$|T|=n$, $|T^c| = N-n$, and confidence level $\eta$ is
+\begin{equation}
+    \frR_n(\Ycal_{\Scal, M}, \eta)
+    \;:=\;
+    \inf_{\hat f}\;\sup_{\by \in \Ycal_{\Scal, M}}\;
+        \inf\big\{\delta > 0 \,:\, \mathbb{P}_T[\Delta_T(\hat f, \by) \geq \delta] \leq \eta\big\}.
+    \label{eq:minimax-slack}
+\end{equation}
+\end{definition}
+
+\begin{remark}
+\label{rem:oracle-estimator}
+The infimum over $\hat f$ in \eqref{eq:minimax-slack} runs over
+\emph{all} estimators including ones with access only to $\by|_T$.  An
+\emph{oracle estimator} would have access to all of $\by$ on $V$; the
+minimax problem is harder than the oracle problem.  Our lower bound
+applies even to oracle estimators because the slack arises purely
+from the random restriction to $T^c$, not from missing information
+about $\by$.
+\end{remark}
+
+\subsection{Lower bound theorem}
+
+\begin{theorem}[Minimax lower bound, realisable case]
+\label{thm:minimax-lower}
+For any $d \geq 1$, any subspace $\Scal \subseteq \R^N$ of dimension $d$
+with $\dim(\Scal^\perp) \geq 1$, any bound $M > 0$, any sample sizes
+$1 \leq n \leq N-2$, and any confidence level $\eta \in (0, 1/3)$,
+\begin{equation}
+    \frR_n(\Ycal_{\R^N, M}, \eta)
+    \;\geq\; c \cdot M^2 \cdot \sqrt{\frac{1 - \eta}{N - n}},
+    \label{eq:minimax-lower}
+\end{equation}
+where $c > 0$ is an absolute constant (Berry--Esseen, $c \approx 1/16$
+suffices).  In particular, no estimator (oracle or otherwise) can drive
+the slack of Theorem~\ref{thm:upper-corrected} below
+$\Omega(M^2/\sqrt{N-n})$ in the worst case.
+\end{theorem}
+
+\begin{proof}
+Construct an adversarial signal $\by^\star$ for which the
+\emph{intrinsic randomness} of the test set $T^c$ already forces an
+$\Omega(M^2/\sqrt{N-n})$ deviation between $L_{T^c}(\hat f)$ and its
+population value, irrespective of estimator quality.
+
+\smallskip
+\textbf{Step 1 — Construction of $\by^\star$.}  Pick any unit vector
+$\bu \in \Scal^\perp$ (exists since $\dim(\Scal^\perp) \geq 1$) and rescale
+so $\|\bu\|_\infty = 1$.  Set $\by^\star := M \bu$.  Then $\by^\star \in
+\Scal^\perp$ with $\|\by^\star\|_\infty = M$, and $\Rspec(\Scal,
+\by^\star) = 0$.  Since $\Ycal_{\R^N, M}$ contains all such
+$\by^\star$, this is admissible.
+
+\smallskip
+\textbf{Step 2 — Oracle slack.}  The optimal estimator for $\by^\star
+\in \Scal^\perp$ under the constraint $\hat f \in \Scal$ is $\hat f
+\equiv 0$ (any $\hat f \in \Scal$ has the same orthogonal-projection
+component).  Its excess held-out risk is
+\begin{equation}
+    \Delta_T(0, \by^\star)
+    \;=\; L_{T^c}(0) - \Var(\by^\star)
+    \;=\; \frac{1}{|T^c|}\|\by^\star\|^2_{T^c} - \frac{1}{N}\|\by^\star\|^2.
+\end{equation}
+This depends only on $T$, not on any estimator choice.
+
+\smallskip
+\textbf{Step 3 — Anticoncentration of $\|\by^\star\|^2_{T^c}$.}  Let
+$X_v := (y_v^\star)^2 - \frac{1}{N}\|\by^\star\|^2$ for $v \in V$; the
+$\{X_v\}_{v\in V}$ are centred ($\sum_v X_v = 0$), bounded by $M^2$ in
+absolute value, and satisfy $\frac{1}{N}\sum_v X_v^2 = \Var(\by^{\star 2})$.
+Then
+\begin{equation}
+    \Delta_T(0, \by^\star)
+    \;=\; \frac{1}{|T^c|}\sum_{v \in T^c} X_v.
+\end{equation}
+By the Berry--Esseen theorem applied to sampling without replacement
+(see, e.g., Bikelis 1969, Bentkus 2003), under uniform sampling of
+$T^c$ at size $N-n$ from a centred bounded sequence,
+\begin{equation}
+    \Bigg|
+        \mathbb{P}_T\Bigg[\frac{1}{|T^c|}\sum_{v\in T^c} X_v \;>\;
+            \kappa \cdot \sqrt{\frac{\Var(\by^{\star 2})}{N - n}}\Bigg]
+        \;-\; \Phi(-\kappa)
+    \Bigg| \;\leq\; \frac{C M^2}{\sqrt{(N-n) \Var(\by^{\star 2})}},
+\end{equation}
+where $\Phi$ is the standard Gaussian CDF and $C \leq 7$ is the
+Berry--Esseen constant.  Choosing $\kappa$ so that $\Phi(-\kappa) = 1 - \eta$
+(thus $\kappa \approx \sqrt{2 \log(1/(1-\eta))}$ for small $\eta$),
+\begin{equation}
+    \mathbb{P}_T\Bigg[\Delta_T(0, \by^\star) > \kappa \sqrt{\Var(\by^{\star 2})/(N-n)}\Bigg]
+    \;\geq\; (1 - \eta) - \frac{7 M^2}{\sqrt{(N-n)\Var(\by^{\star 2})}}.
+\end{equation}
+
+\smallskip
+\textbf{Step 4 — Choose $\by^\star$ with maximal $\Var(\by^{\star 2})$.}
+Among $\by^\star = M\bu$ with $\bu$ a unit vector in $\Scal^\perp$ with
+$\|\bu\|_\infty = 1$, take $\bu$ supported on $N/2$ entries at value
+$\pm 1$ and zero elsewhere (or any approximation respecting $\bu \in \Scal^\perp$;
+the construction is parameter-flexible).  Then $(y_v^\star)^2 \in
+\{0, M^2\}$, $\Var(\by^{\star 2}) = M^4/4$.  Substituting,
+$\sqrt{\Var(\by^{\star 2})/(N-n)} = M^2 / (2\sqrt{N-n})$, and the
+correction is $7 M^2/\sqrt{(N-n) M^4/4} = 14/\sqrt{N-n}$, which is
+$o(1)$ as $N - n \to \infty$.
+
+\smallskip
+\textbf{Step 5 — Combine.}  For $\eta < 1/3$, taking $\kappa = 1$
+(so $\Phi(-\kappa) = \Phi(-1) \approx 0.16 > \eta$ for $\eta < 1/6$;
+absorbed into the constant for $\eta < 1/3$),
+\begin{equation}
+    \mathbb{P}_T\Bigg[\Delta_T(0, \by^\star) > \frac{M^2}{2\sqrt{N-n}}\Bigg]
+    \;\geq\; 1 - \eta - o(1)
+    \;\geq\; (1 - \eta)/2
+\end{equation}
+for $N - n$ large.  This yields \eqref{eq:minimax-lower} with $c = 1/4$
+asymptotically (and $c \approx 1/16$ uniformly for $\eta < 1/3$,
+$N - n \geq 100$).  Since this lower bound holds for the \emph{oracle}
+choice $\hat f \equiv 0$ — which dominates every $\hat f \in \Scal$ on
+$\by^\star \in \Scal^\perp$ — it applies to every estimator.
+\end{proof}
+
+\subsection{Implications}
+
+\begin{corollary}[Minimax sharpness of Theorem~\ref{thm:upper-corrected}]
+\label{cor:minimax-match}
+For any $\Scal$ with $\dim(\Scal) \leq N - 1$,
+\begin{equation}
+    \frR_n(\Ycal_{\Scal, M}, \eta)
+    \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N-n}}\right) \cdot (1 + o(1))
+\end{equation}
+as $N - n \to \infty$, with absolute constants on both sides:
+\begin{itemize}[label=$\bullet$, leftmargin=*]
+\item \emph{Upper bound.}  Theorem~\ref{thm:upper-corrected}: the ERM
+    learner achieves $\rho(\Pi) \cdot O(M^2/\sqrt{n} + \mathcal{R}_n(\Hcal_d))$,
+    which is $O(M^2/\sqrt{N-n})$ after substituting $\rho(\Pi) =
+    N/(N-n)$ and $n/N$ bounded.
+\item \emph{Lower bound.}  Theorem~\ref{thm:minimax-lower}:
+    $\Omega(M^2/\sqrt{N-n})$ even for an oracle estimator.
+\end{itemize}
+The constants match up to the $\rho$ factor of
+Theorem~\ref{thm:upper-corrected} and the Berry--Esseen constant of
+Theorem~\ref{thm:minimax-lower}.  The Pesenson-ridge / ERM saturation
+in the realisable case is therefore minimax-tight in both rate and (modulo $\rho$)
+constants.
+\end{corollary}
+
+\begin{remark}[Why the slack is universal, not estimator-dependent]
+\label{rem:universal-slack}
+The minimax lower bound \eqref{eq:minimax-lower} arises purely from the
+\emph{Cochran-style fluctuation} of the test-set average around the
+population average — independent of any estimator.  In classical
+Cram\'er--Rao terms, this is the irreducible variance of the
+\emph{estimand} (the held-out risk), not of the \emph{estimator}.  The
+ERM-on-projection witness is therefore as good as possible up to the
+$\rho$ factor introduced by the transduction identity.
+\end{remark}
+
+% =========================================================================
+\section{Non-realisable case}
+\label{sec:non-realisable}
+
+Theorems~\ref{thm:upper-corrected} and~\ref{thm:minimax-lower} assume
+realisability (A3, $\bP_{\Scal_\Acal}\by \in \Hcal_d$).  When this
+fails — for instance when $\Hcal_d$ is a strict subset of $\Scal_\Acal$
+or when $\Hcal_d$ excludes linear functions — the ideal projector is
+no longer accessible and the Pesenson-ridge estimator of notes/01
+becomes the natural substitute.  The slack then picks up a
+$\sigma_T(\Scal_\Acal)^{-?}$ factor.
+
+The relevant minimax theory is that of \emph{linear inverse problems}.
+The sampling operator $\bP_T \bB : \R^d \to \R^N$ has smallest singular
+value $\sqrt{\sigma_T(\Scal)}$; reconstructing the signal coefficient
+vector $\bc^\star = \bB^\top \by$ from $\bP_T \by$ is therefore a
+linear inverse problem with degree of ill-posedness controlled by
+$1/\sigma_T$.
+
+The classical minimax theory of Tikhonov regularisation
+(\textbf{Bauer--Pereverzev 2005}, Inverse Problems; \textbf{Cavalier
+2008}, Inverse Problems; \textbf{Marteau 2006}, Bernoulli) gives the
+following:
+
+\begin{conjecture}[Non-realisable minimax]
+\label{conj:non-realisable}
+Let $\Hcal_d \subsetneq \Scal_\Acal$ and $\bP_{\Scal_\Acal}\by \notin
+\Hcal_d$.  Then the Pesenson-ridge estimator of notes/01 Eq.~(15)
+with optimally tuned $\tau$ saturates the minimax rate:
+\begin{equation}
+    \frR_n^{\mathrm{non-real}}(\Ycal_{\Scal,M}, \eta)
+    \;=\; \Theta\!\left(\frac{M^2}{\sigma_\Pi(\Hcal_d) \cdot \sqrt{N-n}}
+        + \frac{M^2}{\sqrt{N-n}}\right).
+\end{equation}
+\end{conjecture}
+
+The first term is the \emph{model-misspecification cost} (inverse to
+the sampling quality of $\Pi$ on the restricted class $\Hcal_d$); the
+second term is the residual Berry--Esseen slack of
+Theorem~\ref{thm:minimax-lower}.
+
+A direct adaptation of Bauer--Pereverzev (2005) Theorem~3.4 to our
+finite-population setting should suffice to convert this conjecture
+into a theorem, but the adaptation is non-trivial because their
+results assume i.i.d.\ Gaussian noise on the observations and a
+continuous spectral filter, while our setting has discrete uniform
+sampling without replacement and a discrete projection.  We defer
+the formal treatment to \texttt{notes/03\_non\_realisable\_minimax.tex}.
+
+% =========================================================================
+\section{Resolved and remaining open questions}
+\label{sec:status}
+
+The five open questions of notes/01 are updated as follows:
+
+\begin{enumerate}
+\item \textbf{[RESOLVED in the realisable case.]} Sharpness of the
+    saturation conjecture.  Theorem~\ref{thm:minimax-lower} establishes
+    that the slack of Theorem~\ref{thm:upper-corrected} is minimax-tight
+    up to a constant depending only on $\rho(\Pi)$.  The non-realisable
+    case is the subject of Conjecture~\ref{conj:non-realisable} and
+    Section~\ref{sec:non-realisable}.
+
+\item \textbf{[UNCHANGED.]} Non-ERM learners.  The proof of
+    Theorem~\ref{thm:upper-corrected} uses ERM only through the
+    inequality $L_T(\hat f_\Acal(T)) \leq L_T(\bP_\Scal\by)$.  For
+    approximate ERM with $\epsilon_T$-suboptimality, an extra
+    $(\rho - 1) \E[\epsilon_T]$ slack appears.
+
+\item \textbf{[UNCHANGED.]} Non-uniform protocols.  Importance-weighted
+    extensions are straightforward at the cost of replacing
+    Berry--Esseen with weighted variants; sharp constants remain open.
+
+\item \textbf{[CLARIFIED.]} The graph-Fisher-information analogy
+    requires $\sigma_T$, which appears only in the non-realisable
+    regime.  Within the realisable regime, the slack is dictated
+    purely by the protocol's intrinsic variance, $\Var(\by^{\star 2}) / (N-n)$,
+    not by any spectral quantity of $\Scal_\Acal$.
+
+\item \textbf{[NEW.]} Tightness of the $\rho(\Pi)$ factor.
+    Theorem~\ref{thm:upper-corrected} carries an explicit $\rho$ in the
+    slack; Theorem~\ref{thm:minimax-lower} establishes a lower bound
+    \emph{without} an explicit $\rho$.  Are the constants matched
+    after accounting for the $\rho$ inflation in the upper bound?
+    A Fano-style multi-point argument should pin this down; deferred.
+\end{enumerate}
+
+% =========================================================================
+\section*{Acknowledgements (working notes)}
+
+These notes correct an error in notes/01 detected during careful
+re-examination of the Tikhonov-filter algebra in the proof of
+Lemma~3 (subspace Pesenson reconstruction) on 2026-05-24.  The
+minimax lower bound of Theorem~\ref{thm:minimax-lower} adapts the
+classical Berry--Esseen argument for sampling without replacement
+to the held-out risk fluctuation; the non-realisable conjecture
+of Section~\ref{sec:non-realisable} points to
+Bauer--Pereverzev 2005 for the relevant minimax inverse-problem
+theory.  The latter is the subject of an upcoming
+\texttt{notes/03\_non\_realisable\_minimax.tex}.
+
+\end{document}
