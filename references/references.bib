@@ -1,14 +1,6 @@
 % =========================================================================
-% references.bib — bibliography for {{repo-name}}
-%
-% Convention :
-%   - Use Harvard / author-year style citation keys : NameYearShortTopic
-%     (e.g. FossePallares2026applicabilityBound, Mohri2018book).
-%   - Group entries by topic with a comment header.
-%   - Prefer DOIs over arXiv links when the paper is published.
-%   - Verify the entry type matches the publication venue
-%     (@article for journals, @inproceedings for proceedings,
-%     @book for textbooks, @misc for preprints / software).
+% references.bib -- bibliography for structural-bounds-framework
+% Author-year citation keys : NameYearShortTopic. Group by topic.
 % =========================================================================
 
 % -- Sibling work in the cycling-data-lab organisation ---------------------
@@ -23,4 +15,324 @@
   year   = {2026}
 }
 
-% -- Add your own citations below, grouped by topic ------------------------
+% -- VC / Rademacher / classical statistical learning ---------------------
+
+@book{Vapnik1998,
+  author    = {Vapnik, Vladimir N.},
+  title     = {Statistical Learning Theory},
+  publisher = {Wiley},
+  year      = {1998}
+}
+
+@book{Mohri2018book,
+  author    = {Mohri, Mehryar and Rostamizadeh, Afshin and Talwalkar, Ameet},
+  title     = {Foundations of Machine Learning},
+  publisher = {MIT Press},
+  edition   = {2nd},
+  year      = {2018}
+}
+
+@article{Talagrand1996concentration,
+  author  = {Talagrand, Michel},
+  title   = {A new look at independence},
+  journal = {The Annals of Probability},
+  volume  = {24},
+  number  = {1},
+  pages   = {1--34},
+  year    = {1996},
+  doi     = {10.1214/aop/1042644705}
+}
+
+% -- Transfer learning bounds ---------------------------------------------
+
+@inproceedings{Tripuraneni2020,
+  author    = {Tripuraneni, Nilesh and Jordan, Michael I. and Jin, Chi},
+  title     = {On the theory of transfer learning: The importance of task diversity},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2020},
+  note      = {arXiv:2006.11650}
+}
+
+@inproceedings{Du2020,
+  author    = {Du, Simon S. and Hu, Wei and Kakade, Sham M. and Lee, Jason D. and Lei, Qi},
+  title     = {Few-shot learning via learning the representation, provably},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  note      = {arXiv:2002.09434}
+}
+
+@inproceedings{Tran2019,
+  author    = {Tran, Anh T. and Nguyen, Cuong V. and Hassner, Tal},
+  title     = {Transferability and hardness of supervised classification tasks},
+  booktitle = {IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year      = {2019},
+  note      = {arXiv:1908.08142}
+}
+
+@article{Nguyen2023,
+  author  = {Nguyen, Cuong N. and Ho, Lam Si Tung and Xu, Vu and Dinh, Vu and Nguyen, Binh T.},
+  title   = {Understanding transferability via task-relatedness},
+  journal = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year    = {2023},
+  note    = {arXiv:2307.00823}
+}
+
+% -- Information-theoretic generalisation ---------------------------------
+
+@inproceedings{Russo2016,
+  author    = {Russo, Daniel and Zou, James},
+  title     = {Controlling bias in adaptive data analysis using information theory},
+  booktitle = {AISTATS},
+  year      = {2016}
+}
+
+@inproceedings{Xu2017,
+  author    = {Xu, Aolin and Raginsky, Maxim},
+  title     = {Information-theoretic analysis of generalization capability of learning algorithms},
+  booktitle = {Advances in Neural Information Processing Systems (NIPS)},
+  year      = {2017},
+  note      = {arXiv:1705.07809}
+}
+
+% -- Graph signal processing ----------------------------------------------
+
+@article{Shuman2013,
+  author  = {Shuman, David I. and Narang, Sunil K. and Frossard, Pascal and Ortega, Antonio and Vandergheynst, Pierre},
+  title   = {The emerging field of signal processing on graphs: Extending high-dimensional data analysis to networks and other irregular domains},
+  journal = {IEEE Signal Processing Magazine},
+  volume  = {30},
+  number  = {3},
+  pages   = {83--98},
+  year    = {2013},
+  doi     = {10.1109/MSP.2012.2235192}
+}
+
+@book{Ortega2018,
+  author    = {Ortega, Antonio},
+  title     = {Introduction to Graph Signal Processing},
+  publisher = {Cambridge University Press},
+  year      = {2022}
+}
+
+@article{Pesenson2008,
+  author  = {Pesenson, Isaac},
+  title   = {Sampling in {P}aley--{W}iener spaces on combinatorial graphs},
+  journal = {Transactions of the American Mathematical Society},
+  volume  = {360},
+  number  = {10},
+  pages   = {5603--5627},
+  year    = {2008},
+  doi     = {10.1090/S0002-9947-08-04511-X}
+}
+
+@article{AnisGaddeOrtega2016,
+  author  = {Anis, Aamir and Gadde, Akshay and Ortega, Antonio},
+  title   = {Efficient sampling set selection for bandlimited graph signals using graph spectral proxies},
+  journal = {IEEE Transactions on Signal Processing},
+  volume  = {64},
+  number  = {14},
+  pages   = {3775--3789},
+  year    = {2016},
+  doi     = {10.1109/TSP.2016.2546233},
+  note    = {arXiv:1510.00297}
+}
+
+@inproceedings{ChepuriLeus2018,
+  author    = {Chepuri, Sundeep Prabhakar and Leus, Geert},
+  title     = {Graph sampling with and without input priors},
+  booktitle = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year      = {2018},
+  pages     = {4564--4568},
+  doi       = {10.1109/ICASSP.2018.8461451}
+}
+
+@article{TanakaEldar2020,
+  author  = {Tanaka, Yuichi and Eldar, Yonina C.},
+  title   = {Generalized sampling on graphs with subspace and smoothness priors},
+  journal = {IEEE Transactions on Signal Processing},
+  volume  = {68},
+  pages   = {2272--2286},
+  year    = {2020},
+  doi     = {10.1109/TSP.2020.2982325},
+  note    = {arXiv:1905.04441}
+}
+
+% -- Inverse-problem minimax theory (cited for distinction) ---------------
+
+@article{BauerPereverzev2005,
+  author  = {Bauer, Frank and Pereverzev, Sergei V.},
+  title   = {Regularization without preliminary knowledge of smoothness and error behaviour},
+  journal = {Inverse Problems},
+  volume  = {21},
+  number  = {6},
+  pages   = {1975--1991},
+  year    = {2005},
+  doi     = {10.1088/0266-5611/21/6/011}
+}
+
+@article{Cavalier2008,
+  author  = {Cavalier, Laurent},
+  title   = {Nonparametric statistical inverse problems},
+  journal = {Inverse Problems},
+  volume  = {24},
+  number  = {3},
+  pages   = {034004},
+  year    = {2008},
+  doi     = {10.1088/0266-5611/24/3/034004}
+}
+
+% -- Berry--Esseen for sampling without replacement -----------------------
+
+@article{Serfling1974,
+  author  = {Serfling, Robert J.},
+  title   = {Probability inequalities for the sum in sampling without replacement},
+  journal = {The Annals of Statistics},
+  volume  = {2},
+  number  = {1},
+  pages   = {39--48},
+  year    = {1974},
+  doi     = {10.1214/aos/1176342611}
+}
+
+@article{BardenetMaillard2015,
+  author  = {Bardenet, R\'emi and Maillard, Odalric-Ambrym},
+  title   = {Concentration inequalities for sampling without replacement},
+  journal = {Bernoulli},
+  volume  = {21},
+  number  = {3},
+  pages   = {1361--1385},
+  year    = {2015},
+  doi     = {10.3150/14-BEJ605}
+}
+
+@article{Bikelis1969,
+  author  = {Bikelis, A.},
+  title   = {Estimates of the remainder term in the central limit theorem for sums of independent random variables},
+  journal = {Litovsk. Mat. Sb.},
+  volume  = {9},
+  pages   = {26--34},
+  year    = {1969}
+}
+
+@article{Bentkus2003,
+  author  = {Bentkus, Vidmantas},
+  title   = {On the dependence of the {B}erry--{E}sseen bound on dimension},
+  journal = {Journal of Statistical Planning and Inference},
+  volume  = {113},
+  number  = {2},
+  pages   = {385--402},
+  year    = {2003},
+  doi     = {10.1016/S0378-3758(02)00094-0}
+}
+
+% -- Materials informatics / applicability domain -------------------------
+
+@article{Tropsha2010,
+  author  = {Tropsha, Alexander},
+  title   = {Best practices for {QSAR} model development, validation, and exploitation},
+  journal = {Molecular Informatics},
+  volume  = {29},
+  number  = {6--7},
+  pages   = {476--488},
+  year    = {2010},
+  doi     = {10.1002/minf.201000061}
+}
+
+@article{Sahigara2012,
+  author  = {Sahigara, Faizan and Mansouri, Kamel and Ballabio, Davide and Mauri, Andrea and Consonni, Viviana and Todeschini, Roberto},
+  title   = {Comparison of different approaches to define the applicability domain of {QSAR} models},
+  journal = {Molecules},
+  volume  = {17},
+  number  = {5},
+  pages   = {4791--4810},
+  year    = {2012},
+  doi     = {10.3390/molecules17054791}
+}
+
+@article{Hanser2016,
+  author  = {Hanser, Thierry and Barber, Chris and Marchaland, Jean-Fran\c{c}ois and Werner, S\'ebastien},
+  title   = {Applicability domain: towards a more formal definition},
+  journal = {SAR and QSAR in Environmental Research},
+  volume  = {27},
+  number  = {11},
+  pages   = {865--881},
+  year    = {2016},
+  doi     = {10.1080/1062936X.2016.1250229}
+}
+
+% -- Recommender systems cold-start ---------------------------------------
+
+@inproceedings{Schein2002,
+  author    = {Schein, Andrew I. and Popescul, Alexandrin and Ungar, Lyle H. and Pennock, David M.},
+  title     = {Methods and metrics for cold-start recommendations},
+  booktitle = {Proceedings of the 25th Annual International ACM SIGIR Conference},
+  year      = {2002},
+  pages     = {253--260},
+  doi       = {10.1145/564376.564421}
+}
+
+@inproceedings{Marlin2003,
+  author    = {Marlin, Benjamin M.},
+  title     = {Modeling user rating profiles for collaborative filtering},
+  booktitle = {Advances in Neural Information Processing Systems (NIPS)},
+  year      = {2003}
+}
+
+@inproceedings{Kluver2014,
+  author    = {Kluver, Daniel and Konstan, Joseph A.},
+  title     = {Evaluating recommender behavior for new users},
+  booktitle = {RecSys '14},
+  year      = {2014},
+  pages     = {121--128},
+  doi       = {10.1145/2645710.2645742}
+}
+
+% -- Urban mobility transferability ---------------------------------------
+
+@article{Naik2014,
+  author  = {Naik, Nikhil and Philipoom, Jade and Raskar, Ramesh and Hidalgo, C\'esar},
+  title   = {Streetscore -- predicting the perceived safety of one million streetscapes},
+  journal = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops},
+  year    = {2014},
+  pages   = {779--785}
+}
+
+@article{Hillel2021,
+  author  = {Hillel, Tim and Bierlaire, Michel and Elshafie, Mohammed Z. E. B. and Jin, Ying},
+  title   = {A systematic review of machine learning classification methodologies for modelling passenger mode choice},
+  journal = {Journal of Choice Modelling},
+  volume  = {38},
+  pages   = {100221},
+  year    = {2021},
+  doi     = {10.1016/j.jocm.2020.100221}
+}
+
+% -- Leverage-score / A-optimal design sampling ---------------------------
+
+@article{DrineasMahoney2018,
+  author  = {Drineas, Petros and Mahoney, Michael W.},
+  title   = {Lectures on randomized numerical linear algebra},
+  journal = {The Mathematics of Data},
+  publisher = {AMS},
+  year    = {2018},
+  note    = {arXiv:1712.08880}
+}
+
+@article{Avron2017,
+  author  = {Avron, Haim and Kapralov, Michael and Musco, Cameron and Musco, Christopher and Velingker, Ameya and Zandieh, Amir},
+  title   = {Random {F}ourier features for kernel ridge regression: Approximation bounds and statistical guarantees},
+  journal = {Proceedings of the International Conference on Machine Learning (ICML)},
+  year    = {2017},
+  note    = {arXiv:1804.09893}
+}
+
+@article{Puy2018,
+  author  = {Puy, Gilles and Tremblay, Nicolas and Gribonval, R\'emi and Vandergheynst, Pierre},
+  title   = {Random sampling of bandlimited signals on graphs},
+  journal = {Applied and Computational Harmonic Analysis},
+  volume  = {44},
+  number  = {2},
+  pages   = {446--475},
+  year    = {2018},
+  doi     = {10.1016/j.acha.2016.05.005}
+}

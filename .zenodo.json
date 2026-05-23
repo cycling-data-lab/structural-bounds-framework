@@ -1,15 +1,15 @@
 {
-  "title": "{{repo-name}}: {{paper-title}}",
-  "description": "Companion software, data, and LaTeX source for the manuscript '{{paper-title}}' (R. Fossé and G. Pallares, in preparation for {{journal}}). The repository provides: (i) [one-sentence description of theory contribution], (ii) [one-sentence description of empirical validation], (iii) [one-sentence description of methodological contribution]. Each numbered experiment script reproduces a specific table or figure.",
+  "title": "structural-bounds-framework: A universal spectral lower bound on the leave-node-out generalisation error of graph-supervised learning",
+  "description": "Companion software, working notes, and LaTeX manuscript source for 'A universal spectral lower bound on the leave-node-out generalisation error of graph-supervised learning' (R. Fossé and G. Pallares, in preparation for JMLR / FoCM). The repository provides: (i) the formal proofs of the three main theorems (universal lower bound, ERM upper bound with Rademacher slack, Berry-Esseen minimax tightness) in research notes notes/01-03, (ii) the consolidated working draft of the manuscript in paper.tex, (iii) the corollary derivations recovering the materials-applicability-bound (MLST) and mobility-applicability-bound (TR-B) results. Empirical anchors are provided by the sibling repositories of the cycling-data-lab organisation.",
   "upload_type": "software",
   "access_right": "open",
   "license": "MIT",
   "keywords": [
-    "{{keyword1}}",
-    "{{keyword2}}",
-    "{{keyword3}}",
-    "{{keyword4}}",
-    "{{keyword5}}"
+    "graph-supervised learning",
+    "generalisation lower bound",
+    "leave-node-out cross-validation",
+    "Cramér-Rao analog",
+    "spectral methods"
   ],
   "creators": [
     {
@@ -23,17 +23,20 @@
       "orcid": "0009-0002-8680-604X"
     }
   ],
-  "communities": [
-    {"identifier": "{{community-id}}"}
-  ],
   "related_identifiers": [
     {
-      "identifier": "https://github.com/cycling-data-lab/{{repo-name}}",
+      "identifier": "https://github.com/cycling-data-lab/structural-bounds-framework",
       "relation": "isSupplementTo",
       "scheme": "url",
       "resource_type": "software"
+    },
+    {
+      "identifier": "10.5281/zenodo.20355996",
+      "relation": "isDerivedFrom",
+      "scheme": "doi",
+      "resource_type": "publication-article"
     }
   ],
   "language": "eng",
-  "notes": "Companion software release for the {{journal}} submission. The git tag 'v1.0' marks the snapshot submitted to {{journal}}. Reproducibility: SEED=42 master seed, dependencies pinned in requirements.txt, Python 3.12."
+  "notes": "Working-draft companion software release. Reproducibility: SEED=42 master seed, dependencies pinned in requirements.txt, Python 3.12. Earlier git tags are pre-release snapshots; v1.0 will mark the JMLR / FoCM submission snapshot."
 }

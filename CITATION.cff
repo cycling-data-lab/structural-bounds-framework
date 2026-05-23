@@ -1,9 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this software or the accompanying manuscript, please cite as below."
-title: "{{repo-name}}: {{paper-title}}"
+title: "structural-bounds-framework: A universal spectral lower bound on the leave-node-out generalisation error of graph-supervised learning"
 type: software
 version: "0.1-draft"
-date-released: "{{YYYY-MM-DD}}"
+date-released: "2026-05-24"
 authors:
   - family-names: "Fossé"
     given-names: "Rohan"
@@ -14,20 +14,27 @@ authors:
     given-names: "Gaël"
     orcid: "https://orcid.org/0009-0002-8680-604X"
     affiliation: "CESI LINEACT (EA 7527), Montpellier, France"
-repository-code: "https://github.com/cycling-data-lab/{{repo-name}}"
-url: "https://github.com/cycling-data-lab/{{repo-name}}"
+repository-code: "https://github.com/cycling-data-lab/structural-bounds-framework"
+url: "https://github.com/cycling-data-lab/structural-bounds-framework"
 license: MIT
 keywords:
-  - "{{keyword1}}"
-  - "{{keyword2}}"
-  - "{{keyword3}}"
-  - "{{keyword4}}"
-  - "{{keyword5}}"
+  - "graph-supervised learning"
+  - "generalisation lower bound"
+  - "leave-node-out cross-validation"
+  - "spectral methods"
+  - "Cramér-Rao analog"
 abstract: >-
-  {{One- to three-sentence abstract for citation indexes.}}
+  A universal lower bound on the expected leave-node-out generalisation
+  error of any feature-restricted learner on any graph-supervised
+  regression problem. The bound depends only on the graph Laplacian, the
+  target signal, and the learner's reachable feature subspace, and is
+  saturated by empirical-risk-minimising learners to a Berry-Esseen slack
+  that is itself minimax-tight. Unifies the materials-applicability-bound
+  (MLST) and mobility-applicability-bound (TR-B) corollaries as
+  instantiations of a single Cramér-Rao-style efficiency inequality.
 preferred-citation:
   type: article
-  title: "{{paper-title}}"
+  title: "A universal spectral lower bound on the leave-node-out generalisation error of graph-supervised learning"
   authors:
     - family-names: "Fossé"
       given-names: "Rohan"
@@ -35,6 +42,6 @@ preferred-citation:
     - family-names: "Pallares"
       given-names: "Gaël"
       orcid: "https://orcid.org/0009-0002-8680-604X"
-  journal: "{{journal}}"
-  year: {{year}}
-  notes: "In preparation; preprint at the repository URL."
+  journal: "Journal of Machine Learning Research"
+  year: 2026
+  notes: "In preparation; working draft at the repository URL."

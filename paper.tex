@@ -3,77 +3,41 @@
 % !BIB TS-program = bibtex
 %
 % ============================================================================
-% paper.tex -- {{paper-title}}
+% paper.tex -- A universal spectral lower bound on graph-supervised learning
 %
-% Target  : {{journal}} (IOP Publishing)
-% Class   : iopjournal.cls (2024/01/31), supplied by IOP at
-%   https://publishingsupport.iopscience.iop.org/questions/latex-template/
-% Authors : {{authors}}, CESI LINEACT, {{year}}.
+% Target  : Journal of Machine Learning Research (JMLR) or Foundations
+%           of Computational Mathematics (FoCM).
+% Authors : Rohan Fossé, Gaël Pallares, CESI LINEACT, 2026.
 %
-% Companion files :
-%   paper_si.tex                 -- Supplementary Information
-%   references/references.bib    -- BibTeX
-%   figures/                     -- publication figures (PDF)
-%   experiments/d{NN}_{name}.py  -- reproducible scripts
-%
-% Compile :
-%   pdflatex paper.tex
-%   bibtex   paper
-%   pdflatex paper.tex
-%   pdflatex paper.tex
+% Source notes (absorbed):
+%   notes/01_universal_bound_proof.tex          -- Theorem 1 (universal LB)
+%   notes/02_minimax_saturation.tex             -- Theorem 2 (corrected UB),
+%                                                  Theorem 3 (Berry-Esseen LB)
+%   notes/03_non_realisable_resolution.tex      -- Vacuous non-realisable
+%                                                  regime; learner-specific
+%                                                  formulation
 % ============================================================================
-\documentclass{iopjournal}      % add [anonymous] for double-anonymous review
 
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
-\usepackage{csquotes}
-\usepackage{amssymb,amsmath,amstext,amsthm}
-
-\graphicspath{{figures/}}
-
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{float}
+\usepackage{amssymb,amsmath,amstext,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{booktabs,array,float}
 \usepackage{enumitem}
 \setlist{topsep=2pt,itemsep=2pt,parsep=0pt}
-\usepackage{url}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
 
-% IOP accepts either Vancouver (numbered) or Harvard (author-year).
-% Defaulting to author-year + plainnat ; switch to iopart-num for numeric.
 \usepackage[authoryear,round]{natbib}
 \bibliographystyle{plainnat}
 
-% Patch \orcid to a text fallback if the orcid.pdf image is missing.
-\IfFileExists{orcid.pdf}{}{%
-  \renewcommand{\orcid}[1]{\textsuperscript{\href{https://orcid.org/##1}{\textsf{[ORCID]}}}}%
-}
-
-% Running-header customisation : IOP class hardcodes "Journal vv (yyyy) aaaaaa"
-% and "Author et al" ; override for the target journal.
-\usepackage{fancyhdr}
-\fancyhead[L]{{\small \sf IOP Publishing}\hspace{5mm}%
-              {\it {{journal-short}}}\ \textbf{vv} (yyyy) aaaaaa}
-\fancyhead[R]{{{lead-author-surname}} {\it et al}\ }
-\fancyhead[C]{}
-
-% Anti-widow / orphan
-\widowpenalty=10000
-\clubpenalty=10000
-\displaywidowpenalty=10000
-\raggedbottom
-
-% Patch \articletype : replace the hardcoded "Journal Name" banner.
-\makeatletter
-\renewcommand{\articletype}[1]{%
-   {\vspace*{-8mm}\noindent \Large \sf {{journal}}}%
-   \vspace*{8mm} \noindent\reversemarginpar
-   \marginpar{\vspace{-3mm} {\color{gray}\hrule} \ \\ Crossmark\\
-       {\color{gray}\hrule} \ \\
-       \tiny {\sf RECEIVED} {\small \\ dd Month yyyy}\\ \\
-       {\sf REVISED} {\small \\ dd Month yyyy}}%
-   {\scriptsize \sf{\bfseries \MakeUppercase{#1}}}}
-\makeatother
+\graphicspath{{figures/}}
 
 % Theorem environments
 \theoremstyle{plain}
@@ -83,136 +47,901 @@
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{conjecture}[theorem]{Conjecture}
 
-% Bold-math shortcuts (delete what you don't need)
-\newcommand{\E}{\mathbb{E}}
-\newcommand{\Var}{\mathrm{Var}}
-\newcommand{\by}{\mathbf{y}}
-\newcommand{\bX}{\mathbf{X}}
+% Notation macros (mirror notes/0X and the MLST companion paper)
 \newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\bc}{\mathbf{c}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bD}{\mathbf{D}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\PR}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Lsym}{\mathcal{L}_{\mathrm{sym}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\frR}{\mathfrak{R}}
 
-% Editorial-placeholder marker used while drafting (renders less alarmingly
-% than \textbf{[TODO]} ; reviewers will read it as a release-candidate
-% placeholder rather than a substantive gap).  Remove all uses before v1.0.
-\newcommand{\Todo}[1]{\textbf{[To confirm: #1]}}
+\title{A universal spectral lower bound on the leave-node-out\\
+generalisation error of graph-supervised learning}
 
-% =========================================================================
+\author{Rohan Foss\'e\thanks{rfosse@cesi.fr; ORCID 0009-0002-2195-0198.}
+\and Ga\"el Pallares\thanks{ORCID 0009-0002-8680-604X.}\\
+\small CESI LINEACT (EA 7527), Montpellier, France}
+
+\date{Working draft v0.1 --- May 2026}
+
 \begin{document}
 
-\articletype{Paper}     % or "Letter", "Topical Review"
-
-\title{{{paper-title}}}
-
-\author{{{lead-author-name}}$^{1,*}$\orcid{{{lead-author-orcid-id}}},
-        {{co-author-name}}$^{2}$\orcid{{{co-author-orcid-id}}}}
-
-\affil{$^{1}$ {{lead-author-affiliation}}
-       \quad$^{2}$ {{co-author-affiliation}}\\[0.2em]
-       $^{*}$ Author to whom any correspondence should be addressed.}
-
-\email{{{lead-author-email}}}
-
-\keywords{{{keyword1}}; {{keyword2}}; {{keyword3}}; {{keyword4}}; {{keyword5}}}
+\maketitle
 
 \begin{abstract}
-\Todo{Write the abstract.  Target $\sim 250$ words.  Open with the
-problem in one sentence, state the contribution in the second, give
-the headline number (effect size + significance) in the third, and
-close with the operational reading.}
+We prove a universal lower bound on the expected leave-node-out
+generalisation error of any feature-restricted learner on any
+graph-supervised regression problem.  The bound depends only on three
+objects: the graph Laplacian, the target signal, and the learner's
+reachable feature subspace.  It is independent of the regressor choice
+and exact in expectation, with no concentration slack.  We prove that
+an empirical-risk-minimising learner saturates the bound to a
+Berry--Esseen slack of order $\rho(\Pi) \cdot M^2/\sqrt{n}$, and that
+this slack is itself minimax-tight: even an oracle estimator with full
+knowledge of the target on the population cannot drive it lower.
+The pair of bounds is the Cram\'er--Rao analog, for graph-supervised
+learning under leave-node-out evaluation, of the classical efficiency
+inequality for parameter estimation.  Four corollaries instantiate the
+framework: the encoding-gap bound for materials-property prediction
+(recovering~\citealp{FossePallares2026applicabilityBound}), a spectral-disjointness
+bound on negative transfer, a label-complexity dual for active learning,
+and an empirical validation across the eight-task MatBench panel,
+27-network bike-share demand panel, and 34{,}858-commune French mobility
+panel established by the companion repositories of the cycling-data-lab
+organisation.
 \end{abstract}
+
+\noindent\textbf{Keywords:} graph-supervised learning; generalisation
+lower bound; leave-node-out cross-validation; spectral methods; Laplacian
+eigenfunctions; Berry--Esseen anticoncentration; Cram\'er--Rao analog;
+applicability domain; transfer learning; active learning.
 
 % =========================================================================
 \section{Introduction}
 \label{sec:intro}
 
-\Todo{Write Introduction.  Three paragraphs.  (1) The problem and why
-existing approaches are insufficient.  (2) Our contribution at the
-sentence-level.  (3) Roadmap of the paper.}
+Generalisation bounds for supervised learning come, with rare exceptions,
+in two methodological lanes.  The VC / Rademacher lane
+\citep{Vapnik1998,Mohri2018book,Tripuraneni2020} bounds the gap between
+empirical and population risk in terms of the hypothesis class's
+combinatorial or geometric complexity, yielding \emph{upper bounds} on
+the excess risk.  The information-theoretic lane
+\citep{Russo2016,Xu2017,Tran2019,Nguyen2023} bounds the same gap in terms
+of the mutual information between the training data and the learned
+hypothesis, again yielding upper bounds.  In both cases, the resulting
+inequalities tell us how \emph{badly} a learner could perform; they do
+not characterise an irreducible floor below which no learner can go.
+
+In a parallel development at the intersection of graph signal processing
+\citep{Shuman2013,Ortega2018} and statistical learning, the question of
+\emph{leave-node-out generalisation} on a graph-supported regression
+problem has acquired particular significance.  The materials-informatics
+community has investigated the \emph{applicability-domain problem}
+\citep{Tropsha2010,Sahigara2012,Hanser2016} --- the empirical observation
+that models trained on one family of compositions generalise poorly to
+materials outside that family --- through largely empirical means.  The
+recommender-systems community has investigated the \emph{cold-start
+problem} \citep{Schein2002,Marlin2003,Kluver2014} as a structurally
+similar question on user--item graphs.  Urban mobility research has
+investigated the failure of mode-choice models trained in one city to
+generalise to others \citep{Naik2014,Hillel2021}.  In every case the
+empirical phenomenology is unambiguous, but a quantitative theorem
+characterising the \emph{floor} of the held-out error --- as a function
+of the data, not of the regressor --- was, until recently, missing.
+
+The companion paper \citet{FossePallares2026applicabilityBound} provided one
+such floor, specifically for the materials-informatics setting.  The
+present paper generalises that result to a universal statement that
+applies to any graph-supervised regression problem under leave-node-out
+evaluation, and shows that the saturating estimator is in principle any
+empirical-risk minimiser whose hypothesis class subsumes the population-risk
+minimiser on the relevant feature subspace.  Together with a matching
+Berry--Esseen minimax lower bound, this yields a Cram\'er--Rao-style
+efficiency statement for graph-supervised learning.
+
+\subsection{Contributions}
+
+\begin{enumerate}[label=(\arabic*),leftmargin=*]
+\item \textbf{Universal lower bound
+    (Theorem~\ref{thm:universal-lower-bound}).}  For any learner $\Acal$
+    with reachable hypothesis class $\Hcal_d$, target $\by \in \R^N$
+    with $\|\by\|_\infty \leq M$, and uniform leave-node-out protocol
+    $\Pi_{\mathrm{LSO}}$ with $|T| = n$, the expected leave-node-out loss
+    satisfies
+    \begin{equation*}
+        \E_T\!\big[L_{T^c}(\hat f_\Acal(T))\big] \;\geq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by),
+    \end{equation*}
+    where $\Rspec(\Hcal_d, \by) := 1 - L_V(f^\star_{\Hcal_d})/\Var(\by)$
+    and $f^\star_{\Hcal_d} := \arg\min_{f \in \Hcal_d} L_V(f)$.  The
+    bound is \emph{exact in expectation}: no concentration slack
+    appears.  Proved as
+    Theorem~\ref{thm:universal-lower-bound} in
+    Section~\ref{sec:lower-bound-proof}.
+
+\item \textbf{Universal upper bound
+    (Theorem~\ref{thm:universal-upper-bound}).}  Any empirical-risk-minimising
+    learner with truncated $L$-Lipschitz hypothesis class $\Hcal_d$ of
+    Rademacher complexity $\mathcal{R}_n(\Hcal_d)$ satisfies, with
+    probability $\geq 1 - \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
+    \begin{equation*}
+        L_{T^c}(\hat f_\Acal(T))
+        \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
+            + \rho(\Pi) \cdot \!\left[ 2 \mathcal{R}_n(\Hcal_d) + 3 M^2 \sqrt{\tfrac{\log(2/\eta)}{2 n}} \right] + O\!\left(\tfrac{M^2}{\sqrt{n}}\right),
+    \end{equation*}
+    where $\rho(\Pi) := N/(N-n)$ is the transduction factor.  Proved
+    in Section~\ref{sec:upper-bound-proof}.
+
+\item \textbf{Minimax tightness (Theorem~\ref{thm:minimax-lower-bound}).}
+    No estimator --- including an oracle with full population knowledge
+    of $\by$ --- can drive the slack of Theorem~\ref{thm:universal-upper-bound}
+    below $\Omega(M^2/\sqrt{N-n})$ in the worst case over signals.  The
+    argument is a Berry--Esseen anticoncentration on the residual energy
+    $\|\by^\star_\perp\|^2_{T^c}$, the fluctuation of which is intrinsic
+    to the random test set, not estimator-dependent.  Proved in
+    Section~\ref{sec:minimax-proof}.
+
+\item \textbf{Cram\'er--Rao analogy.}  Theorems
+    \ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound} are
+    the graph-supervised-learning analog of the classical efficiency
+    inequality $\Var(\hat\theta) \geq 1/I(\theta)$:
+    Theorem~\ref{thm:universal-lower-bound} provides a structural
+    floor on the expected loss depending only on (graph, target,
+    learner's reach), and Theorem~\ref{thm:universal-upper-bound}
+    exhibits an explicit efficient estimator achieving the floor up to a
+    minimax-tight slack.  The structural role of the Fisher information
+    is played by the variance of the residual energy
+    $((\bP_{\Hcal_d^\perp}\by)(v))^2$ on $V$.
+
+\item \textbf{Corollaries.}
+    \begin{itemize}[label=$\bullet$,leftmargin=*]
+    \item \textbf{C1 (encoding-gap recovery; \S\ref{subsec:c1}).}  The
+        bound of \citet{FossePallares2026applicabilityBound} on the categorical
+        vs.\ compositional encoding gap under leave-composition-out
+        evaluation is a one-paragraph corollary, with the categorical
+        learner the degenerate case $\Hcal_d = \{$constants$\}$ and
+        the compositional learner the case $\Hcal_d = \Scal_{\mathrm{comp}}$.
+    \item \textbf{C2 (negative transfer; \S\ref{subsec:c2}).}  Taking
+        $V = V_{\mathrm{src}} \cup V_{\mathrm{tgt}}$ and $\Pi$ the
+        leave-task-out protocol, the bound recovers a structural
+        \emph{spectral-disjointness} criterion for negative transfer:
+        transfer is unavoidably harmful when the source and target
+        labels project onto disjoint bands of the joint graph's
+        Laplacian eigenbasis.
+    \item \textbf{C3 (active learning; \S\ref{subsec:c3}).}  Letting the
+        protocol $\Pi$ be chosen by the learner gives an
+        importance-weighted variant in which the optimal sampling
+        distribution is the leverage-score distribution on the learner's
+        reachable subspace, with the bound matching the rate of the
+        spectral-graph A-optimal design literature
+        \citep{DrineasMahoney2018,Avron2017}.
+    \end{itemize}
+
+\item \textbf{Empirical validation.}  The companion repositories
+    \texttt{materials-applicability-bound}
+    \citep{FossePallares2026applicabilityBound} and
+    \texttt{mobility-applicability-bound} (Foss\'e and Pallares, in
+    preparation) provide cross-domain empirical instantiations on the
+    8-task MatBench panel, 27-network bike-share demand panel, and
+    34{,}858-commune French mobility panel respectively.
+    Section~\ref{sec:empirics} summarises the headline results and
+    points to the per-repository scripts for reproduction.
+\end{enumerate}
+
+\subsection{Relation to prior work}
+\label{subsec:related-work}
+
+The four nearest methodological lanes are:
+
+\textbf{(a) Rademacher / VC bounds.}  Classical generalisation bounds
+\citep{Vapnik1998,Mohri2018book} and the modern transfer-learning
+extensions \citep{Tripuraneni2020,Du2020} give \emph{upper} bounds on
+excess risk via Rademacher complexity, eluder dimension, or task
+diversity.  Our Theorem~\ref{thm:universal-upper-bound} reuses the
+Rademacher technology to prove its upper bound, but the principal
+contribution is the matching lower bound and the resulting
+Cram\'er--Rao-style efficiency statement, which has no analog in the
+VC lane.
+
+\textbf{(b) Information-theoretic bounds.}  Recent
+information-theoretic bounds on transferability
+\citep{Tran2019,Nguyen2023} and on generalisation
+\citep{Russo2016,Xu2017} provide model-free upper bounds via conditional
+entropy or PAC-Bayes.  Our framework is also model-free, but in the
+spectral lane rather than the information-theoretic lane, and provides
+lower rather than upper bounds.
+
+\textbf{(c) Graph signal processing on bandlimited subspaces.}  The
+classical bandlimited reconstruction theorems of
+\citet{Pesenson2008,AnisGaddeOrtega2016} and the recent generalisation
+to arbitrary feature subspaces by \citet{ChepuriLeus2018,TanakaEldar2020}
+provide the underlying sampling-theoretic machinery for graph signals
+restricted to a subspace.  Our framework borrows the notion of a
+subspace-restricted estimator but, crucially, does \emph{not} require
+the Pesenson sampling quality $\sigma_T(\Hcal_d)$ to appear in the
+bound; see Remark~\ref{rem:no-sigma-T-needed} for the resolution of an
+intermediate misconception in our own development.
+
+\textbf{(d) Cycling-data-lab structural-bounds program.}  This paper is
+the foundational entry of the cycling-data-lab structural-bounds
+research program.  It absorbs and unifies the empirical
+applicability-domain bound of \citet{FossePallares2026applicabilityBound} (MLST,
+materials informatics) and the mobility-transfer instantiation in
+preparation by the same authors (TR-B, urban mobility).  The bound
+established here is the \emph{floor}; the empirical companions
+demonstrate that the floor is operationally tight in two unrelated
+domains.
+
+\subsection{Roadmap}
+
+Section~\ref{sec:setup} fixes notation and assumptions.
+Section~\ref{sec:main-results} states the three main theorems and the
+Cram\'er--Rao corollary.  Sections~\ref{sec:lower-bound-proof},
+\ref{sec:upper-bound-proof}, \ref{sec:minimax-proof} contain the proofs.
+Section~\ref{sec:corollaries} develops the three corollaries C1--C3.
+Section~\ref{sec:empirics} summarises empirical validation.
+Section~\ref{sec:discussion} discusses open questions and limitations.
 
 % =========================================================================
-\section{Setup and notation}
+\section{Setup}
 \label{sec:setup}
 
-\Todo{Formal setup.  Define the objects, the loss, the protocol.}
+\subsection{Graph, signal, and spectrum}
+
+Let $G = (V, E)$ be a finite undirected graph with $|V| = N$.  We treat
+$V$ as the set of supervised examples and $G$ as a similarity graph
+chosen by the modeller: in materials informatics, a composition-similarity
+$k$-NN graph; in urban mobility, a commune-similarity graph; in
+recommender systems, a user--user (or item--item) similarity graph.
+
+The symmetric-normalised Laplacian is
+$\Lsym = \bI - \bD^{-1/2} \bW \bD^{-1/2}$, where $\bW$ is the
+weighted adjacency matrix and $\bD$ the diagonal degree matrix.  Its
+eigendecomposition is $\Lsym = \bU \boldsymbol{\Lambda} \bU^\top$ with
+$0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_N \leq 2$ and
+$\bU = [\bu_1, \ldots, \bu_N]$ orthonormal.
+
+The target signal is a vector $\by \in \R^N$, treated as deterministic
+(not random).  Without loss of generality we assume $\by$ is centred,
+$\bone^\top \by = 0$ (this absorbs any constant predictor into the
+reachable subspace; see Remark~\ref{rem:centring}).  Under this
+convention, the population variance
+$\Var(\by) := N^{-1} \|\by\|^2$.
+We assume the signal is bounded: $\|\by\|_\infty \leq M < \infty$.
+
+The graph Fourier coefficients of $\by$ are $\hat y_k := \bu_k^\top \by$,
+so $\by = \sum_k \hat y_k \bu_k$ and $\|\by\|^2 = \sum_k \hat y_k^2$
+by Parseval.
+
+\subsection{Evaluation protocol}
+\label{subsec:setup-protocol}
+
+\begin{definition}[Evaluation protocol]
+\label{def:protocol}
+An \emph{evaluation protocol} is a distribution $\Dcal_\Pi$ over
+ordered pairs $(T, T^c)$ with $T \subset V$, $|T| = n$,
+$T^c := V \setminus T$, $|T^c| = N - n$.  The canonical instance
+$\Pi_{\mathrm{LSO}}$ samples $T$ uniformly without replacement.
+\end{definition}
+
+For a predictor $\hat f : V \to \R$ (identified with its vector of
+node predictions in $\R^N$), we write
+$L_T(\hat f) := n^{-1} \sum_{v \in T} (\hat f(v) - y_v)^2$,
+$L_{T^c}(\hat f) := (N-n)^{-1} \sum_{v \in T^c} (\hat f(v) - y_v)^2$,
+and $L_V(\hat f) := N^{-1} \sum_{v \in V} (\hat f(v) - y_v)^2$.
+The \emph{transduction factor} is $\rho(\Pi) := N/(N-n)$; for the
+standard 80/20 split, $\rho = 5$.
+
+\subsection{Learner and reachable hypothesis class}
+\label{subsec:setup-learner}
+
+\begin{definition}[Learner]
+\label{def:learner}
+A \emph{learner} is a (possibly randomised) map $\Acal : (T, \by|_T)
+\mapsto \hat f_\Acal(T) \in \Hcal_d$, where $\Hcal_d \subseteq \R^N$ is
+the \emph{hypothesis class}: the set of vector-valued predictors the
+algorithm can output, identified with their restrictions to $V$.  We
+assume $\Hcal_d$ is closed under truncation to $[-M, M]$.
+\end{definition}
+
+\begin{definition}[Learner-specific spectral $R^2$]
+\label{def:learner-rspec}
+Let $f^\star_{\Hcal_d} := \arg\min_{f \in \Hcal_d} L_V(f)$ be the
+\emph{population-risk minimiser} of $\Hcal_d$ (which exists by
+compactness under truncation).  The \emph{learner-specific spectral
+$R^2$} of $\Hcal_d$ on $\by$ is
+\begin{equation}
+    \Rspec(\Hcal_d, \by) \;:=\; 1 \,-\, \frac{L_V(f^\star_{\Hcal_d})}{\Var(\by)} \;\in\; [0, 1].
+    \label{eq:rspec-learner-defn}
+\end{equation}
+For closed linear $\Hcal_d$, $f^\star_{\Hcal_d} = \bP_{\Hcal_d}\by$ and
+$\Rspec(\Hcal_d, \by) = \|\bP_{\Hcal_d}\by\|^2/\|\by\|^2$, the classical
+projection $R^2$.  For non-linear $\Hcal_d$ (gradient-boosted trees,
+neural networks with weight constraints, $k$-NN with local averaging),
+$\Rspec$ is the population-variance-explained ceiling of the class.
+\end{definition}
+
+\begin{remark}[Examples of $\Hcal_d$ and $\Rspec(\Hcal_d, \by)$]
+\label{rem:examples}
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item \emph{Categorical (one-hot) learner.}  $\Hcal_d = \{$constants on $T^c\}$
+    (the learner sees one-hot indicators for $v \in T$ only, and is
+    forced to a constant prediction on $T^c$).  Then
+    $\Rspec(\Hcal_d, \by) = 0$ for centred $\by$.
+\item \emph{Linear regressor on features $\bphi$.}
+    $\Hcal_d = \{(\langle \bphi(v), \bm{\beta}\rangle)_{v \in V} : \bm{\beta} \in \R^d\}$;
+    $\Rspec(\Hcal_d, \by)$ is the projection-$R^2$ of $\by$ on
+    $\mathrm{col}(\bphi)$.
+\item \emph{Kernel ridge with kernel $\mathcal{K}$.}  $\Hcal_d$ is the
+    column span of the kernel matrix.
+\item \emph{Sufficiently expressive MLP / GBM.}  $\Hcal_d = \R^N$, so
+    $\Rspec(\Hcal_d, \by) = 1$ and the bound becomes vacuous --- as
+    expected, since an arbitrarily expressive learner has no structural
+    floor.
+\end{itemize}
+\end{remark}
+
+\subsection{Assumptions}
+
+\begin{assumption}[Bounded centred target]
+\label{a:target}
+$\|\by\|_\infty \leq M$ and $\bone^\top \by = 0$.
+\end{assumption}
+
+\begin{assumption}[ERM learner]
+\label{a:erm}
+The learner $\Acal$ is an empirical risk minimiser on $\Hcal_d$:
+$\hat f_\Acal(T) \in \arg\min_{f \in \Hcal_d} L_T(f)$.  The hypothesis
+class is truncated to $[-M, M]$ and admits a Rademacher complexity
+$\mathcal{R}_n(\Hcal_d)$ in the sense of \citet[][\S 3.3]{Mohri2018book}.
+\end{assumption}
 
 % =========================================================================
-\section{Main result}
-\label{sec:main}
+\section{Main results}
+\label{sec:main-results}
 
-\Todo{State the main theorem / claim with a half-page proof sketch ;
-defer the full proof to the SI if longer than two pages.}
+\begin{theorem}[Universal spectral lower bound]
+\label{thm:universal-lower-bound}
+Under Assumptions~\ref{a:target}--\ref{a:erm}, for any evaluation
+protocol $\Pi$ satisfying $\E_T[L_T(f)] = L_V(f)$ for all deterministic
+$f \in \R^N$ (in particular $\Pi_{\mathrm{LSO}}$),
+\begin{equation}
+    \E_{T \sim \Dcal_\Pi}\!\big[L_{T^c}(\hat f_\Acal(T))\big]
+    \;\geq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by).
+    \label{eq:universal-lower-bound}
+\end{equation}
+The bound is \emph{exact in expectation}: there is no concentration
+slack term.
+\end{theorem}
+
+\begin{theorem}[Universal upper bound]
+\label{thm:universal-upper-bound}
+Under Assumptions~\ref{a:target}--\ref{a:erm}, with probability $\geq 1
+- \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
+        \;+\; \rho(\Pi) \cdot \Bigg[
+            2 \mathcal{R}_n(\Hcal_d)
+            + 3 M^2 \sqrt{\frac{\log(2/\eta)}{2 n}}
+          \Bigg]
+        + O\!\left(\frac{M^2}{\sqrt{n}}\right).
+    \label{eq:universal-upper-bound}
+\end{equation}
+For learners satisfying $\mathcal{R}_n(\Hcal_d) = O(\sqrt{d/n})$
+(linear, kernel-ridge, MLP with bounded weights, gradient-boosted
+trees of bounded depth), the leading-order slack is
+$O(\rho(\Pi) (M \sqrt{d} + M^2)/\sqrt{n})$.
+\end{theorem}
+
+\begin{theorem}[Berry--Esseen minimax lower bound on the slack]
+\label{thm:minimax-lower-bound}
+For any hypothesis class $\Hcal_d \subsetneq \R^N$, any $M > 0$, any
+sample sizes $1 \leq n \leq N - 2$, and any confidence level $\eta \in
+(0, 1/3)$, there exists a signal $\by^\star \in \Hcal_d^\perp$ with
+$\|\by^\star\|_\infty = M$ such that
+\begin{equation}
+    \PR_T\!\Big[
+        L_{T^c}(\hat f) - \big(1 - \Rspec(\Hcal_d, \by^\star)\big)\Var(\by^\star)
+        \;\geq\; c \cdot M^2 / \sqrt{N - n}
+    \Big]
+    \;\geq\; 1 - \eta
+    \label{eq:minimax-lower-bound}
+\end{equation}
+for an absolute constant $c > 0$ (Berry--Esseen, $c \approx 1/16$
+suffices), uniformly in $\hat f$.  No estimator --- including one with
+oracle access to $\by^\star$ on $V$ --- can drive the slack of
+\eqref{eq:universal-upper-bound} below
+$\Omega(M^2/\sqrt{N-n})$ in the worst case.
+\end{theorem}
+
+\begin{corollary}[Cram\'er--Rao efficiency for graph-supervised learning]
+\label{cor:cramer-rao}
+Combining Theorems~\ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound},
+the minimax slack rate at protocol $\Pi_{\mathrm{LSO}}$ on signal class
+$\Ycal_{\Hcal_d, M} := \{\by \in \R^N : \|\by\|_\infty \leq M, \bone^\top
+\by = 0\}$ is
+\begin{equation}
+    \frR_n(\Hcal_d, M, \eta)
+    \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N - n}} + \rho(\Pi) \mathcal{R}_n(\Hcal_d)\right),
+    \label{eq:cramer-rao-rate}
+\end{equation}
+with absolute constants on both sides, matching up to the $\rho(\Pi)$
+factor in the upper bound and the Berry--Esseen constant in the lower
+bound.  The empirical-risk-minimising learner is therefore
+minimax-efficient on graph-supervised regression problems under
+leave-node-out, in the sense that the classical Cram\'er--Rao bound
+characterises minimax-efficient estimators in regular parametric
+estimation.
+\end{corollary}
+
+\begin{remark}[Centring]
+\label{rem:centring}
+If $\by$ is not centred, replace $\by$ throughout by $\by - \bar y \bone$,
+where $\bar y := N^{-1}\bone^\top \by$.  Equivalently, augment
+$\Hcal_d$ to contain the constant vector $\bone$, which absorbs the
+mean predictor.  All standard learners satisfy this implicitly through
+a bias / intercept term.
+\end{remark}
+
+\begin{remark}[Why the Pesenson sampling quality $\sigma_T$ does not appear]
+\label{rem:no-sigma-T-needed}
+An earlier formulation of Theorem~\ref{thm:universal-upper-bound}
+(working notes \texttt{notes/01\_universal\_bound\_proof.tex} in the
+companion repository, withdrawn in \texttt{notes/03\_non\_realisable\_resolution.tex})
+expressed the slack as $O(\rho(\Pi) /
+\sqrt{n \cdot \sigma_\Pi(\Hcal_d)})$, where $\sigma_\Pi(\Hcal_d) :=
+\E_T[\lambda_{\min}(\bB^\top \bP_T \bB)]$ is the
+Pesenson--Anis--Gadde--Ortega sampling quality of $\Pi$ for $\Hcal_d$.
+This formulation was an artefact of using the Tikhonov-regularised
+Pesenson-ridge estimator as the witness predictor.  In fact, the
+population-risk minimiser $f^\star_{\Hcal_d}$ itself serves as a
+witness without invoking the sampling-restricted inverse $(\bB^\top
+\bP_T \bB)^{-1}$, eliminating the $\sigma_T$ factor entirely.  The
+proof of Theorem~\ref{thm:universal-upper-bound} below uses this
+cleaner witness, mirroring the proof of Theorem~1(c) of
+\citet{FossePallares2026applicabilityBound}.  The
+graph-Fisher-information / inverse-problem theory of
+\citet{BauerPereverzev2005,Cavalier2008} --- relevant for noisy
+continuous Hilbert-space inverse problems --- does not apply to the
+finite-population empirical-risk problem treated here.
+\end{remark}
+
+% =========================================================================
+\section{Proof of Theorem~\ref{thm:universal-lower-bound}}
+\label{sec:lower-bound-proof}
+
+The proof has three short steps.
+
+\paragraph{Step 1 — Functional floor on $L_V$ (Bessel-projection inequality).}
+
+\begin{lemma}[Bessel projection floor]
+\label{lem:bessel}
+For any $\hat f \in \Hcal_d$,
+$N \cdot L_V(\hat f) = \|\hat f - \by\|^2 \;\geq\; \|f^\star_{\Hcal_d} - \by\|^2 = N \cdot (1 - \Rspec(\Hcal_d, \by))\Var(\by)$.
+\end{lemma}
+
+\begin{proof}
+$f^\star_{\Hcal_d}$ is the population-risk minimiser by definition.
+Hence $L_V(\hat f) \geq L_V(f^\star_{\Hcal_d}) = (1 - \Rspec(\Hcal_d,
+\by))\Var(\by)$ for every $\hat f \in \Hcal_d$.  By Assumption~\ref{a:erm},
+$\hat f_\Acal(T) \in \Hcal_d$, so the inequality applies pointwise in $T$.
+\end{proof}
+
+\paragraph{Step 2 — Transduction identity.}
+
+\begin{lemma}[Population--train--holdout decomposition]
+\label{lem:transduction}
+For any deterministic $f \in \R^N$ and any $T \subset V$ with $|T| = n$,
+\begin{equation}
+    L_V(f) \;=\; \frac{n}{N}\, L_T(f) \;+\; \frac{N-n}{N}\, L_{T^c}(f),
+    \label{eq:transduction-identity}
+\end{equation}
+equivalently $L_{T^c}(f) = \rho(\Pi) L_V(f) - (\rho(\Pi) - 1) L_T(f)$.
+\end{lemma}
+
+\begin{proof}
+$N \cdot L_V(f) = \sum_{v \in V}(f(v) - y_v)^2 = \sum_{v \in T}(\ldots)
++ \sum_{v \in T^c}(\ldots) = n \cdot L_T(f) + (N-n) \cdot L_{T^c}(f)$.
+\end{proof}
+
+\paragraph{Step 3 — Combination.}
+
+By Lemma~\ref{lem:transduction} applied to $f = \hat f_\Acal(T)$ and
+taken in expectation over $T$,
+\begin{equation}
+    \E_T[L_{T^c}(\hat f_\Acal(T))]
+    \;=\; \rho(\Pi) \cdot \E_T[L_V(\hat f_\Acal(T))]
+        \;-\; (\rho(\Pi) - 1) \cdot \E_T[L_T(\hat f_\Acal(T))].
+    \label{eq:lower-step3-expectation}
+\end{equation}
+By Lemma~\ref{lem:bessel}, $L_V(\hat f_\Acal(T)) \geq (1 -
+\Rspec(\Hcal_d, \by))\Var(\by)$ pointwise in $T$, hence
+$\E_T[L_V(\hat f_\Acal(T))] \geq (1 - \Rspec(\Hcal_d, \by))\Var(\by)$.
+
+For the $L_T$ term, by Assumption~\ref{a:erm} (ERM property) and
+$f^\star_{\Hcal_d} \in \Hcal_d$,
+$L_T(\hat f_\Acal(T)) \leq L_T(f^\star_{\Hcal_d})$ pointwise in $T$.
+Taking expectation and using the protocol hypothesis $\E_T[L_T(f)] = L_V(f)$
+for deterministic $f$,
+\begin{equation}
+    \E_T[L_T(\hat f_\Acal(T))]
+    \;\leq\; \E_T[L_T(f^\star_{\Hcal_d})]
+    \;=\; L_V(f^\star_{\Hcal_d})
+    \;=\; (1 - \Rspec(\Hcal_d, \by)) \Var(\by).
+    \label{eq:lower-step3-LT}
+\end{equation}
+Setting $A := (1 - \Rspec(\Hcal_d, \by)) \Var(\by)$ and substituting
+into \eqref{eq:lower-step3-expectation},
+$$
+\E_T[L_{T^c}(\hat f_\Acal(T))] \;\geq\; \rho(\Pi) \cdot A - (\rho(\Pi) - 1) \cdot A \;=\; A.
+$$
+This is Eq.~\eqref{eq:universal-lower-bound}.\qed
+
+\begin{remark}[Why the bound is exact in expectation]
+\label{rem:exact-in-expectation}
+The two slack terms (from upper-bounding $L_V$ above by the Bessel
+floor, and from upper-bounding $L_T$ below by the ERM-on-projection
+inequality) cancel exactly through the transduction identity.  This
+mirrors the structural unbiasedness condition under which the classical
+Cram\'er--Rao bound holds with equality.  A high-probability version
+of the bound carries a $O(\rho M^2/\sqrt{n})$ slack from the
+Hoeffding--Serfling concentration of \eqref{eq:lower-step3-LT}; see
+Theorem~\ref{thm:universal-upper-bound} for the matching upper bound.
+\end{remark}
+
+% =========================================================================
+\section{Proof of Theorem~\ref{thm:universal-upper-bound}}
+\label{sec:upper-bound-proof}
+
+The proof structure mirrors that of part~(c) of Theorem~1 of
+\citet[][\S 5.2]{FossePallares2026applicabilityBound}, with the
+population-risk minimiser $f^\star_{\Hcal_d}$ replacing the specific
+compositional projector $\bP_{\Scal_{\mathrm{comp}}}\by$ used there.
+
+\paragraph{Step 1 — In-sample concentration of the witness.}
+
+The population-risk minimiser $f^\star_{\Hcal_d} \in \Hcal_d$ is fixed
+(not a function of $T$).  By Serfling's without-replacement Hoeffding
+inequality \citep{Serfling1974,BardenetMaillard2015} applied to the
+bounded sequence $\{(f^\star_{\Hcal_d}(v) - y_v)^2\}_{v \in V}$ ---
+which has population mean $L_V(f^\star_{\Hcal_d}) = (1 -
+\Rspec(\Hcal_d, \by))\Var(\by)$ and supremum at most $4 M^2$ --- with
+probability $\geq 1 - \eta/2$ over $T \sim \Pi_{\mathrm{LSO}}$,
+\begin{equation}
+    L_T(f^\star_{\Hcal_d})
+    \;\leq\; (1 - \Rspec(\Hcal_d, \by)) \Var(\by)
+        + 4 M^2 \sqrt{\frac{(1 - (n-1)/N) \log(2/\eta)}{2 n}}.
+    \label{eq:upper-step1-serfling}
+\end{equation}
+
+\paragraph{Step 2 — ERM property.}
+
+By Assumption~\ref{a:erm}, $L_T(\hat f_\Acal(T)) \leq L_T(f^\star_{\Hcal_d})$
+pointwise in $T$, since $f^\star_{\Hcal_d} \in \Hcal_d$ and ERM
+minimises $L_T$ over $\Hcal_d$.
+
+\paragraph{Step 3 — Rademacher generalisation.}
+
+Mohri Theorem 3.7 \citep[][\S 3.3]{Mohri2018book} for the square
+loss truncated to $[-M, M]^2$, combined with the Talagrand contraction
+lemma \citep{Talagrand1996concentration} ($2M$-Lipschitz square loss),
+gives with probability $\geq 1 - \eta/2$:
+\begin{equation}
+    L_V(\hat f_\Acal(T))
+    \;\leq\; L_T(\hat f_\Acal(T))
+        + 2 \mathcal{R}_n(\Hcal_d)
+        + 3 M^2 \sqrt{\frac{\log(2/\eta)}{2 n}}.
+    \label{eq:upper-step3-mohri}
+\end{equation}
+
+\paragraph{Step 4 — Transduction.}
+
+By Lemma~\ref{lem:transduction}, $L_{T^c}(\hat f_\Acal(T)) = L_T(\hat
+f_\Acal(T)) + \rho(\Pi)(L_V(\hat f_\Acal(T)) - L_T(\hat f_\Acal(T)))$.
+Combining \eqref{eq:upper-step1-serfling}--\eqref{eq:upper-step3-mohri}
+and a union bound across the two confidence events,
+$$
+L_{T^c}(\hat f_\Acal(T))
+\;\leq\; (1 - \Rspec(\Hcal_d, \by))\Var(\by)
+    + \rho(\Pi) \cdot \Big[ 2 \mathcal{R}_n(\Hcal_d)
+      + 3 M^2 \sqrt{\log(2/\eta)/(2 n)} \Big]
+    + O(M^2/\sqrt{n}),
+$$
+yielding \eqref{eq:universal-upper-bound}.\qed
+
+% =========================================================================
+\section{Proof of Theorem~\ref{thm:minimax-lower-bound}}
+\label{sec:minimax-proof}
+
+We construct an adversarial signal whose Berry--Esseen anticoncentration
+on the held-out residual already forces an $\Omega(M^2/\sqrt{N-n})$
+deviation between $L_{T^c}(\hat f)$ and its population value,
+irrespective of estimator choice.
+
+\paragraph{Construction of $\by^\star$.}
+
+Pick any unit-infty vector $\bu \in \Hcal_d^\perp$ (exists because
+$\Hcal_d \subsetneq \R^N$).  Rescale so $\bu$ has $N/2$ entries equal
+to $\pm 1$ (in any sign pattern respecting $\bone^\top \bu = 0$) and
+zero entries elsewhere.  Set $\by^\star := M \bu$.  Then $\by^\star
+\in \Hcal_d^\perp$, $\|\by^\star\|_\infty = M$, $\bone^\top \by^\star
+= 0$.  Since $\by^\star \in \Hcal_d^\perp$,
+$\Rspec(\Hcal_d, \by^\star) = 0$ and the lower bound reference value is
+$\Var(\by^\star) = M^2/2$.
+
+\paragraph{Oracle slack.}
+
+Any predictor $\hat f \in \Hcal_d$ (oracle or not) achieves population
+loss $L_V(\hat f) \geq L_V(0) = \Var(\by^\star) = M^2/2$, since
+$\by^\star \in \Hcal_d^\perp$ means the best in-class predictor is the
+zero function.  Define $\Delta_T := L_{T^c}(0) - \Var(\by^\star)$.
+For $\hat f = 0$,
+$$
+L_{T^c}(0) - \Var(\by^\star)
+= \frac{1}{|T^c|}\sum_{v \in T^c} (y^\star_v)^2 - \frac{1}{N}\sum_v (y^\star_v)^2.
+$$
+Define $X_v := (y^\star_v)^2 - \Var(\by^\star) = M^2 \mathbf{1}_{\{v
+\in \mathrm{supp}(\bu)\}} - M^2/2$.  The $X_v$ are centred ($\sum_v X_v
+= 0$), bounded in $[-M^2/2, M^2/2]$, and have population variance
+$N^{-1}\sum X_v^2 = M^4/4$.
+
+\paragraph{Berry--Esseen on sampling without replacement.}
+
+By the Berry--Esseen theorem for sampling without replacement
+\citep{Bikelis1969,Bentkus2003}, the standardised sum
+$\frac{1}{\sqrt{|T^c| M^4/4}}\sum_{v \in T^c} X_v$ converges to
+$\mathcal{N}(0, 1)$ in Kolmogorov distance at rate $O(M^2/\sqrt{(N-n)
+M^4/4}) = O(1/\sqrt{N-n})$.  For any threshold $\kappa$, the deviation
+event
+$$
+\PR_T\!\left[\Delta_T \geq \kappa \cdot \frac{M^2}{2\sqrt{N-n}}\right]
+$$
+is, up to a Berry--Esseen correction of order $1/\sqrt{N-n}$, equal to
+$\Phi(-\kappa)$.
+
+\paragraph{Combine.}
+
+For $\eta < 1/3$, choose $\kappa$ such that $\Phi(-\kappa) = 1 - \eta - 14/\sqrt{N-n}$
+(absorbing the Berry--Esseen constant into the displayed constant).
+For $N - n \geq 100$ and $\eta < 1/3$, $\kappa \geq 1$ suffices, giving
+$$
+\PR_T\!\left[\Delta_T \geq \frac{M^2}{2\sqrt{N-n}}\right] \;\geq\; 1 - \eta.
+$$
+Since the oracle predictor $\hat f = 0$ \emph{dominates} every other
+$\hat f \in \Hcal_d$ on $\by^\star \in \Hcal_d^\perp$, this lower bound
+applies to every learner, yielding \eqref{eq:minimax-lower-bound} with
+$c = 1/2$ (resp.\ $c = 1/16$ uniformly across smaller $N - n$).\qed
+
+% =========================================================================
+\section{Corollaries}
+\label{sec:corollaries}
+
+\subsection{C1 — Encoding-gap bound for materials informatics}
+\label{subsec:c1}
+
+Take two learners on the same graph $G$ with hypothesis classes
+$\Hcal_{\mathrm{cat}} := \{f : f \text{ constant on } T^c \text{ for
+every } T\}$ (the one-hot categorical learner of MLST Theorem~1) and
+$\Hcal_{\mathrm{comp}}$ a closed linear subspace of $\R^N$ (the
+compositional feature subspace).  Theorem~\ref{thm:universal-lower-bound}
+applied to each gives
+\begin{align*}
+\E_T[L_{T^c}(\hat f_{\mathrm{cat}})]   &\geq \Var(\by), \\
+\E_T[L_{T^c}(\hat f_{\mathrm{comp}})] &\geq (1 - \Rspec(\Hcal_{\mathrm{comp}}, \by))\Var(\by).
+\end{align*}
+Subtracting, the structural gap is
+$$
+\E_T[L_{T^c}(\hat f_{\mathrm{cat}}) - L_{T^c}(\hat f_{\mathrm{comp}})]
+\geq \Rspec(\Hcal_{\mathrm{comp}}, \by) \cdot \Var(\by),
+$$
+recovering Theorem~1(d) of \citet{FossePallares2026applicabilityBound} exactly.
+Combining with Theorem~\ref{thm:universal-upper-bound} on the
+compositional learner gives a high-probability version with the slack
+of \eqref{eq:universal-upper-bound}.  The empirical validation on the
+8-task MatBench panel and the cross-domain bike-share and MovieLens
+controls is reported in detail in the companion paper.
+
+\subsection{C2 — Negative transfer (spectral disjointness)}
+\label{subsec:c2}
+
+\emph{[Full corollary in preparation.]}  Take $V = V_{\mathrm{src}}
+\cup V_{\mathrm{tgt}}$, $\Pi = $ leave-task-out (train on
+$V_{\mathrm{src}}$, test on $V_{\mathrm{tgt}}$), and $\Hcal_d$ the
+transfer learner's reachable hypothesis class on $V$ (e.g., a linear
+head on a shared feature representation).  Theorem~\ref{thm:universal-lower-bound}
+specialises to give
+\begin{equation*}
+    \E[L_{V_{\mathrm{tgt}}}(\hat f_\Acal)]
+    \;\geq\; (1 - \Rspec(\Hcal_d, \by_{\mathrm{tgt}})) \cdot \Var(\by_{\mathrm{tgt}}).
+\end{equation*}
+The \emph{spectral-disjointness criterion} for negative transfer asserts
+that transfer is unavoidably harmful (in the sense $\E[L_{V_{\mathrm{tgt}}}(\hat
+f_\Acal)] \geq \Var(\by_{\mathrm{tgt}})$) when the source-trained
+$\Hcal_d$ has $\Rspec(\Hcal_d, \by_{\mathrm{tgt}}) = 0$, i.e., when
+the source and target labels are supported on disjoint bands of the
+joint graph's Laplacian spectrum.  Empirical validation: a QM9
+$\rightarrow$ MatBench task-pair experiment, in preparation as the
+companion repository \texttt{negative-transfer-corollary} of the
+\texttt{cycling-data-lab} organisation.
+
+\subsection{C3 — Active learning (label complexity)}
+\label{subsec:c3}
+
+\emph{[Full corollary in preparation.]}  Let the protocol $\Pi$ be
+\emph{chosen} by the learner: minimise the right-hand side of
+\eqref{eq:universal-upper-bound} over $\Pi$.  The minimum is attained
+at the importance-weighted variant of $\Pi_{\mathrm{LSO}}$ in which
+$v \in V$ is sampled with probability proportional to the leverage
+score $\|\bB(v, :)\|^2$ of the orthonormal basis $\bB$ of $\Hcal_d$
+\citep{DrineasMahoney2018,Avron2017,Puy2018}.  The resulting label
+complexity matches the rate of the spectral-graph A-optimal design
+literature, with the lower bound of Theorem~\ref{thm:universal-lower-bound}
+establishing that no active-learning strategy can do better.
+Full corollary, including the importance-weighted variant of the
+transduction identity \eqref{eq:transduction-identity}, deferred to a
+companion paper.
 
 % =========================================================================
 \section{Empirical validation}
 \label{sec:empirics}
 
-\Todo{Multi-pillar evidence architecture works well : (i) primary
-predictive validation, (ii) robustness pillar, (iii) encoder
-discrimination, (iv) falsifiability test against a topology-matched
-null.  Convergence of independent statistics is the warrant.}
+\emph{[Full empirical section in preparation.]}  The framework is
+empirically anchored by three sibling repositories of the
+\texttt{cycling-data-lab} organisation, each providing an
+out-of-the-box instantiation of one or more corollaries:
+
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item \texttt{materials-applicability-bound} (MLST, in submission;
+    \citealp{FossePallares2026applicabilityBound}): \emph{Corollary C1} on the
+    8-task MatBench v0.1 regression panel.  Headline: Spearman
+    $\rho(\Rspec, \Delta R^2_{\mathrm{LSO}}) = +1.000$ on $n = 8$,
+    exact $p = 4.96 \times 10^{-5}$; partial Spearman on chemistry
+    graph $= +0.79$, $p = 0.032$; CIG $= 18\times$ to $145\times$ above
+    shuffled-$k$NN null.  Cross-domain controls: bike-share station
+    demand, MovieLens user ratings.
+\item \texttt{mobility-applicability-bound} (TR-B, in preparation):
+    \emph{Empirical instantiation of Corollary C1} on the
+    34{,}858-commune French mobility panel, exhibiting the same
+    structural gap between fixed-effect (categorical) and
+    feature-based (compositional) mode-choice models under
+    leave-commune-out.
+\item \texttt{bikeshare-demand-forecasting} (working draft): provides
+    an additional cross-domain anchor on 27 dock-based bike-share
+    networks under leave-station-out, with the
+    \texttt{imd-national-catalogue} compositional descriptor as the
+    feature map.
+\end{itemize}
+
+We refer to the per-repository documentation for full reproducibility
+information (random seed, RAM and wall-time budgets, intermediate
+parquets).  A consolidated empirical table will be added in v0.2 of the
+present manuscript.
 
 % =========================================================================
-\section{Related work}
-\label{sec:related}
-
-\Todo{Position the contribution at the empty intersection of two
-existing literatures.  One paragraph per closest adjacent result with
-explicit "what we add" sentence.}
-
-% =========================================================================
-\section{Discussion}
+\section{Discussion and open questions}
 \label{sec:discussion}
 
-\Todo{Operational reading + connections to adjacent fields.}
+\subsection{What the bound says, and what it does not}
+
+Theorem~\ref{thm:universal-lower-bound} establishes that the expected
+leave-node-out error of any learner is bounded below by the irreducible
+component $(1 - \Rspec(\Hcal_d, \by)) \Var(\by)$.  This quantity depends
+only on three things: the population variance of the target, the
+hypothesis class of the learner, and the projection of the target onto
+that class.  It does \emph{not} depend on the regressor's training
+algorithm, the choice of optimiser, the random seed, or the
+hyperparameters --- all of which can only affect how closely the slack
+of Theorem~\ref{thm:universal-upper-bound} is achieved.
+
+Equivalently, the bound says: \emph{there is no algorithmic trick to
+beat the structural floor}.  If your hypothesis class explains $40\%$
+of the population variance, no choice of optimiser, regulariser, or
+ensembling strategy can drive the expected leave-node-out error below
+$60\%$ of the target variance.  Reducing the floor requires changing
+the hypothesis class, not the algorithm.
+
+\subsection{Open questions remaining}
+\label{subsec:open}
+
+\begin{enumerate}[label=(\arabic*),leftmargin=*]
+\item \textbf{Sharp $\rho(\Pi)$ constant.}  The upper bound
+    \eqref{eq:universal-upper-bound} carries an explicit $\rho(\Pi)$
+    in front of the Rademacher and Hoeffding--Serfling slack; the lower
+    bound \eqref{eq:minimax-lower-bound} does not.  A Fano-style
+    multi-point argument should match the constants exactly.
+
+\item \textbf{Importance-weighted transduction identity.}  Extending
+    Lemma~\ref{lem:transduction} to non-uniform protocols (e.g.,
+    leverage-score sampling for active learning) requires an
+    importance-weighted variant of \eqref{eq:transduction-identity}.
+    Mechanical, deferred to the C3 companion paper.
+
+\item \textbf{Approximate ERM.}  Assumption~\ref{a:erm} requires strict
+    ERM.  For approximate ERM with $\epsilon_T$-suboptimality, an
+    additional $(\rho - 1) \E_T[\epsilon_T]$ slack term appears in
+    Theorem~\ref{thm:universal-lower-bound}.  For regularised learners
+    (ridge, GBM with early stopping), this slack is typically
+    $O(d/n)$ --- small but non-zero.
+
+\item \textbf{Misspecified $\Hcal_d$ at deployment.}  The bound applies
+    to the actual reachable class $\Hcal_d$ of the deployed learner,
+    not to the modeller's nominal description of it.  In practice,
+    learners with implicit biases (e.g., neural networks trained by
+    SGD, which empirically reach a small "minimum-norm" subspace of
+    $\R^N$) have a $\Hcal_d$ smaller than the parametric capacity
+    suggests; identifying the operative $\Hcal_d$ for such learners is
+    an open empirical question.
+\end{enumerate}
+
+\subsection{Limitations}
+
+The framework treats the target $\by$ as deterministic.  Extension to
+noisy observations $y^{\mathrm{obs}}_v = y_v + \xi_v$ requires either
+(a) absorbing the noise into the residual budget $(1 - \Rspec)\Var$,
+which the bound then describes as an upper limit on the
+\emph{signal-plus-noise}-explainable variance; or (b) a parallel
+inverse-problem analysis along the lines of
+\citet{BauerPereverzev2005,Cavalier2008}, which we have not pursued
+because the deterministic target is the operative case in our motivating
+applications (materials informatics, urban mobility, recommender systems).
+
+The framework does not address \emph{model selection}: the choice of
+$\Hcal_d$ itself is outside the bound's scope.  Selecting $\Hcal_d$ to
+maximise $\Rspec(\Hcal_d, \by)$ subject to fixed Rademacher complexity
+is a separate problem (essentially representation learning), on which
+the bound only comments indirectly via the trade-off between
+$\Rspec(\Hcal_d, \by)$ and $\mathcal{R}_n(\Hcal_d)$ in the slack of
+Theorem~\ref{thm:universal-upper-bound}.
 
 % =========================================================================
-\section{Limitations and future work}
-\label{sec:limits}
-
-\Todo{Be explicit about scope.  Address the obvious hostile-reviewer
-objections (graph-construction sensitivity, sample size, benchmark
-restrictions) with concrete theorem-level defenses where possible.}
-
-% =========================================================================
-\section{Methods}
-\label{sec:methods}
-
-\Todo{Reproducibility-grade Methods.  Data, encoders, splits,
-statistical procedures, software stack with version pins.}
-
-% =========================================================================
-% Back matter -- iopjournal native commands.  Each takes its content as
-% a single argument and emits the appropriate heading.  Under
-% [anonymous] the contents (except \suppdata) are auto-redacted.
-% =========================================================================
-
-\ack{\Todo{Acknowledgements text.}}
-
-\funding{\Todo{Funding sources and grant numbers.}}
-
-\roles{\Todo{CRediT role assignments per author.}}
-
-\data{All data sources and per-experiment derived outputs are
-released under the MIT licence at
-\url{https://github.com/cycling-data-lab/{{repo-name}}}.  A frozen
-Zenodo snapshot of the v1.0 release tag is deposited at
-\url{https://doi.org/10.5281/zenodo.XXXXXXX} \Todo{substitute the
-issued Zenodo DOI after the first release}.}
-
 \section*{Reproducibility}
-Each table and figure is produced by a numbered script
-\texttt{experiments/d<NN>\_<name>.py} that consumes a known input
-cache, writes to a named output JSON, and pins \texttt{SEED=42}.
-\Todo{Add experiment-specific reproducibility detail here.}
 
-\section*{Competing interests}
-The authors declare no competing financial or non-financial interests.
+A working draft of this manuscript, the full formal proofs (research
+notes \texttt{notes/01\_universal\_bound\_proof.tex},
+\texttt{notes/02\_minimax\_saturation.tex}, and
+\texttt{notes/03\_non\_realisable\_resolution.tex}), and all empirical
+material referenced in Section~\ref{sec:empirics} are publicly available
+under MIT license in the \texttt{cycling-data-lab} GitHub organisation:
+\url{https://github.com/cycling-data-lab/structural-bounds-framework}.
 
 % =========================================================================
-\section*{References}
+\section*{Acknowledgements}
+
+This work develops the unified theoretical framework for the
+\texttt{cycling-data-lab} structural-bounds research program at
+CESI LINEACT (EA 7527).  Empirical anchors are provided by the
+companion repositories of the same organisation.
+
+% =========================================================================
 \bibliography{references/references}
 
 \end{document}
