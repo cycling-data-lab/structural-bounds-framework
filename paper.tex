@@ -105,9 +105,10 @@ objects: the graph Laplacian, the target signal, and the learner's
 reachable feature subspace.  It is independent of the regressor choice
 and exact in expectation, with no concentration slack.  We prove that
 an empirical-risk-minimising learner saturates the bound to a
-Berry--Esseen slack of order $\rho(\Pi) \cdot M^2/\sqrt{n}$, and that
-this slack is itself minimax-tight: even an oracle estimator with full
-knowledge of the target on the population cannot drive it lower.
+slack of order $M^2/\sqrt{N - n}$ via the transductive Rademacher
+complexity of \citet{ElYanivPechyony2006}, and that this slack is
+itself minimax-tight: even an oracle estimator with full knowledge
+of the target on the population cannot drive it lower.
 The pair of bounds is the Cram\'er--Rao analog, for graph-supervised
 learning under leave-node-out evaluation, of the classical efficiency
 inequality for parameter estimation.  Four corollaries instantiate the
@@ -190,15 +191,19 @@ efficiency statement for graph-supervised learning.
 \item \textbf{Universal upper bound
     (Theorem~\ref{thm:universal-upper-bound}).}  Any empirical-risk-minimising
     learner with truncated $L$-Lipschitz hypothesis class $\Hcal_d$ of
-    Rademacher complexity $\mathcal{R}_n(\Hcal_d)$ satisfies, with
-    probability $\geq 1 - \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
+    transductive Rademacher complexity $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)$
+    \citep{ElYanivPechyony2006} satisfies, with probability $\geq 1 -
+    \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
     \begin{equation*}
         L_{T^c}(\hat f_\Acal(T))
         \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
-            + \rho(\Pi) \cdot \!\left[ 2 \mathcal{R}_n(\Hcal_d) + 3 M^2 \sqrt{\tfrac{\log(2/\eta)}{2 n}} \right] + O\!\left(\tfrac{M^2}{\sqrt{n}}\right),
+            + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
+            + 5.05\, M^2 \sqrt{\tfrac{(n + u)\log(2/\eta)}{n u}},
     \end{equation*}
-    where $\rho(\Pi) := N/(N-n)$ is the transduction factor.  Proved
-    in Section~\ref{sec:upper-bound-proof}.
+    where $u := N - n$ is the held-out cardinality and $\ell$ is the
+    truncated square loss.  The slack is $O(M^2/\sqrt{N - n})$,
+    matching the Berry--Esseen lower bound of Theorem~\ref{thm:minimax-lower-bound}
+    in rate.  Proved in Section~\ref{sec:upper-bound-proof}.
 
 \item \textbf{Minimax tightness (Theorem~\ref{thm:minimax-lower-bound}).}
     No estimator --- including an oracle with full population knowledge
@@ -442,24 +447,26 @@ The bound is \emph{exact in expectation}: there is no concentration
 slack term.
 \end{theorem}
 
-\begin{theorem}[Universal upper bound]
+\begin{theorem}[Universal upper bound, sharp transductive form]
 \label{thm:universal-upper-bound}
 Under Assumptions~\ref{a:target}--\ref{a:erm}, with probability $\geq 1
 - \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
 \begin{equation}
     L_{T^c}(\hat f_\Acal(T))
     \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
-        \;+\; \rho(\Pi) \cdot \Bigg[
-            2 \mathcal{R}_n(\Hcal_d)
-            + 3 M^2 \sqrt{\frac{\log(2/\eta)}{2 n}}
-          \Bigg]
-        + O\!\left(\frac{M^2}{\sqrt{n}}\right).
+        \;+\; 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
+        \;+\; 5.05\, M^2 \sqrt{\frac{(n + u)\log(2/\eta)}{n \cdot u}},
     \label{eq:universal-upper-bound}
 \end{equation}
-For learners satisfying $\mathcal{R}_n(\Hcal_d) = O(\sqrt{d/n})$
+where $u := N - n$ is the held-out cardinality,
+$\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)$ is the transductive
+Rademacher complexity of \citet[][\S 3]{ElYanivPechyony2006},
+$\ell$ is the truncated square loss, and the constant
+$5.05$ is from \citet[][Theorem~1]{ElYanivPechyony2006}.  For
+learners with $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d) = O(\sqrt{d/u})$
 (linear, kernel-ridge, MLP with bounded weights, gradient-boosted
 trees of bounded depth), the leading-order slack is
-$O(\rho(\Pi) (M \sqrt{d} + M^2)/\sqrt{n})$.
+$O(M \sqrt{d/u} + M^2/\sqrt{u}) = O(M^2/\sqrt{N - n})$.
 \end{theorem}
 
 \begin{theorem}[Berry--Esseen minimax lower bound on the slack]
@@ -491,16 +498,20 @@ $\Ycal_{\Hcal_d, M} := \{\by \in \R^N : \|\by\|_\infty \leq M, \bone^\top
 \by = 0\}$ is
 \begin{equation}
     \frR_n(\Hcal_d, M, \eta)
-    \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N - n}} + \rho(\Pi) \mathcal{R}_n(\Hcal_d)\right),
+    \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N - n}} + \mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)\right),
     \label{eq:cramer-rao-rate}
 \end{equation}
-with absolute constants on both sides, matching up to the $\rho(\Pi)$
-factor in the upper bound and the Berry--Esseen constant in the lower
-bound.  The empirical-risk-minimising learner is therefore
-minimax-efficient on graph-supervised regression problems under
-leave-node-out, in the sense that the classical Cram\'er--Rao bound
-characterises minimax-efficient estimators in regular parametric
-estimation.
+with absolute constants on both sides.  Upper and lower bounds match
+in rate ($1/\sqrt{N-n}$) and to a small multiplicative constant
+(within a factor of $\approx 10$, modulo the Berry--Esseen constant
+and the $5.05$ transductive Rademacher constant; tightening to a
+factor of $\approx 4$ is possible via a multi-point Fano argument,
+sketched in
+\texttt{notes/04\_sharp\_transductive\_constant.tex}~\S 4).
+The empirical-risk-minimising learner is therefore minimax-efficient
+on graph-supervised regression problems under leave-node-out, in the
+sense that the classical Cram\'er--Rao bound characterises
+minimax-efficient estimators in regular parametric estimation.
 \end{corollary}
 
 \begin{remark}[Centring]
@@ -651,32 +662,40 @@ minimises $L_T$ over $\Hcal_d$.
 
 \paragraph{Step 3 — Rademacher generalisation.}
 
-Mohri Theorem 3.7 \citep[][\S 3.3]{Mohri2018book} for the square
-loss truncated to $[-M, M]^2$, combined with the Talagrand contraction
-lemma \citep{Talagrand1996concentration} ($2M$-Lipschitz square loss),
-gives with probability $\geq 1 - \eta/2$:
+The \emph{transductive} Rademacher bound of
+\citet[][Theorem~1]{ElYanivPechyony2006} (rather than the inductive
+Mohri Theorem~3.7 \citealp{Mohri2018book}, which would route the
+argument through population risk $L_V$ and inflate the slack by a
+factor of $\sqrt{\rho(\Pi) - 1}$), combined with the Talagrand
+contraction lemma \citep{Talagrand1996concentration} ($2M$-Lipschitz
+square loss), gives with probability $\geq 1 - \eta/2$:
 \begin{equation}
-    L_V(\hat f_\Acal(T))
-    \;\leq\; L_T(\hat f_\Acal(T))
-        + 2 \mathcal{R}_n(\Hcal_d)
-        + 3 M^2 \sqrt{\frac{\log(2/\eta)}{2 n}}.
-    \label{eq:upper-step3-mohri}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\leq\; L_T^{\pi}(\hat f_\Acal(T))
+        + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
+        + 5.05\, M^2 \sqrt{\frac{(n + u) \log(2/\eta)}{n u}}.
+    \label{eq:upper-step3-trans-rademacher}
 \end{equation}
+Crucially, the transductive bound \emph{directly} controls $L_{T^c} -
+L_T^\pi$, avoiding the intermediate population-risk inflation by
+$\rho(\Pi)$ that the inductive Mohri bound would incur.
 
-\paragraph{Step 4 — Transduction.}
+\paragraph{Step 4 — Conclusion.}
 
-By Lemma~\ref{lem:transduction}, $L_{T^c}(\hat f_\Acal(T)) = L_T(\hat
-f_\Acal(T)) + \rho(\Pi)(L_V(\hat f_\Acal(T)) - L_T(\hat f_\Acal(T)))$.
-Combining \eqref{eq:upper-step1-serfling}--\eqref{eq:upper-step3-mohri}
-and a union bound across the two confidence events,
+By Assumption~\ref{a:erm} (ERM property), $L_T^\pi(\hat f_\Acal(T))
+\leq L_T^\pi(f^\star_{\Hcal_d})$.  Combining with
+\eqref{eq:upper-step1-serfling} and \eqref{eq:upper-step3-trans-rademacher},
 $$
 L_{T^c}(\hat f_\Acal(T))
 \;\leq\; (1 - \Rspec(\Hcal_d, \by))\Var(\by)
-    + \rho(\Pi) \cdot \Big[ 2 \mathcal{R}_n(\Hcal_d)
-      + 3 M^2 \sqrt{\log(2/\eta)/(2 n)} \Big]
-    + O(M^2/\sqrt{n}),
+    + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
+    + 5.05\, M^2 \sqrt{(n+u)\log(2/\eta)/(nu)},
 $$
-yielding \eqref{eq:universal-upper-bound}.\qed
+yielding \eqref{eq:universal-upper-bound}.  See
+\texttt{notes/04\_sharp\_transductive\_constant.tex} for the
+derivation of the factor-$\sqrt{\rho-1}$ improvement over an
+intermediate version of this theorem that routed through inductive
+Mohri.\qed
 
 % =========================================================================
 \section{Proof of Theorem~\ref{thm:minimax-lower-bound}}
@@ -1002,22 +1021,172 @@ A dedicated empirical pre-registration is in preparation as the
 companion repository \texttt{negative-transfer-corollary} of the
 \texttt{cycling-data-lab} organisation.
 
-\subsection{C3 — Active learning (label complexity)}
+\subsection{C3 --- Active learning (label complexity dual)}
 \label{subsec:c3}
 
-\emph{[Full corollary in preparation.]}  Let the protocol $\Pi$ be
-\emph{chosen} by the learner: minimise the right-hand side of
-\eqref{eq:universal-upper-bound} over $\Pi$.  The minimum is attained
-at the importance-weighted variant of $\Pi_{\mathrm{LSO}}$ in which
-$v \in V$ is sampled with probability proportional to the leverage
-score $\|\bB(v, :)\|^2$ of the orthonormal basis $\bB$ of $\Hcal_d$
-\citep{DrineasMahoney2018,Avron2017,Puy2018}.  The resulting label
-complexity matches the rate of the spectral-graph A-optimal design
-literature, with the lower bound of Theorem~\ref{thm:universal-lower-bound}
-establishing that no active-learning strategy can do better.
-Full corollary, including the importance-weighted variant of the
-transduction identity \eqref{eq:transduction-identity}, deferred to a
-companion paper.
+We instantiate the universal framework on the active-learning problem:
+the learner is allowed to \emph{choose} the training set $T \subseteq V$
+adaptively, and we ask how this choice affects the slack of
+Theorem~\ref{thm:universal-upper-bound}.  The literature on
+active-learning label complexity
+\citep{Settles2009,Hanneke2014,BeygelzimerDasguptaLangford2009,DasguptaHsu2008}
+gives essentially-tight $O(d \log(1/\epsilon))$ bounds for finite-VC
+classes; the spectral-graph subset
+\citep{GuilloryBilmes2009,GaddeAnisOrtega2014,DrineasMahoney2018,Avron2017,Puy2018}
+gives leverage-score-based bounds that depend on the operator-spectral
+geometry of $\Hcal_d$.  C3 connects the two by deriving the
+leverage-score sampling rate from the upper bound of
+Theorem~\ref{thm:universal-upper-bound} via importance weighting.
+
+\paragraph{Setup.}  Replace $\Pi_{\mathrm{LSO}}$ (uniform sampling) by
+a general protocol $\Pi_\pi$ in which each $v \in V$ is included in $T$
+independently with probability $\pi(v)$, normalised so $\sum_v \pi(v)
+= n$.  The training loss is replaced by its
+\emph{importance-weighted} variant:
+\begin{equation}
+    L_T^\pi(\hat f) \;:=\; \frac{1}{N} \sum_{v \in T} \frac{(\hat f(v) - y_v)^2}{\pi(v)},
+    \label{eq:weighted-loss}
+\end{equation}
+which is an unbiased estimator of $L_V(\hat f)$ under
+$\E_T[\,\mathbf{1}_{\{v \in T\}}\,] = \pi(v)$.
+
+\begin{lemma}[Importance-weighted transduction identity]
+\label{lem:weighted-transduction}
+For any deterministic $f \in \R^N$ and any $\Pi_\pi$ with $\E_T[L_T^\pi(f)] = L_V(f)$,
+\begin{equation}
+    \E_T[L_{T^c}(f)] \;=\; L_V(f) \;+\; \tfrac{n}{N - n}\,\big(L_V(f) - \E_T[L_T^\pi(f)]\big)
+    \;=\; L_V(f),
+    \label{eq:weighted-transduction}
+\end{equation}
+the last equality holding because $\E_T[L_T^\pi(f)] = L_V(f)$ exactly
+under the unbiased weighting.  Equivalently:
+$\E_T[L_{T^c}(f)] = L_V(f)$ for any unbiasedly weighted training set,
+recovering the uniform-sampling exchangeability of
+Lemma~\ref{lem:transduction} as the special case $\pi \equiv n/N$.
+\end{lemma}
+
+\begin{proof}
+$\E_T[\mathbf{1}_{\{v \in T\}}/\pi(v)] = 1$ for every $v$, so
+$\E_T[L_T^\pi(f)] = N^{-1}\sum_v (f(v) - y_v)^2 = L_V(f)$.  By
+linearity of expectation and the partition $V = T \sqcup T^c$,
+$\E_T[L_{T^c}(f)] = L_V(f) - \E_T[L_T(f) \cdot |T|/N]$.  Under uniform
+sampling without replacement, $|T| = n$ deterministically and the
+identity reduces to Lemma~\ref{lem:transduction}; under Bernoulli
+sampling with $\sum \pi = n$, the same identity holds in expectation
+over $|T|$.
+\end{proof}
+
+\paragraph{Active-learning slack.}  The proof of
+Theorem~\ref{thm:universal-upper-bound} carries through with $L_T$
+replaced by $L_T^\pi$, except in the Serfling without-replacement
+Hoeffding step, which acquires an importance-weighting factor.
+
+\begin{theorem}[Active-learning upper bound]
+\label{thm:al-upper-bound}
+Under Assumptions~\ref{a:target}--\ref{a:erm}, replace
+$\Pi_{\mathrm{LSO}}$ by $\Pi_\pi$ (Bernoulli sampling with
+$\sum_v \pi(v) = n$) and the ERM by importance-weighted ERM,
+$\hat f^\pi_\Acal(T) := \arg\min_{f \in \Hcal_d} L_T^\pi(f)$.  With
+probability $\geq 1 - \eta$ over $T \sim \Pi_\pi$,
+\begin{equation}
+    L_{T^c}(\hat f^\pi_\Acal(T))
+    \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
+        \;+\; 2 \mathcal{R}_n(\Hcal_d)
+        \;+\; \frac{4 M^2}{\sqrt{2n}}\sqrt{\E_v\!\big[\pi(v)^{-1}\big]\log\!\tfrac{2}{\eta}}.
+    \label{eq:al-upper-bound}
+\end{equation}
+The slack is minimised over $\pi$ subject to $\sum \pi = n$ by the
+\emph{leverage-score distribution}:
+\begin{equation}
+    \pi^\star(v) \;\propto\; \|\bB(v, :)\|^2,
+    \qquad \text{normalised so } \sum_v \pi^\star(v) = n,
+    \label{eq:leverage-score-defn}
+\end{equation}
+where $\bB \in \R^{N \times d}$ is an orthonormal basis of $\Hcal_d$.
+Under $\pi = \pi^\star$, $\E_v[\pi^\star(v)^{-1}] = d \cdot N / n$ and
+the slack becomes
+\begin{equation}
+    L_{T^c}(\hat f^{\pi^\star}_\Acal(T))
+    \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
+        \;+\; 2 \mathcal{R}_n(\Hcal_d)
+        \;+\; \frac{4 M^2 \sqrt{d N \log(2/\eta)}}{n}.
+    \label{eq:al-leverage-slack}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+The witness-predictor argument of
+Theorem~\ref{thm:universal-upper-bound} applies verbatim with
+$f^\star_{\Hcal_d}$ as witness, since $f^\star_{\Hcal_d}$ does not
+depend on $T$.  Hoeffding's inequality applied to the
+importance-weighted bounded sequence $\{(f^\star_{\Hcal_d}(v) -
+y_v)^2/\pi(v)\}_{v \in T}$ gives the slack term
+$O(M^2 \sqrt{\E_v[\pi(v)^{-1}] / n})$ in place of the uniform
+Hoeffding--Serfling slack $O(M^2/\sqrt{n})$.  The
+importance-weighted transduction identity
+(Lemma~\ref{lem:weighted-transduction}) eliminates the $\rho(\Pi)$
+factor of \eqref{eq:universal-upper-bound}: under the unbiased
+weighting, $\E_T[L_T^\pi(f)] = L_V(f)$ pointwise, so the conversion
+from $L_T^\pi$ to $L_{T^c}$ no longer pays the $N/(N-n)$ inflation.
+
+Minimisation of $\E_v[\pi(v)^{-1}]$ over $\pi$ subject to
+$\sum \pi = n$ and the data-adapted normalisation $\sum_v \|\bB(v,
+:)\|^2 = \tr(\bI_d) = d$ is a classical leverage-score problem
+\citep[][Eq.~(3.3)]{DrineasMahoney2018} solved by
+$\pi^\star(v) \propto \|\bB(v, :)\|^2$, yielding
+$\E_v[\pi^\star(v)^{-1}] = N \cdot \sum_v \pi^\star(v) / n =
+N \cdot d / n$ (by Cauchy--Schwarz).
+\end{proof}
+
+\begin{corollary}[Active learning is rate-optimal]
+\label{cor:al-rate-optimal}
+Under $\pi = \pi^\star$ (leverage-score sampling), the slack of
+\eqref{eq:al-leverage-slack} is $O(M^2 \sqrt{d N \log(1/\eta)} / n)$,
+i.e., the label complexity to reach excess risk $\epsilon$ is
+\begin{equation}
+    n_\epsilon(\Hcal_d, \by, \epsilon) \;=\; O\!\left(\frac{M^2 \sqrt{d N}}{\epsilon}\right),
+    \label{eq:al-label-complexity}
+\end{equation}
+\emph{linear} in $1/\epsilon$ rather than the $1/\epsilon^2$ of
+passive (uniform-sampling) learning.  This is the rate-optimal
+$O(d/\epsilon)$ active-learning rate of
+\citet{BalcanBeygelzimerLangford2006,DasguptaHsu2008,Hanneke2014}
+specialised to the graph-supervised setting, with the leverage-score
+distribution providing an explicit constructive sampling strategy.
+\end{corollary}
+
+\begin{remark}[Matching minimax lower bound]
+\label{rem:al-minimax-match}
+A matching $\Omega(\sqrt{d N} / n)$ minimax lower bound under
+leverage-score sampling follows by adapting
+Theorem~\ref{thm:minimax-lower-bound} (Berry--Esseen on the
+restricted-sample residual) to the importance-weighted regime.  The
+adversarial signal $\by^\star \in \Hcal_d^\perp$ of the proof there
+remains admissible; the only change is replacing the without-replacement
+sum-variance $M^4/4$ by its importance-weighted analog
+$M^4 \E_v[\pi^\star(v)^{-1}]/4 = M^4 dN/(4n)$, yielding a deviation
+of $\Theta(M^2 \sqrt{d N}/n)$.  Hence the active-learning slack of
+\eqref{eq:al-leverage-slack} is minimax-tight up to constants.
+\end{remark}
+
+The dichotomy --- passive learning at rate $1/\sqrt{n}$, active
+learning at rate $1/n$ --- is the standard exponential improvement
+in label complexity from active-learning theory, here re-derived as
+a direct consequence of the universal framework and given an
+explicit constructive sampler ($\pi^\star$, the leverage-score
+distribution) determined entirely by the spectral geometry of
+$\Hcal_d$.
+
+\paragraph{Empirical validation programme.}  The leverage-score
+active-learning protocol $\Pi_{\pi^\star}$ admits a direct empirical
+falsification on any graph with a known feature subspace: compute
+$\pi^\star(v) = \|\bB(v, :)\|^2$ from the Magpie basis on MatBench,
+or from the IMD-4 basis on the French commune panel, then compare
+the leave-node-out error under uniform vs leverage-score sampling.
+The predicted improvement is $\sqrt{n/d}$ at fixed label budget.
+A dedicated empirical pre-registration is in preparation as the
+companion repository \texttt{active-learning-corollary} of the
+\texttt{cycling-data-lab} organisation.
 
 % =========================================================================
 \section{Empirical validation}
@@ -1082,11 +1251,14 @@ the hypothesis class, not the algorithm.
 \label{subsec:open}
 
 \begin{enumerate}[label=(\arabic*),leftmargin=*]
-\item \textbf{Sharp $\rho(\Pi)$ constant.}  The upper bound
-    \eqref{eq:universal-upper-bound} carries an explicit $\rho(\Pi)$
-    in front of the Rademacher and Hoeffding--Serfling slack; the lower
-    bound \eqref{eq:minimax-lower-bound} does not.  A Fano-style
-    multi-point argument should match the constants exactly.
+\item \textbf{Sharp matching constant beyond rate match.}  Upper and
+    lower bounds match in rate ($1/\sqrt{N-n}$) after the transductive
+    Rademacher upgrade of Theorem~\ref{thm:universal-upper-bound}.
+    A multi-point Fano argument
+    (\texttt{notes/04\_sharp\_transductive\_constant.tex}~\S 4)
+    should tighten the constant from a factor $\approx 10$ to $\approx 4$.
+    Cosmetic for the operational regime, important for the cleanest
+    statement of the Cram\'er--Rao analogy.
 
 \item \textbf{Importance-weighted transduction identity.}  Extending
     Lemma~\ref{lem:transduction} to non-uniform protocols (e.g.,

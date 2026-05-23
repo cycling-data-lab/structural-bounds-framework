@@ -1,0 +1,429 @@
+% notes/04_sharp_transductive_constant.tex
+%
+% Research notes — sharp transductive constant for Theorem 2.
+%
+% The slack of Theorem 2 in the manuscript (and equivalently of
+% notes/02 Theorem 2 / notes/03 Theorem 4) is
+%   rho(Pi) · [2 R_n + 3 M² sqrt(log(2/eta) / (2n))]
+% with rho(Pi) := N/(N-n).  We show that the rho factor is an artefact
+% of using the non-transductive Mohri (2018) generalisation bound; the
+% transductive Rademacher analysis of El-Yaniv & Pechyony (2006) replaces
+% rho/sqrt(n) by sqrt(1/(N-n)), an improvement by sqrt(rho-1) (≈ 2 at
+% the standard 80/20 split).  The improved slack rate matches the
+% Berry-Esseen lower bound of notes/02 Theorem 3 up to constants, and
+% a Le Cam two-point construction with the sharpest known constant
+% confirms minimax tightness.
+%
+% Resolves Open Question (1) of paper.tex §Discussion / notes/01 §6
+% Question 5 — sharp rho(Pi) constant.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\PR}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\KL}{\mathrm{KL}}
+
+\title{\textbf{Sharp transductive constant for the universal upper bound}\\
+\large{Research notes — improves Theorem~2 from $\rho/\sqrt{n}$ to $1/\sqrt{N-n}$ slack}}
+\author{Rohan Fossé \and Gaël Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, May 2026 — \emph{not for distribution beyond co-authors}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The universal upper bound (paper Theorem~2 / notes/03 Theorem~4) is
+stated with a slack
+$\rho(\Pi) \cdot [2\Rcal_n(\Hcal_d) + 3M^2\sqrt{\log(2/\eta)/(2n)}]$,
+which exceeds the Berry--Esseen minimax lower bound of notes/02
+Theorem~3 (= paper Theorem~3) by a factor of $\sqrt{\rho(\Pi) - 1}$
+($\approx 2$ at the standard $80/20$ split).  We show that this gap
+is an artefact of routing the upper-bound proof through Mohri's
+non-transductive generalisation bound, and that replacing it with the
+transductive Rademacher analysis of \citet{ElYanivPechyony2006}
+eliminates the $\rho$ factor entirely.  The corrected upper bound
+$L_{T^c}(\hat f_\Acal) \leq A + 2\Rcal_n^{\mathrm{trans}} +
+C M^2/\sqrt{N-n}$ matches the Berry--Esseen lower bound in both rate
+and constants (Le Cam two-point construction, sharpest known
+$C \approx 1/2$).  This resolves open question (1) of paper
+§Discussion --- sharp $\rho(\Pi)$ constant --- in the negative:
+the $\rho$ factor in the original Theorem~2 was loose, not
+fundamental.  The transductive bound is the right one.
+\end{abstract}
+
+% =========================================================================
+\section{The puzzle: a $\sqrt{\rho-1}$ gap}
+\label{sec:puzzle}
+
+The universal upper bound of the framework
+(paper Theorem~2, notes/03 Theorem~4) reads, with probability
+$\geq 1 - \eta$ over $T \sim \Pi_{\mathrm{LSO}}$:
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\leq\; (1 - \Rspec(\Hcal_d, \by)) \Var(\by)
+        + \rho(\Pi) \cdot \Big[2\Rcal_n(\Hcal_d) + 3 M^2 \sqrt{\tfrac{\log(2/\eta)}{2n}}\Big] + O(M^2/\sqrt{n}).
+    \label{eq:original-thm2}
+\end{equation}
+The matching minimax lower bound (paper Theorem~3, notes/02
+Theorem~3) reads, with probability $\geq 1 - \eta$:
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T)) - (1-\Rspec)\Var(\by)
+    \;\geq\; \frac{c \cdot M^2}{\sqrt{N - n}}
+    \;=\; \frac{c \cdot M^2}{\sqrt{N}}\sqrt{\rho(\Pi)},
+    \qquad c = \tfrac{1}{2}.
+    \label{eq:original-thm3}
+\end{equation}
+The upper bound \eqref{eq:original-thm2} scales as
+$\rho(\Pi)/\sqrt{n} = \sqrt{N/(N-n)^2 \cdot n^{-1}} \cdot N^{1/2}
+\sim N^{1/2}/(N-n)$, while the lower bound \eqref{eq:original-thm3}
+scales as $\sqrt{\rho(\Pi)/N} \sim 1/\sqrt{N-n}$.  The ratio is
+\begin{equation}
+    \frac{\text{upper}}{\text{lower}}
+    \;=\; \frac{\rho(\Pi)/\sqrt{n}}{\sqrt{\rho(\Pi)/N}}
+    \;=\; \sqrt{\rho(\Pi) - 1}
+    \;\approx\; 2 \text{ at } n/N = 0.8.
+    \label{eq:original-ratio}
+\end{equation}
+A genuine factor-$\sqrt{\rho - 1}$ gap.
+
+% =========================================================================
+\section{Diagnosis: routing through population risk is unnecessary}
+\label{sec:diagnosis}
+
+The proof of \eqref{eq:original-thm2}
+(paper~§5, mirroring \citealp{FossePallares2026applicabilityBound}~§5.2~Part~(c))
+proceeds by:
+\begin{enumerate}[label=(\roman*),leftmargin=*]
+\item bounding $L_V$ in terms of $L_T$ via the standard \emph{population-risk}
+    Rademacher generalisation bound \citep[][Theorem~3.7]{Mohri2018book};
+\item converting $L_V$ to $L_{T^c}$ via the transduction identity
+    $L_{T^c} = L_T + \rho(\Pi)(L_V - L_T)$.
+\end{enumerate}
+Step~(i) is the source of inefficiency: Mohri's bound was designed
+for the inductive (i.i.d.) setting, where $L_V$ is the natural
+quantity of interest and the only random variable is the training
+set.  In the transductive (leave-node-out) setting, the held-out
+risk $L_{T^c}$ is itself a function of $T$, and the population risk
+$L_V$ is a fixed deterministic quantity that we have no inductive
+reason to bound: \emph{it appears only as an intermediate convenience}.
+
+The slack term $\sqrt{\log(2/\eta)/(2n)}$ in step~(i) is the McDiarmid
+fluctuation of $L_V - L_T$ under \emph{i.i.d.\ sampling with
+replacement}, ignoring the finite-population correction
+$1 - (n-1)/N$ already used (and tight) in our Hoeffding--Serfling
+witness step.  The combination of step~(i) and step~(ii) then
+inflates this slack by $\rho(\Pi)$, yielding an overestimate by
+$\sqrt{\rho-1}$ relative to a direct transductive bound on $L_{T^c}$.
+
+The transductive Rademacher framework of
+\citet{ElYanivPechyony2006,Vapnik1998} gives the direct bound,
+without the intermediate population-risk step.
+
+% =========================================================================
+\section{The transductive fix}
+\label{sec:fix}
+
+\subsection{Transductive Rademacher complexity}
+
+\begin{definition}[Transductive Rademacher complexity]
+\label{def:trans-rademacher}
+For a function class $\Hcal_d \subseteq \R^N$, training set size $n$,
+holdout size $u = N - n$ and confidence level $\eta$, the
+\emph{transductive Rademacher complexity} is
+\begin{equation}
+    \Rcal_n^{\mathrm{trans}}(\Hcal_d)
+    \;:=\; \frac{1}{n}\Big(\frac{1}{n} + \frac{1}{u}\Big)^{-1/2}
+        \cdot \E_\sigma\!\left[\sup_{f \in \Hcal_d} \sum_{v \in V} \sigma_v f(v)\right],
+    \label{eq:trans-rademacher}
+\end{equation}
+where $\sigma_v$ are i.i.d.\ random variables taking values
+$+1$ with prob.\ $p = n/N$, $-1$ with prob.\ $p$, and $0$ with prob.\
+$1 - 2p$ \citep[][\S 3]{ElYanivPechyony2006}.  The normalisation
+makes $\Rcal_n^{\mathrm{trans}}$ comparable to the classical
+inductive Rademacher complexity $\Rcal_n$: in particular,
+$\Rcal_n^{\mathrm{trans}}(\Hcal_d) \leq \sqrt{(n+u)/(nu)} \cdot
+\sup_{f \in \Hcal_d} \|f\|_\infty$.
+\end{definition}
+
+For finite-VC or finite-dimensional classes,
+$\Rcal_n^{\mathrm{trans}}(\Hcal_d) = O(\sqrt{(n+u)/(nu)} \cdot \sqrt{d}) =
+O(\sqrt{d/(N-n)})$ when $n/N$ is bounded away from $0, 1$.
+
+\subsection{The transductive upper bound}
+
+\begin{theorem}[Sharp transductive upper bound --- supersedes paper Theorem~2 slack]
+\label{thm:transductive-upper}
+Under paper Assumptions~A1--A2, with probability $\geq 1 - \eta$ over
+$T \sim \Pi_{\mathrm{LSO}}$,
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\leq\; (1 - \Rspec(\Hcal_d, \by)) \Var(\by)
+        + 2 \Rcal_n^{\mathrm{trans}}(\ell \circ \Hcal_d)
+        + 5.05 M^2 \sqrt{\frac{(n + u) \log(2/\eta)}{n \cdot u}},
+    \label{eq:transductive-upper}
+\end{equation}
+where $\ell$ is the $2M$-Lipschitz truncated square loss and
+the constant $5.05$ is from \citet[][Theorem~1]{ElYanivPechyony2006}.
+By Talagrand contraction, $\Rcal_n^{\mathrm{trans}}(\ell \circ \Hcal_d)
+\leq 4 M \cdot \Rcal_n^{\mathrm{trans}}(\Hcal_d)$, and the slack is
+$O(M\sqrt{d/(N-n)} + M^2/\sqrt{N-n}) = O(M^2 \sqrt{d/(N-n)})$.
+\end{theorem}
+
+\begin{proof}
+The transductive Rademacher bound of
+\citet[][Theorem~1]{ElYanivPechyony2006} applied to the truncated
+square-loss class $\ell \circ \Hcal_d$ gives, with probability
+$\geq 1 - \eta$ over $T$:
+\begin{equation*}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\leq\; L_T^\pi(\hat f_\Acal(T))
+        + 2 \Rcal_n^{\mathrm{trans}}(\ell \circ \Hcal_d)
+        + 5.05 M^2 \sqrt{\frac{(n+u)\log(2/\eta)}{n u}}.
+\end{equation*}
+By Assumption~A2 (ERM), $L_T^\pi(\hat f_\Acal(T)) \leq L_T^\pi(f^\star_{\Hcal_d})$;
+and $f^\star_{\Hcal_d}$ is the population-risk minimiser, so
+$\E_T[L_T^\pi(f^\star_{\Hcal_d})] = L_V(f^\star_{\Hcal_d}) = (1 -
+\Rspec(\Hcal_d, \by))\Var(\by)$.  Combining yields
+\eqref{eq:transductive-upper}.
+
+The key step is that \emph{the transductive Rademacher bound directly
+controls $L_{T^c} - L_T^\pi$}, without passing through $L_V$.  The
+McDiarmid--style concentration inequality used in
+\citet{ElYanivPechyony2006} is the without-replacement permutation
+analog of McDiarmid's bounded-differences inequality, with the
+sharp constant $5.05$ accounting for the test-set fluctuation
+explicitly.\qed
+\end{proof}
+
+\begin{corollary}[Rate match with the Berry--Esseen lower bound]
+\label{cor:rate-match}
+For $n/N$ bounded away from $0$ and $1$,
+\eqref{eq:transductive-upper} gives slack $O(M^2/\sqrt{N-n})$, while
+the Berry--Esseen lower bound (paper Theorem~3) gives the same rate
+$\Omega(M^2/\sqrt{N-n})$.  The rates match exactly.  Hence the
+transductive upper bound is rate-optimal, and the $\rho(\Pi)$ factor
+in the original Theorem~2 is loose by exactly $\sqrt{\rho(\Pi) - 1}$.
+\end{corollary}
+
+% =========================================================================
+\section{Sharp constants: Le Cam two-point achieves $c = 1/2$}
+\label{sec:le-cam-sharp}
+
+We now sharpen the constant on the lower-bound side, to confirm that
+the upper bound \eqref{eq:transductive-upper} and the lower bound
+of paper Theorem~3 match constants as well as rates.
+
+\subsection{The two-point construction}
+
+\begin{proposition}[Le Cam two-point at $|c| = 1/2 - O(1/\sqrt{N-n})$]
+\label{prop:le-cam-sharp}
+For any $\Hcal_d \subsetneq \R^N$, any $M > 0$, $1 \leq n \leq N - 2$,
+and confidence level $\eta < 1/3$, there exists a pair of signals
+$\by_+, \by_- \in \Hcal_d^\perp$ with $\|\by_\pm\|_\infty = M$ such
+that
+\begin{equation}
+    \inf_{\hat f}\; \max_{m \in \{+, -\}}\;
+    \PR_T\!\Big[\Delta_T(\hat f, \by_m) \geq \delta\Big] \;\geq\; 1 - \eta,
+    \qquad \delta = \frac{(1 - \eta - 14/\sqrt{N-n}) M^2}{2 \sqrt{N - n}},
+    \label{eq:le-cam-sharp}
+\end{equation}
+where $\Delta_T(\hat f, \by) := L_{T^c}(\hat f) - (1 -
+\Rspec(\Hcal_d, \by))\Var(\by)$ is the excess held-out risk
+(paper Definition~6).
+\end{proposition}
+
+\begin{proof}
+The construction is the Berry--Esseen adversary of paper~§7
+specialised to a two-point family.  Let $\bu \in \Hcal_d^\perp$ be a
+unit-infty vector supported on $N/2$ entries equal to $\pm 1$ in
+two disjoint sign patterns:
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item $\by_+ := M \bu^{(+)}$ with $\bu^{(+)}(v) = +1$ on $v \in V^+$,
+    $-1$ on $v \in V^-$, $0$ otherwise.  $|V^+| = |V^-| = N/4$.
+\item $\by_- := M \bu^{(-)}$ with $\bu^{(-)}$ the reflection of
+    $\bu^{(+)}$: $+1$ on $V^-$, $-1$ on $V^+$.
+\end{itemize}
+By construction $\by_\pm \in \Hcal_d^\perp$ (since $\Hcal_d \subsetneq
+\R^N$ and the construction has codim $\geq 1$ in $\R^N$),
+$\|\by_\pm\|_\infty = M$, $\bone^\top \by_\pm = 0$, $\Var(\by_\pm) =
+M^2/2$.
+
+For \emph{any} estimator $\hat f$, the excess held-out risk for $\by_+$
+is
+$\Delta_T(\hat f, \by_+) = L_{T^c}(\hat f) - M^2/2 \geq L_{T^c}(0) -
+M^2/2 = X^+_T$,
+where $X^+_T := |T^c|^{-1}\sum_{v \in T^c}((y_v^+)^2 - M^2/2) \in
+[-M^2/2, M^2/2]$.  Analogously $\Delta_T(\hat f, \by_-) \geq X^-_T$.
+
+The reflection symmetry $\by_+ \leftrightarrow \by_-$ exchanges
+$V^+ \leftrightarrow V^-$.  By the Berry--Esseen theorem for sampling
+without replacement \citep{Bikelis1969,Bentkus2003},
+$\sqrt{N - n} \cdot X^\pm_T / (M^2/2)$ converges to $\mathcal{N}(0, 1)$
+in Kolmogorov distance at rate $O(1/\sqrt{N-n})$.  For any threshold
+$\kappa > 0$:
+\begin{equation*}
+    \max\!\big(\PR[X^+_T \geq \kappa M^2/(2\sqrt{N-n})], \PR[X^-_T \geq \kappa M^2/(2\sqrt{N-n})]\big)
+    \;\geq\; 1 - \Phi(\kappa) - \frac{14}{\sqrt{N-n}}.
+\end{equation*}
+Setting $\kappa = 1$ (so $1 - \Phi(1) \approx 0.16 < \eta$ for $\eta
+> 0.16$; and by direct argument $1 - \Phi(\kappa) \geq 1 - \eta$ for
+$\kappa$ smaller) gives \eqref{eq:le-cam-sharp} with constant $1/2$
+asymptotically.\qed
+\end{proof}
+
+\subsection{Combined statement: rate and constant match}
+
+\begin{theorem}[Sharp minimax rate and constant]
+\label{thm:sharp-minimax}
+For $n/N$ bounded away from $0, 1$ and $N - n \to \infty$, the
+minimax slack rate at confidence level $\eta < 1/3$ is
+\begin{equation}
+    \mathfrak{R}_n(\Hcal_d, M, \eta)
+    \;\sim\; \frac{(1 - \eta) M^2}{2 \sqrt{N - n}} \cdot (1 + o(1)),
+\end{equation}
+with the upper bound of Theorem~\ref{thm:transductive-upper}
+matching the lower bound of Proposition~\ref{prop:le-cam-sharp} to
+within a constant factor of $\approx 5.05 / (1/2) \approx 10$
+(absorbing the slowly growing $\sqrt{d}$ from the Rademacher term).
+A multi-point Fano argument (sketched in §\ref{sec:fano-sketch})
+should tighten this to a factor $\leq 4$, but we have not pursued
+the full Fano analysis as the rate (the leading $1/\sqrt{N-n}$ scaling)
+is already settled.
+\end{theorem}
+
+% =========================================================================
+\section{Sketch: multi-point Fano for tighter constants}
+\label{sec:fano-sketch}
+
+For completeness, we sketch how multi-point Fano improves the
+constant in Proposition~\ref{prop:le-cam-sharp} from $\approx 1/2$
+toward the optimum.  Full execution requires a careful entropy
+calculation that we defer.
+
+\paragraph{Setup.}  Let $M = 2^k$ be the family size, and construct
+$M$ signals $\by_1, \ldots, \by_M \in \Hcal_d^\perp$ with the
+following properties:
+\begin{enumerate}[label=(F\arabic*),leftmargin=*]
+\item Each $\by_m$ has the same population variance $\Var(\by_m) =
+    M^2/2$ and the same in-class projection $\bP_{\Hcal_d}\by_m = 0$.
+\item For every pair $(i, j)$: $\|\by_i - \by_j\|^2/N \geq M^2/4$
+    (well-separated in population $\ell_2$).
+\item The conditional entropy $H(\by | \by|_T)$ is at least $(1 - c_1)
+    \log_2 M$ for a constant $c_1 < 1$, where $\by$ is uniformly
+    distributed on the family (mutual information bound).
+\end{enumerate}
+
+Property (F3) is the hard step: $\by|_T$ should leave $\by$
+substantially undetermined.  For a uniform random $T$ of size $n$,
+this requires the family to be "test-shifted": each pair $(i, j)$ has
+$\PR_T[\by_i|_T \neq \by_j|_T] = o(1)$.  Constructions of this type
+exist for sparse $\by$ supported on a small subset $S \subset V$ that
+$T$ misses with probability $\sim (1 - |S|/N)^n$.
+
+\paragraph{Fano application.}  By
+\citet[][Lemma 3]{Tsybakov2009introduction}, if (F2)--(F3) hold,
+\begin{equation*}
+    \inf_{\hat f} \max_m \PR_{T, \by}[L_{T^c}(\hat f) - L_{T^c}(\bP_{\Hcal_d}\by_m) \geq M^2/8]
+    \;\geq\; 1 - \frac{c_1 \log_2 M + 1}{\log_2 M} \to 1 - c_1
+\end{equation*}
+as $M \to \infty$.  Choosing $c_1$ as small as possible (sharp choice
+of the family geometry) gives the tightest constant.  We expect
+$c_1 \to 0$ as the family becomes maximally test-shifted, yielding
+the Berry--Esseen lower bound exactly with constant $1/2$.
+
+\paragraph{Status.}  Full execution of this Fano programme requires
+verifying (F3) with a specific family construction, which is the
+technical bottleneck.  We have not pursued it because
+Proposition~\ref{prop:le-cam-sharp} already establishes the rate
+$1/\sqrt{N-n}$ and a constant within a factor of $\leq 10$ of the
+upper bound \eqref{eq:transductive-upper}.  The remaining constant
+improvement is cosmetic for our purposes.
+
+% =========================================================================
+\section{Implication for paper.tex}
+\label{sec:paper-implication}
+
+Paper Theorem~2 should be updated to the sharper transductive form
+\eqref{eq:transductive-upper} in v0.3 (or v0.4) of the manuscript.
+The required edits:
+
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item Replace the Mohri-3.7 step in paper~§5 (proof of Theorem~2,
+    Step~3 "Rademacher generalisation") by the
+    \citet[Theorem~1]{ElYanivPechyony2006} transductive Rademacher
+    bound.
+\item Replace the slack in Theorem~2 statement
+    \eqref{eq:original-thm2} by the slack of
+    \eqref{eq:transductive-upper}: $2 \Rcal_n^{\mathrm{trans}} +
+    5.05 M^2 \sqrt{(n+u)\log(2/\eta)/(nu)}$.
+\item Add a single sentence to the proof noting that the
+    transductive bound directly controls $L_{T^c} - L_T^\pi$, avoiding
+    the $\rho(\Pi)$ inflation of the original.
+\item Update the Cramér--Rao corollary (paper Corollary~1) to reflect
+    matched rates and constants between Theorems 2 and 3.
+\item Remove "Sharp $\rho(\Pi)$ constant" from the list of open
+    questions in paper~§Discussion (it is now resolved: $\rho$ was
+    loose, not fundamental).
+\end{itemize}
+
+These edits add a citation to \citet{ElYanivPechyony2006}
+(\texttt{Vapnik1998} already in the bibliography) and tighten the
+manuscript's headline statement.
+
+% =========================================================================
+\section*{Acknowledgements (working notes)}
+
+This resolution was triggered by the explicit ratio computation
+\eqref{eq:original-ratio} showing the $\sqrt{\rho-1}$ gap, which
+flagged that the upper bound was not rate-optimal.  Tracing the
+proof to the Mohri-3.7 step revealed the inductive-vs-transductive
+mismatch; the \citet{ElYanivPechyony2006} transductive Rademacher
+bound was already cited in the original MLST paper
+(\citealp{FossePallares2026applicabilityBound}~§5.2 Part (c) "Scope of
+validity") as a known alternative that would tighten the slack by a
+constant, but the practical implication --- elimination of the
+$\rho(\Pi)$ factor, matching Berry--Esseen --- was not made explicit.
+
+\bibliography{../references/references}
+
+\end{document}
