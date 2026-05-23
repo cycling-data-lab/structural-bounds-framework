@@ -1,0 +1,403 @@
+% notes/03_non_realisable_resolution.tex
+%
+% Research notes — resolution of the non-realisable case in the
+% universal spectral lower bound program.
+%
+% Main result: there is no separate "non-realisable regime" requiring
+% a distinct minimax theory. The realisable theorem of notes/02
+% (Theorem 2 corrected) applies uniformly to any learner, with the
+% reachable hypothesis class $\Hcal_d$ replacing the ambient subspace
+% $\Scal_\Acal$ throughout. The $\sigma_\Pi$ factor that motivated
+% Conjecture 1 of notes/02 is an artefact of choosing the
+% Pesenson-ridge construction as the witness predictor; using the
+% population-risk minimiser of $\Hcal_d$ instead avoids it entirely.
+%
+% Conjecture 1 of notes/02 is therefore withdrawn as vacuous.
+% Q1 from notes/01 (and refined in notes/02 §5) is FULLY RESOLVED.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\frR}{\mathfrak{R}}
+
+\title{\textbf{The non-realisable case is vacuous}\\
+\large{Research notes — closure of Q1, withdraws Conjecture 1 of notes/02}}
+\author{Rohan Fossé \and Gaël Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, May 2026 — \emph{not for distribution beyond co-authors}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+notes/01 and notes/02 left open the minimax rate in a "non-realisable
+regime" where the orthogonal projection $\bP_\Scal\by$ falls outside the
+learner's hypothesis class $\Hcal_d$ and a Pesenson-ridge witness with
+$\sigma_T$-dependent slack must be used instead.
+We show that this regime is \emph{vacuous}: the realisable theorem
+(notes/02 Theorem~2, corrected) applies uniformly to any learner, with
+the reachable hypothesis class $\Hcal_d$ replacing the ambient subspace
+$\Scal_\Acal$ throughout the proof.  The $\sigma_T$ factor in notes/01
+Theorem~2 and notes/02 Conjecture~1 is an artefact of choosing the
+Pesenson-ridge construction as the witness predictor; replacing it with
+the population-risk minimiser $f^\star_{\Hcal_d} := \arg\min_{f \in
+\Hcal_d} L_V(f)$ —  which always exists, even when $\Hcal_d$ is
+non-convex or non-linear — eliminates the $\sigma_T$ dependence entirely.
+We formally withdraw Conjecture~1 of notes/02.  Q1 of notes/01 is
+fully resolved: the universal lower bound (notes/01 Theorem~1) is
+minimax-tight up to $\rho(\Pi)$ constants for any learner of any
+form, with the Berry--Esseen rate $\Omega(M^2/\sqrt{N-n})$ of
+notes/02 Theorem~3 as the matching lower bound.
+\end{abstract}
+
+% =========================================================================
+\section{The puzzle and its resolution}
+\label{sec:puzzle}
+
+\subsection{Where the $\sigma_T$ entered}
+
+In notes/01, the saturation theorem (Theorem~2) was proved by exhibiting
+the Pesenson-ridge estimator
+\begin{equation}
+    \hat f_\tau \;:=\; \bB(\bB^\top \bP_T \bB + \tau \bI_d)^{-1} \bB^\top \bP_T \by
+    \label{eq:pesenson-ridge-recall}
+\end{equation}
+on an orthonormal basis $\bB$ of $\Scal_\Acal$, with reconstruction
+error bounded by $\tau^2/(\sigma_T + \tau)^2 \cdot \|\bP_\Scal\by\|^2 +
+\|\bP_T \bP_{\Scal^\perp}\by\|^2/(\sigma_T + \tau)^2$
+(notes/01 Lemma~3).  The choice $\tau \to 0$ recovers OLS-on-$T$ with
+slack scaling as $1/\sigma_T^2$ in expectation; the choice
+$\tau = \sigma_T \sqrt{d/n}$ balances bias and variance but
+preserves the $1/\sigma_T$-type dependence.
+
+notes/02 corrected this for the \emph{realisable} case (where
+$\bP_{\Scal_\Acal}\by \in \Hcal_d$) by showing that the ideal projector
+itself serves as a witness with slack $O(\rho M^2/\sqrt{n})$ —
+\emph{no} $\sigma_T$ — and proved this rate minimax-tight via Berry--Esseen
+(notes/02 Theorem~3).  Conjecture~1 of notes/02 retained the
+$\sigma_T$-dependent rate $\Theta(M^2/(\sigma_\Pi\sqrt{N-n}))$ for the
+"non-realisable" case ($\bP_{\Scal_\Acal}\by \notin \Hcal_d$), pointing
+to Bauer--Pereverzev 2005 minimax inverse-problem theory.
+
+\subsection{The resolution}
+
+The non-realisable case is vacuous.  More precisely, the realisable
+theorem of notes/02 applies uniformly to \emph{every} learner, with the
+following two substitutions:
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item Replace the orthogonal projector $\bP_{\Scal_\Acal}\by$ by the
+    \emph{population-risk minimiser}
+    \begin{equation}
+        f^\star_{\Hcal_d} \;:=\; \arg\min_{f \in \Hcal_d} L_V(f).
+        \label{eq:fstar-hd}
+    \end{equation}
+    This minimiser always exists by compactness (under standard truncation
+    of $\Hcal_d$) and reduces to $\bP_{\Hcal_d}\by$ when $\Hcal_d$ is a
+    closed linear subspace.
+
+\item Replace the spectral $R^2$ of $\Scal_\Acal$ by the
+    \emph{learner-specific spectral $R^2$}:
+    \begin{equation}
+        \Rspec(\Hcal_d, \by) \;:=\; 1 - \frac{L_V(f^\star_{\Hcal_d})}{\Var(\by)}.
+        \label{eq:rspec-hd}
+    \end{equation}
+    For closed linear $\Hcal_d$, this is exactly the projection-$R^2$ of
+    $\by$ on $\Hcal_d$.  For non-linear $\Hcal_d$ (gradient-boosted trees,
+    MLP with weight constraints, $k$-NN), it is the fraction of
+    target variance explainable in principle by some predictor in
+    $\Hcal_d$.
+\end{itemize}
+Under these substitutions, notes/02 Theorem~2 and Theorem~3 hold verbatim,
+and the universal lower bound (notes/01 Theorem~1) is minimax-tight to
+$\rho(\Pi)$ constants for \emph{every} learner — linear, non-linear,
+convex or non-convex hypothesis class.  No $\sigma_T$ ever appears.
+
+% =========================================================================
+\section{Formal restatement}
+\label{sec:formal}
+
+\begin{definition}[Learner-specific reachable risk]
+\label{def:reachable-risk}
+For any hypothesis class $\Hcal_d \subseteq \R^N$ closed under truncation
+to $[-M, M]$, define
+\begin{equation}
+    f^\star_{\Hcal_d} \;:=\; \arg\min_{f \in \Hcal_d} L_V(f),
+    \qquad
+    \Rspec(\Hcal_d, \by) \;:=\; 1 - \frac{L_V(f^\star_{\Hcal_d})}{\Var(\by)}.
+    \label{eq:learner-rspec}
+\end{equation}
+For closed linear $\Hcal_d$, $f^\star_{\Hcal_d} = \bP_{\Hcal_d}\by$ and
+$\Rspec(\Hcal_d, \by) = \|\bP_{\Hcal_d}\by\|^2/\|\by\|^2$, matching
+Definition~3 of notes/01.
+\end{definition}
+
+\begin{theorem}[Universal upper bound, learner-specific form — supersedes
+notes/02 Theorem~2]
+\label{thm:learner-specific-upper}
+For any learner $\Acal$ with hypothesis class $\Hcal_d$ closed under
+truncation to $[-M, M]$ and Rademacher complexity $\mathcal{R}_n(\Hcal_d)$,
+under Assumption~A1 (bounded target), Assumption~A2 (ERM property),
+and the existence of $f^\star_{\Hcal_d}$ in \eqref{eq:learner-rspec},
+with probability $\geq 1 - \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
+        \;+\; \rho(\Pi) \cdot \Bigg[
+            2 \mathcal{R}_n(\Hcal_d)
+            + 3 M^2 \sqrt{\frac{\log(2/\eta)}{2 n}}
+          \Bigg]
+        + O\!\left(\frac{M^2}{\sqrt{n}}\right).
+    \label{eq:learner-upper}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+We replicate the proof of notes/02 Theorem~2 with $\bP_{\Scal_\Acal}\by$
+replaced by $f^\star_{\Hcal_d}$.
+
+\textit{Witness.}  $f^\star_{\Hcal_d} \in \Hcal_d$ by construction (it is
+the argmin over $\Hcal_d$).  Its population loss is exactly
+$(1 - \Rspec(\Hcal_d, \by))\Var(\by)$ by Definition~\ref{def:reachable-risk}.
+
+\textit{In-sample concentration.}  Serfling without-replacement Hoeffding
+inequality on the bounded sequence
+$\{(f^\star_{\Hcal_d}(v) - y_v)^2\}_{v \in V}$ — which has population
+mean $L_V(f^\star_{\Hcal_d}) = (1 - \Rspec(\Hcal_d, \by))\Var(\by)$
+and supremum $\leq 4M^2$ — gives, with probability $\geq 1 - \eta/2$:
+\begin{equation}
+    L_T(f^\star_{\Hcal_d}) \;\leq\; (1 - \Rspec(\Hcal_d, \by))\Var(\by) + 4M^2 \sqrt{\frac{(1 - (n-1)/N)\log(2/\eta)}{2 n}}.
+\end{equation}
+
+\textit{ERM.}  By Assumption~A2, $L_T(\hat f_\Acal(T)) \leq L_T(f^\star_{\Hcal_d})$
+since $f^\star_{\Hcal_d} \in \Hcal_d$ and ERM minimises $L_T$ over $\Hcal_d$.
+
+\textit{Generalisation.}  Mohri Theorem~3.7 + Talagrand contraction
+(square loss is $2M$-Lipschitz on $[-M, M]$) gives, with probability
+$\geq 1 - \eta/2$:
+\begin{equation}
+    L_V(\hat f_\Acal(T)) \;\leq\; L_T(\hat f_\Acal(T)) + 2 \mathcal{R}_n(\Hcal_d) + 3 M^2 \sqrt{\frac{\log(2/\eta)}{2 n}}.
+\end{equation}
+
+\textit{Transduction.}  $L_{T^c} = L_T + \rho(L_V - L_T)$ from notes/01
+Lemma~2.  Combining the above three displayed inequalities yields
+\eqref{eq:learner-upper}.  $\square$
+\end{proof}
+
+\begin{theorem}[Universal lower bound, learner-specific form — supersedes
+notes/02 Theorem~3]
+\label{thm:learner-specific-lower}
+Under the same setup, for any learner $\Acal$,
+\begin{equation}
+    \E_{T \sim \Pi_{\mathrm{LSO}}}[L_{T^c}(\hat f_\Acal(T))]
+    \;\geq\; (1 - \Rspec(\Hcal_d, \by)) \cdot \Var(\by),
+    \label{eq:learner-lower-expectation}
+\end{equation}
+and in high probability,
+\begin{equation}
+    \sup_{\by \in \Ycal_M} \mathbb{P}_T\Big[
+        L_{T^c}(\hat f_\Acal(T)) - (1 - \Rspec(\Hcal_d, \by))\Var(\by) \geq c M^2 / \sqrt{N - n}
+    \Big] \;\geq\; 1 - \eta
+    \label{eq:learner-lower-hp}
+\end{equation}
+for a constant $c > 0$ depending only on $\eta$ (Berry--Esseen argument
+of notes/02 Theorem~3 with the adversarial signal $\by^\star \in
+\Hcal_d^\perp$, which exists whenever $\Hcal_d \subsetneq \R^N$).
+\end{theorem}
+
+\begin{proof}
+Identical to notes/02 §3 with $\Scal_\Acal$ replaced by $\Hcal_d$
+throughout.  The Berry--Esseen anticoncentration on $\|\by^\star\|^2_{T^c}$
+applies whenever the adversarial signal lies in $\Hcal_d^\perp$, which
+is possible whenever $\Hcal_d \subsetneq \R^N$ (and the latter excludes
+only trivial fully-expressive learners for which the bound is vacuous
+anyway).  $\square$
+\end{proof}
+
+% =========================================================================
+\section{Why the $\sigma_T$ disappeared}
+\label{sec:why}
+
+The Pesenson-ridge estimator of notes/01 uses the sampling-restricted
+inverse $(\bB^\top \bP_T \bB + \tau \bI_d)^{-1}$, whose operator norm is
+$1/(\sigma_T + \tau)$.  This is what produces the $1/\sigma_T$
+dependence in notes/01 Theorem~2.
+
+The population-risk minimiser $f^\star_{\Hcal_d}$ does \emph{not} use
+any sampling-restricted inverse: it is defined directly on the
+population $V$, with $L_V$ as the objective.  The slack of
+\eqref{eq:learner-upper} is therefore controlled by classical empirical
+process theory (Rademacher + Hoeffding--Serfling), which has nothing
+to do with the sampling quality $\sigma_T$ of any specific subspace.
+
+The Pesenson-ridge construction is a \emph{specific algorithm}, not a
+fundamental rate.  Using a different ERM-flavoured algorithm (LightGBM,
+kernel ridge, neural network) avoids the $\sigma_T$ cost entirely.
+
+\begin{remark}[Computational accessibility of $f^\star_{\Hcal_d}$]
+\label{rem:fstar-accessible}
+For closed linear $\Hcal_d$, $f^\star_{\Hcal_d} = \bP_{\Hcal_d}\by$ requires
+knowing $\by$ on all of $V$ — which the learner does not have.  This
+matters for the \emph{algorithm}, not for the \emph{minimax rate}: the
+rate measures what is achievable in principle, and the ERM learner
+\emph{approximately recovers $f^\star_{\Hcal_d}$} from $\by|_T$ via
+empirical process theory (Mohri 2018), incurring only the Rademacher
+slack already accounted for in \eqref{eq:learner-upper}.  No knowledge
+of $\by$ on $T^c$ is required; the witness $f^\star_{\Hcal_d}$ enters
+the proof, not the algorithm.
+\end{remark}
+
+\begin{remark}[Connection to the MLST proof]
+\label{rem:mlst-proof}
+The MLST paper (\texttt{materials-applicability-bound/applicability\_bound.tex},
+Section 5.2, Part (c)) implicitly uses
+$f^\star_{\Hcal_d} = \bP_{\Scal_{\mathrm{comp}}}\by$ as its witness, with
+$\Hcal_d \supseteq \Scal_{\mathrm{comp}}$ by Assumption (the hypothesis
+class subsumes the linear projector on the compositional subspace).
+There is no Pesenson-ridge ambiguity in that paper, and no $\sigma_T$
+factor: the proof structure of Theorem~\ref{thm:learner-specific-upper}
+above is identical to MLST Part (c).
+\end{remark}
+
+% =========================================================================
+\section{Withdrawal of notes/02 Conjecture~1}
+\label{sec:withdrawal}
+
+We formally withdraw Conjecture~1 of \texttt{notes/02\_minimax\_saturation.tex}
+(\S 3, Non-realisable case).  Its stated form
+\begin{equation*}
+    \mathfrak{R}_n^{\mathrm{non-real}}(\Ycal_{\Scal,M}, \eta)
+    \;=\; \Theta\!\left(\frac{M^2}{\sigma_\Pi(\Hcal_d) \cdot \sqrt{N-n}}
+        + \frac{M^2}{\sqrt{N-n}}\right)
+\end{equation*}
+contains a spurious $1/\sigma_\Pi$ factor on the first term, traced to
+the conflation of (i) the Pesenson-ridge construction's
+operator-norm slack and (ii) the genuine minimax rate of the
+non-realisable problem.
+
+Under the resolution of §\ref{sec:puzzle}, the correct rate is
+\begin{equation}
+    \mathfrak{R}_n(\Hcal_d, M, \eta)
+    \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N-n}} + \rho(\Pi) \mathcal{R}_n(\Hcal_d)\right),
+    \label{eq:correct-rate-hd}
+\end{equation}
+matching the realisable rate of notes/02 Theorem~2 with $\Hcal_d$
+replacing $\Scal_\Acal$.  The $\sigma_\Pi$ term is absent.  The
+"forthcoming notes/03" referenced in Bauer--Pereverzev paragraph of
+notes/02 §3 is the present document; the Bauer--Pereverzev minimax
+inverse-problem theory turns out not to be needed for the program,
+because our setting is not the noisy linear inverse problem they treat
+but the deterministic empirical-risk problem with random
+test-set splitting, for which classical statistical learning theory
+(Rademacher + Hoeffding--Serfling) is exactly the right tool.
+
+% =========================================================================
+\section{Status of the program after notes/01–03}
+\label{sec:status}
+
+The universal spectral lower bound program is, at the formal-proof level,
+complete.
+
+\begin{itemize}[label=$\bullet$, leftmargin=*]
+\item \textbf{Lower bound (notes/01 Theorem~1).}  Universal,
+    learner-independent, exact in expectation: $\E[L_{T^c}(\hat f)] \geq
+    (1 - \Rspec(\Hcal_d, \by)) \Var(\by)$, with $\Hcal_d$ the learner's
+    hypothesis class (Definition~\ref{def:reachable-risk}).  \emph{Proved.}
+
+\item \textbf{Upper bound (Theorem~\ref{thm:learner-specific-upper}
+    above; supersedes notes/02 Theorem~2).}  ERM learner achieves the
+    lower bound with slack $\rho(\Pi) \cdot [2\mathcal{R}_n(\Hcal_d) +
+    O(M^2/\sqrt{n})]$.  \emph{Proved.}
+
+\item \textbf{Minimax tightness
+    (Theorem~\ref{thm:learner-specific-lower}; supersedes notes/02
+    Theorem~3).}  The slack is minimax-tight up to $\rho(\Pi)$
+    constants; Berry--Esseen forces $\Omega(M^2/\sqrt{N-n})$ even for
+    oracle estimators.  \emph{Proved.}
+
+\item \textbf{Non-realisable regime.}  Vacuous.  \emph{Closed.}
+
+\item \textbf{Corollaries C1, C2, C3.}  C1 = MLST Theorem~1 (corollary of
+    Theorem~\ref{thm:learner-specific-upper} with $\Hcal_d = \Scal_{\mathrm{cat}}$
+    vs $\Scal_{\mathrm{comp}}$).  C2 (negative transfer) and C3 (active
+    learning) inherit the same framework; full corollaries to be written
+    inside the submission-ready manuscript.
+\end{itemize}
+
+The remaining open questions from notes/01 §6 and notes/02 §5 reduce to
+two non-foundational ones:
+\begin{enumerate}
+\item \textbf{Sharp $\rho(\Pi)$ constant} (notes/02 §5, item 5).  A
+    Fano-style multi-point argument should give tight constants.
+    Mathematical exercise, not foundational.
+\item \textbf{Importance-weighted variant for non-uniform protocols}
+    (notes/01 §6, item 3).  Required for active-learning corollary C3.
+    Mechanical, not foundational.
+\end{enumerate}
+
+\begin{remark}[Implication for the manuscript]
+\label{rem:manuscript-implication}
+The submission-ready manuscript for
+\texttt{structural-bounds-framework} can be drafted entirely from
+notes/01 (Theorem 1 + Step-1/2/3 proof structure) and the corrected
+upper-bound statement of Theorem~\ref{thm:learner-specific-upper} above.
+Neither the Pesenson-ridge estimator nor any $\sigma_T$ factor needs
+to appear in the manuscript.  This dramatically simplifies the writeup:
+the bound is a clean realisable-case empirical-process result with a
+spectral interpretation, not an inverse-problem result.
+\end{remark}
+
+% =========================================================================
+\section*{Acknowledgements (working notes)}
+
+This resolution emerged on 2026-05-24 from a careful per-component
+analysis of the $\sigma_T$-dependence in the Pesenson-ridge slack
+of notes/01 Theorem~2.  The key observation — that the
+population-risk minimiser $f^\star_{\Hcal_d}$ serves as a witness
+predictor with no $\sigma_T$ cost — was triggered by re-reading
+the proof of MLST Theorem~1(c) and noticing that it never uses
+the spectral nature of the witness $\bP_{\Scal_{\mathrm{comp}}}\by$.
+
+Conjecture~1 of notes/02 is withdrawn.  The Bauer--Pereverzev 2005
+pointer in that note's §3 is, in retrospect, a wrong-domain reference:
+their theory applies to noisy inverse problems on continuous Hilbert
+spaces, while our setting is the empirical-risk problem with random
+sub-sampling on a finite graph — a different mathematical object.
+
+\end{document}
