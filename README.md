@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/MIT)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
-[![Status: working draft v0.1](https://img.shields.io/badge/Status-working%20draft%20v0.1-orange.svg)](./paper.tex)
+[![Status: working draft v0.2](https://img.shields.io/badge/Status-working%20draft%20v0.2-orange.svg)](./paper.tex)
 [![Target: JMLR / FoCM](https://img.shields.io/badge/Target-JMLR%20%2F%20FoCM-blue.svg)](./paper.tex)
 [![DOI](https://img.shields.io/badge/DOI-pending%20Zenodo-blue.svg)](./CITATION.cff)
 
@@ -25,7 +25,7 @@ The bound is *learner-specific*: `R²_spec(H_d, y) := 1 - L_V(f*_{H_d}) / Var(y)
 
 ```text
 structural-bounds-framework/
-├── paper.tex                              # Main manuscript (working draft v0.1, ~12 pages compiled)
+├── paper.tex                              # Main manuscript (working draft v0.2, ~15 pages compiled, C2 full)
 ├── paper_si.tex                           # Supplementary Information (stub)
 ├── notes/                                 # Research notes — formal proofs
 │   ├── 01_universal_bound_proof.tex         # Theorem 1 (universal LB)

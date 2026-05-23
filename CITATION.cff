@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software or the accompanying manuscript, please cite as below."
 title: "structural-bounds-framework: A universal spectral lower bound on the leave-node-out generalisation error of graph-supervised learning"
 type: software
-version: "0.1-draft"
+version: "0.2-draft"
 date-released: "2026-05-24"
 authors:
   - family-names: "Fossé"
