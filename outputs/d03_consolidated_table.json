@@ -1,0 +1,102 @@
+{
+  "n_matbench_tasks": 8,
+  "n_cross_domain_pilots": 4,
+  "rows": [
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_dielectric",
+      "n": 4764,
+      "rspec": 0.1957,
+      "delta": -0.1115,
+      "source": "d11"
+    },
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_log_kvrh",
+      "n": 10987,
+      "rspec": 0.7271,
+      "delta": 0.842,
+      "source": "d11"
+    },
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_log_gvrh",
+      "n": 10987,
+      "rspec": 0.6759,
+      "delta": 0.8302,
+      "source": "d11"
+    },
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_phonons",
+      "n": 1265,
+      "rspec": 0.8119,
+      "delta": 0.9398,
+      "source": "d11"
+    },
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_perovskites",
+      "n": 18928,
+      "rspec": 0.3908,
+      "delta": 0.4995,
+      "source": "d11"
+    },
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_mp_e_form",
+      "n": 132752,
+      "rspec": 0.8557765079061428,
+      "delta": 0.950422144427244,
+      "source": "d11"
+    },
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_mp_gap",
+      "n": 106113,
+      "rspec": 0.5044569942663695,
+      "delta": 0.8119704538725847,
+      "source": "d11"
+    },
+    {
+      "domain": "MatBench v0.1",
+      "task": "matbench_expt_gap",
+      "n": 4604,
+      "rspec": 0.4278477057178025,
+      "delta": 0.7054253732291264,
+      "source": "d11b"
+    },
+    {
+      "domain": "MovieLens",
+      "task": "user-rating LSO",
+      "n": null,
+      "rspec": null,
+      "delta": -0.39758905385609167,
+      "source": "d01"
+    },
+    {
+      "domain": "QSAR",
+      "task": "molecular-activity LSO",
+      "n": null,
+      "rspec": null,
+      "delta": 0.6118621366327607,
+      "source": "d04"
+    },
+    {
+      "domain": "AFLOW",
+      "task": "log10_bulk_modulus",
+      "n": null,
+      "rspec": null,
+      "delta": 0.8397865295265312,
+      "source": "d03"
+    },
+    {
+      "domain": "AFLOW",
+      "task": "log10_shear_modulus",
+      "n": null,
+      "rspec": null,
+      "delta": 0.8251467601213929,
+      "source": "d03"
+    }
+  ]
+}
