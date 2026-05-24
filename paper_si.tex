@@ -3,58 +3,33 @@
 % !BIB TS-program = bibtex
 %
 % ============================================================================
-% paper_si.tex -- Supplementary Information for "{{paper-title}}"
+% paper_si.tex -- Supplementary Information for "A universal spectral lower
+% bound on the leave-node-out generalisation error of graph-supervised learning"
 %
-% Compiles independently with iopjournal.cls + references/references.bib.
+% Compiles independently with article class + references/references.bib.
 % ============================================================================
-\documentclass{iopjournal}
+\documentclass[11pt,a4paper]{article}
 
+\usepackage[margin=2.5cm]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
-\usepackage{csquotes}
-\usepackage{amssymb,amsmath,amstext,amsthm}
-
-\graphicspath{{figures/}}
-
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{float}
+\usepackage{amssymb,amsmath,amstext,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{booktabs,array,float}
 \usepackage{enumitem}
 \setlist{topsep=2pt,itemsep=2pt,parsep=0pt}
-\usepackage{url}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
 
 \usepackage[authoryear,round]{natbib}
 \bibliographystyle{plainnat}
 
-\IfFileExists{orcid.pdf}{}{%
-  \renewcommand{\orcid}[1]{\textsuperscript{\href{https://orcid.org/##1}{\textsf{[ORCID]}}}}%
-}
+\graphicspath{{figures/}}
 
-\usepackage{fancyhdr}
-\fancyhead[L]{{\small \sf IOP Publishing}\hspace{5mm}%
-              {\it {{journal-short}}}\ \textbf{vv} (yyyy) aaaaaa
-              \hspace{2mm}\textsf{(SI)}}
-\fancyhead[R]{{{lead-author-surname}} {\it et al}\ (SI)}
-\fancyhead[C]{}
-\widowpenalty=10000
-\clubpenalty=10000
-\displaywidowpenalty=10000
-\raggedbottom
-
-\makeatletter
-\renewcommand{\articletype}[1]{%
-   {\vspace*{-8mm}\noindent \Large \sf {{journal}}%
-       \hspace{1em}\normalsize\itshape Supplementary Information}%
-   \vspace*{8mm} \noindent\reversemarginpar
-   \marginpar{\vspace{-3mm} {\color{gray}\hrule} \ \\ Crossmark\\
-       {\color{gray}\hrule} \ \\
-       \tiny {\sf RECEIVED} {\small \\ dd Month yyyy}\\ \\
-       {\sf REVISED} {\small \\ dd Month yyyy}}%
-   {\scriptsize \sf{\bfseries \MakeUppercase{#1}}}}
-\makeatother
-
-% SI appendix-style numbering : Section A, A.1, etc.
+% SI appendix-style numbering : Appendix A, A.1, etc.
 \renewcommand{\thesection}{\Alph{section}}
 \renewcommand{\thesubsection}{\Alph{section}.\arabic{subsection}}
 \renewcommand{\theequation}{\Alph{section}.\arabic{equation}}
@@ -68,51 +43,395 @@
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{conjecture}[theorem]{Conjecture}
 \renewcommand{\thetheorem}{\Alph{section}.\arabic{theorem}}
 
-\newcommand{\E}{\mathbb{E}}
-\newcommand{\Var}{\mathrm{Var}}
+% Notation -- match paper.tex
+\newcommand{\bphi}{\boldsymbol{\phi}}
 \newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\bc}{\mathbf{c}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bD}{\mathbf{D}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\PR}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Lsym}{\mathcal{L}_{\mathrm{sym}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\frR}{\mathfrak{R}}
 
 % Cross-refs to the main paper -- rendered as visible markers.
 \newcommand{\maintext}[1]{(main text, Sec.~#1)}
-\newcommand{\Todo}[1]{\textbf{[To confirm: #1]}}
+
+\title{Supplementary Information for\\
+``A universal spectral lower bound on the leave-node-out generalisation
+error of graph-supervised learning''}
+
+\author{Rohan Foss\'e\thanks{rfosse@cesi.fr; ORCID 0009-0002-2195-0198.}
+\and Ga\"el Pallares\thanks{ORCID 0009-0002-8680-604X.}\\
+\small CESI LINEACT (EA 7527), Montpellier, France}
+
+\date{Companion to paper.tex working draft v0.4 --- May 2026}
 
 \begin{document}
 
-\articletype{Supplementary Information}
-
-\title{Supplementary Information for ``{{paper-title}}''}
-
-\author{{{lead-author-name}}$^{1,*}$\orcid{{{lead-author-orcid-id}}},
-        {{co-author-name}}$^{2}$\orcid{{{co-author-orcid-id}}}}
-
-\affil{$^{1}$ {{lead-author-affiliation}}
-       \quad$^{2}$ {{co-author-affiliation}}\\[0.2em]
-       $^{*}$ Author to whom any correspondence should be addressed.}
-
-\email{{{lead-author-email}}}
+\maketitle
 
 \begin{abstract}
 This supplementary information accompanies the manuscript
-\emph{{{paper-title}}} \maintext{1--7}.  It provides \Todo{list the
-appendices A, B, C, ... with one-sentence summaries.}
+\emph{A universal spectral lower bound on the leave-node-out
+generalisation error of graph-supervised learning} \maintext{1--8}.
+It provides four appendices: (A) the arbitrary-subspace Pesenson
+extension lemma used as a black-box reference in the proof of
+Theorem~2 of the main paper; (B) the transductive Rademacher
+constants of \citet{ElYanivPechyony2006} with detailed derivation;
+(C) full proofs of the negative-transfer (C2) and active-learning
+(C3) corollaries, with the sampling-restriction correction made
+explicit; and (D) the empirical reproducibility map across the
+sibling \texttt{cycling-data-lab} repositories.  An appendix~E
+compares our finite-population empirical-risk setting to the
+continuous-Hilbert-space noisy inverse-problem setting of
+\citet{BauerPereverzev2005}, clarifying why their minimax theory
+does not directly apply to our problem.
 \end{abstract}
 
 % ============================================================================
-\section{{{appendix-A-title}}}
+\section{Arbitrary-subspace Pesenson reconstruction lemma}
 \label{sec:si-A}
 
-\Todo{Content of Appendix A.}
+The proof of Theorem~2 \maintext{5} cites the
+sampling-quality-regularised reconstruction lemma of
+\citet{Pesenson2008}/\citet{AnisGaddeOrtega2016} as a black-box, with
+the extension from bandlimited subspaces $V_K := \mathrm{span}(\bu_1,
+\ldots, \bu_K)$ to arbitrary feature subspaces $\Scal = \mathrm{col}(\bB)$
+attributed to \citet{ChepuriLeus2018} and \citet{TanakaEldar2020}.
+For self-containment, we record the statement and a 3-line proof.
+
+\begin{lemma}[Subspace Pesenson reconstruction]
+\label{lem:si-pesenson-subspace}
+Let $\bB \in \R^{N \times d}$ be any orthonormal basis matrix
+($\bB^\top \bB = \bI_d$) for a closed linear subspace $\Scal \subseteq
+\R^N$.  Let $T \subset V$ with $\sigma_T(\Scal) := \lambda_{\min}(\bB^\top
+\bP_T \bB) > 0$, where $\bP_T$ is the diagonal projector onto $T$.
+For any $\by \in \R^N$ and any $\tau > 0$, the Tikhonov-regularised
+reconstruction
+\begin{equation}
+    \hat\by_\tau \;:=\; \bB \big(\bB^\top \bP_T \bB + \tau \bI_d\big)^{-1}
+        \bB^\top \bP_T \by
+    \label{eq:si-pesenson-ridge}
+\end{equation}
+satisfies
+\begin{equation}
+    \big\|\hat\by_\tau - \bP_\Scal \by\big\|^2
+    \;\leq\; \frac{\tau^2}{(\sigma_T(\Scal) + \tau)^2}\,\|\bP_\Scal\by\|^2
+        \;+\; \frac{1}{(\sigma_T(\Scal) + \tau)^2}\,\|\bP_T \bP_{\Scal^\perp}\by\|^2.
+    \label{eq:si-pesenson-bound}
+\end{equation}
+The bound does not depend on $\bB$ being a basis of Laplacian
+eigenvectors; the classical \citet{Pesenson2008} statement is the
+specialisation $\bB = \bU_K$.
+\end{lemma}
+
+\begin{proof}
+Let $\bM := \bB^\top \bP_T \bB \in \R^{d \times d}$, symmetric PSD with
+$\lambda_{\min}(\bM) = \sigma_T(\Scal) =: \sigma$.  Let $\bc^\star :=
+\bB^\top \by$ so that $\bP_\Scal\by = \bB \bc^\star$.  Decompose
+$\by = \bP_\Scal\by + \bP_{\Scal^\perp}\by$ and compute
+\begin{equation*}
+    \bB^\top \bP_T \by = \bB^\top \bP_T \bB \bc^\star + \bB^\top \bP_T \bP_{\Scal^\perp}\by
+    = \bM \bc^\star + \bB^\top \bP_T \bP_{\Scal^\perp}\by.
+\end{equation*}
+Hence the Tikhonov estimate in coefficient space is
+$\hat\bc_\tau = (\bM + \tau\bI)^{-1}\bB^\top \bP_T \by$, and
+\begin{align*}
+    \hat\bc_\tau - \bc^\star
+    &= \big[(\bM + \tau\bI)^{-1}\bM - \bI\big]\bc^\star
+        + (\bM + \tau\bI)^{-1}\bB^\top \bP_T \bP_{\Scal^\perp}\by\\
+    &= -\tau (\bM + \tau\bI)^{-1}\bc^\star
+        + (\bM + \tau\bI)^{-1}\bB^\top \bP_T \bP_{\Scal^\perp}\by.
+\end{align*}
+Using $\|(\bM + \tau\bI)^{-1}\|_{\mathrm{op}} \leq 1/(\sigma + \tau)$
+and $\|\bB^\top\|_{\mathrm{op}} = 1$,
+\begin{equation*}
+    \|\hat\bc_\tau - \bc^\star\|^2 \leq \frac{\tau^2}{(\sigma + \tau)^2}\|\bc^\star\|^2 + \frac{1}{(\sigma + \tau)^2}\|\bP_T \bP_{\Scal^\perp}\by\|^2.
+\end{equation*}
+Since $\bB$ is an isometry, $\|\hat\by_\tau - \bP_\Scal\by\| = \|\hat\bc_\tau - \bc^\star\|$ and $\|\bc^\star\| = \|\bP_\Scal\by\|$, yielding \eqref{eq:si-pesenson-bound}.\qed
+\end{proof}
+
+\begin{remark}[Where Lemma~\ref{lem:si-pesenson-subspace} would enter the
+main-paper proof]
+\label{rem:si-when-pesenson}
+The main-paper proof of Theorem~2 does \emph{not} actually invoke
+Lemma~\ref{lem:si-pesenson-subspace}, because the witness predictor
+used there is $f^\star_{\Hcal_d}$ (the population-risk minimiser), which
+requires no Tikhonov regularisation.  The lemma is preserved here as a
+reference because: (i) earlier drafts of the program
+(\texttt{notes/01\_universal\_bound\_proof.tex}, since superseded)
+routed through Pesenson-ridge as the witness; (ii) it is the natural
+substitute when $\bP_\Scal\by \notin \Hcal_d$ (non-realisable case),
+treated in \texttt{notes/03\_non\_realisable\_resolution.tex}; (iii)
+it is the foundation of the leverage-score active-learning analysis
+(C3).
+\end{remark}
 
 % ============================================================================
-\section{{{appendix-B-title}}}
+\section{Transductive Rademacher constants}
 \label{sec:si-B}
 
-\Todo{Content of Appendix B.}
+The slack of Theorem~2 of the main paper relies on the transductive
+Rademacher bound of \citet[][Theorem~1]{ElYanivPechyony2006}, which we
+restate here in our notation.
+
+\begin{theorem}[Transductive Rademacher bound]
+\label{thm:si-trans-rademacher}
+Let $N$, $n$, $u = N - n$ as in \maintext{3}.  Let $\ell : \R \to [0,
+B]$ be a loss function and $\Hcal_d \subseteq \R^N$ a hypothesis
+class.  Define the transductive Rademacher complexity
+\begin{equation}
+    \mathcal{R}_n^{\mathrm{trans}}(\Hcal_d)
+    \;:=\; \frac{1}{n}\Big(\frac{1}{n} + \frac{1}{u}\Big)^{-1/2}
+        \;\E_\sigma\!\!\left[\sup_{f \in \Hcal_d}\,\sum_{v \in V}\sigma_v f(v)\right],
+    \label{eq:si-trans-rademacher-defn}
+\end{equation}
+where $\sigma_v$ are i.i.d.\ taking $+1$ w.p.\ $p = n/N$, $-1$ w.p.\
+$p$, and $0$ w.p.\ $1 - 2p$.  Then for any learner $\hat f$ outputting
+predictors in $\Hcal_d$, with probability $\geq 1 - \eta$ over the
+uniformly random split $(T, T^c)$ of $V$ at $|T| = n$,
+\begin{equation}
+    L_{T^c}(\hat f) \;\leq\; L_T^\pi(\hat f)
+        + 2 \mathcal{R}_n^{\mathrm{trans}}(\ell \circ \Hcal_d)
+        + B \sqrt{\frac{(n + u)\log(1/\eta)}{n u}}
+        \cdot \big(11/4 + \sqrt{\log(1/\eta)/2}\big),
+    \label{eq:si-trans-rademacher-bound}
+\end{equation}
+where $L_T^\pi(\hat f) := \frac{1}{N}\sum_{v \in T}\ell(\hat f(v) - y_v)/\pi(v)$
+is the importance-weighted training loss (which under uniform
+sampling reduces to $L_T(\hat f) \cdot N/n$).
+\end{theorem}
+
+The constant $11/4 + \sqrt{\log(1/\eta)/2}$ is bounded by $\approx 5.05$
+for $\eta = 0.05$, which is the value used in the main paper.
+
+The key structural property is that the bound \emph{directly}
+controls $L_{T^c} - L_T^\pi$ without an intermediate population-risk
+term $L_V$.  Routing through $L_V$ would incur a factor of $\rho(\Pi)
+= N/(N-n)$ on the slack (transduction identity), inflating the slack
+by $\sqrt{\rho(\Pi) - 1}$ relative to
+\eqref{eq:si-trans-rademacher-bound}; see
+\texttt{notes/04\_sharp\_transductive\_constant.tex}~\S 1--3 for the
+detailed comparison.
+
+\begin{lemma}[Talagrand contraction for the transductive Rademacher]
+\label{lem:si-talagrand-trans}
+For the $2M$-Lipschitz square loss truncated to $[-M, M]$ and any
+hypothesis class $\Hcal_d \subseteq [-M, M]^N$,
+\begin{equation*}
+    \mathcal{R}_n^{\mathrm{trans}}(\ell \circ \Hcal_d) \;\leq\; 4 M \cdot \mathcal{R}_n^{\mathrm{trans}}(\Hcal_d).
+\end{equation*}
+\end{lemma}
+
+\begin{proof}
+\citet[][\S 4.2]{Talagrand1996concentration} for the standard Rademacher,
+extended to the transductive case by an analogous symmetrisation
+argument
+(\citealp[][\S 5]{ElYanivPechyony2006}; the only change is that the
+$\sigma_v$ take value $0$ on the $1 - 2p$ portion of $V$).
+\end{proof}
+
+% ============================================================================
+\section{Negative-transfer corollary: technical conditions}
+\label{sec:si-C}
+
+We make explicit the sampling-restriction correction of the negative-transfer
+corollary (C2 in the main paper, Remark on
+``sampling-restriction correction'').
+
+\subsection{Setup}
+
+Let $V = V_{\mathrm{src}} \cup V_{\mathrm{tgt}}$ disjoint, $|V_{\mathrm{src}}| =
+n_s$, $|V_{\mathrm{tgt}}| = n_t$, $N = n_s + n_t$.  Let $\Hcal_d$ be a
+closed linear subspace of $\R^N$ of dimension $d$, with orthonormal
+basis $\bB \in \R^{N \times d}$.
+
+Define the source-set and target-set sampling-quality scalars
+\begin{align}
+    \sigma_{V_{\mathrm{src}}}(\Hcal_d) &:= \lambda_{\min}\big(\bB^\top \bP_{V_{\mathrm{src}}}\bB\big), &
+    \sigma_{V_{\mathrm{tgt}}}(\Hcal_d) &:= \lambda_{\min}\big(\bB^\top \bP_{V_{\mathrm{tgt}}}\bB\big).
+\end{align}
+
+\subsection{Identifiability of the source ERM}
+
+\begin{lemma}[Source identifiability]
+\label{lem:si-source-identif}
+If $\sigma_{V_{\mathrm{src}}}(\Hcal_d) > 0$ (i.e., $V_{\mathrm{src}}$ is a
+\emph{uniqueness set} for $\Hcal_d$), then the source-ERM
+\[
+    \hat\bc_s := \arg\min_{\bc \in \R^d} \frac{1}{n_s}\sum_{v \in V_{\mathrm{src}}}\big(\langle\bB(v, :), \bc\rangle - y_v\big)^2
+\]
+is unique and $\hat\bc_s = (\bB^\top \bP_{V_{\mathrm{src}}}\bB)^{-1}\bB^\top \bP_{V_{\mathrm{src}}}\by$.
+\end{lemma}
+
+\begin{proof}
+Standard OLS on the design matrix $\bB[V_{\mathrm{src}}, :] \in
+\R^{n_s \times d}$, which has rank $d$ iff
+$\sigma_{V_{\mathrm{src}}}(\Hcal_d) > 0$.
+\end{proof}
+
+\subsection{Inner-product approximation on $V_{\mathrm{tgt}}$}
+
+\begin{lemma}[Restriction-corrected orthogonality]
+\label{lem:si-restriction-orth}
+Let $f, g \in \Hcal_d$.  Then
+\begin{equation}
+    \Big|\langle f, g\rangle_{V_{\mathrm{tgt}}} - \tfrac{n_t}{N}\langle f, g\rangle\Big| \;\leq\; M^2 \cdot \big(1 - \sigma_{V_{\mathrm{tgt}}}(\Hcal_d) \tfrac{N}{n_t}\big)_+,
+\end{equation}
+where the subscript-$+$ denotes positive part.  In particular, if
+$V_{\mathrm{tgt}}$ is a uniqueness set ($\sigma_{V_{\mathrm{tgt}}} \cdot N/n_t \geq 1$),
+the correction vanishes and $\langle f, g\rangle_{V_{\mathrm{tgt}}} = (n_t/N)\langle f, g\rangle$.
+\end{lemma}
+
+This lemma is what makes the negative-transfer proof (main paper,
+Theorem~6) clean: under the assumption that $V_{\mathrm{tgt}}$ is a
+uniqueness set for $\Hcal_d$ (which is implicit in evaluating any
+non-degenerate target loss), the orthogonality of source and target
+projections under spectral disjointness translates from the global
+$\R^N$ inner product to the restricted $V_{\mathrm{tgt}}$ inner product.
+
+\begin{remark}[When does $V_{\mathrm{tgt}}$ fail to be a uniqueness set?]
+\label{rem:si-uniqueness-failure}
+$V_{\mathrm{tgt}}$ fails to be a uniqueness set for $\Hcal_d$ iff
+$\dim(\Hcal_d) > n_t$, i.e., the target sample is smaller than the
+hypothesis class dimension.  In this regime the target ERM is not
+identifiable, and the negative-transfer phenomenon is masked by the
+broader unidentifiability of any prediction on $V_{\mathrm{tgt}}$
+(regardless of source). We assume $n_t \geq d$ throughout the
+corollary; in practice this is mild (it requires more target
+examples than features), and when it fails the more fundamental
+identifiability question must be addressed first.
+\end{remark}
+
+% ============================================================================
+\section{Reproducibility map}
+\label{sec:si-D}
+
+The empirical content of the main paper
+(\maintext{8}, Table~1) is reproducible from publicly archived
+scripts in the sibling \texttt{cycling-data-lab} repositories.  We
+provide a per-row mapping.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Main-paper Table~1 row} & \textbf{Repository} & \textbf{Script (\texttt{experiments/})} \\
+\midrule
+8 MatBench tasks (mp\_e\_form, mp\_gap, etc.) & \texttt{materials-applicability-bound} & \texttt{d11\_predictive\_multitask.py} \\
+matbench\_expt\_gap                            & \texttt{materials-applicability-bound} & \texttt{d11b\_expt\_gap.py} \\
+MovieLens user-rating pilot                    & \texttt{materials-applicability-bound} & \texttt{d01\_movielens\_pilot.py} \\
+QSAR pilot                                     & \texttt{materials-applicability-bound} & \texttt{d04\_qsar\_pilot.py} \\
+AFLOW bulk / shear modulus pilots              & \texttt{materials-applicability-bound} & \texttt{d03\_aflow\_pilot.py} \\
+Bike-share LSO panel ($\Delta R^2 \in [0.06, 0.55]$) & \texttt{bikeshare-demand-forecasting} & \texttt{d19\_lso\_rigorous.py} \\
+Mobility commune panel (in preparation)        & \texttt{mobility-applicability-bound} & (in preparation) \\
+\midrule
+Falsifiability F1 (Spearman exact $p = 4.96 \times 10^{-5}$) & \texttt{materials-applicability-bound} & \texttt{d20\_exact\_permutation\_test.py} \\
+Falsifiability F2 (partial Spearman, bootstrap CI)           & \texttt{materials-applicability-bound} & \texttt{d13\_bootstrap\_ci.py} \\
+Falsifiability F3 (CIG, shuffled-$k$NN null)                 & \texttt{materials-applicability-bound} & \texttt{d25\_knn\_sensitivity.py}, \texttt{d25b\_*} \\
+Spectrum decomposition (Magpie / chem graph)                 & \texttt{materials-applicability-bound} & \texttt{d05\_rspec\_matbench.py}, \texttt{d06\_h1\_spectrum\_matbench.py} \\
+CHGNet encoder discrimination                                & \texttt{materials-applicability-bound} & \texttt{d24\_chgnet\_structural\_eg.py} \\
+Figure~1 (spectral-projection picture)                       & \texttt{structural-bounds-framework} & \texttt{d01\_spectral\_projection\_figure.py} \\
+\bottomrule
+\end{tabular}
+\caption{Per-row reproducibility map for the main-paper empirical
+section.  Every value is regenerable from raw open data via the
+indicated script, using SEED = 42 and Python 3.12 with the
+\texttt{requirements.txt} of the corresponding repository.}
+\label{tab:si-reproducibility}
+\end{table}
+
+\subsection{Random seeds and finite-population corrections}
+
+The master random seed is pinned to \texttt{SEED = 42} in every
+stochastic script.  Per-seed sensitivity is documented in
+\texttt{d18\_shuffled\_knn\_null.py} (10 realisations) and
+\texttt{d25\_knn\_sensitivity.py} (8 tasks $\times$ 3 $k$ values).
+The headline Spearman $\rho = +1.000$ is robust to the choice of
+$k$ across $k \in \{5, 10, 20\}$ (see \texttt{outputs/d25\_knn\_sensitivity\_full.json}).
+
+Finite-population corrections in the without-replacement Hoeffding
+inequality (Serfling 1974) are made explicit in the proofs of
+Theorems~1 and~2 of the main paper; the corresponding empirical
+correction factor $1 - (n-1)/N$ is applied in
+\texttt{d13\_bootstrap\_ci.py}.
+
+% ============================================================================
+\section{Comparison to noisy continuous inverse-problem theory}
+\label{sec:si-E}
+
+A natural question is why our framework does not invoke the classical
+minimax theory of noisy linear inverse problems on continuous Hilbert
+spaces \citep{BauerPereverzev2005,Cavalier2008}.  We summarise the
+mismatch.
+
+\paragraph{Setting comparison.}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Feature}         & \textbf{Bauer--Pereverzev 2005}            & \textbf{Present paper} \\
+\midrule
+Domain                   & continuous Hilbert space                    & finite graph $V$, $|V| = N$ \\
+Forward operator         & compact linear operator $A : X \to Y$       & sample restriction $\bP_T : \R^N \to \R^n$ \\
+Noise                    & Gaussian $\sigma \xi$ on observations       & none (deterministic target) \\
+Source of randomness     & noise $\xi$                                 & random sub-sample $T$ \\
+Estimand                 & full signal $f \in X$                       & held-out loss $L_{T^c}(\hat f)$ \\
+Minimax-optimal estimator & Tikhonov, $\tau \sim \sigma^{2/(2\mu+1)}$ & ERM with witness $f^\star_{\Hcal_d}$ \\
+Rate                     & $\sigma^{4\mu/(2\mu+1)}$                    & $M^2/\sqrt{N-n}$ (Berry--Esseen) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Why the rates differ.}  In \citet{BauerPereverzev2005}, the
+rate $\sigma^{4\mu/(2\mu+1)}$ is the variance-bias trade-off of a
+Tikhonov regulariser against Gaussian noise of variance $\sigma^2$ on
+observations.  In our finite-population setting, the analogous
+``noise'' would be the random restriction $\by|_T$ instead of $\by|_V$,
+but this is not Gaussian: it is a uniform sub-sample.  The
+Berry--Esseen rate $1/\sqrt{N-n}$ governs the residual fluctuation,
+which is the right object to bound in this setting; the inverse-problem
+rate $\sigma^{4\mu/(2\mu+1)}$ does not apply because there is no
+parametric noise variance to optimise against.
+
+\paragraph{When inverse-problem theory \emph{would} apply.}  If we
+augment the framework with noisy observations $y_v^{\mathrm{obs}} = y_v
++ \xi_v$, $\xi_v \sim \mathcal{N}(0, \sigma_\xi^2)$ i.i.d.\ on $T$,
+the Bauer--Pereverzev rate would govern the additional noise-dependent
+slack term.  This is a natural extension to chemical-precision
+applications (e.g., DFT energy targets with quantum-Monte-Carlo
+ground-truth labels carrying explicit noise estimates) but is not
+operative in the deterministic-target setting of our motivating
+applications (MatBench, MovieLens, mobility panels).
 
 % ============================================================================
 \section*{References}
