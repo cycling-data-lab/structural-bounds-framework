@@ -12,8 +12,8 @@ This repository develops the foundational theoretical paper of the [cycling-data
 
 ## Headline result
 
-| Theorem | Statement | Status |
-| :---    | :---      | :---:  |
+|Theorem|Statement|Status|
+|:---|:---|:---:|
 | **Universal lower bound** (Thm 1) | `E[L_{T^c}(f̂)] ≥ (1 - R²_spec(H_d, y)) · Var(y)` — exact in expectation, no concentration slack | proved (notes/01) |
 | **Universal upper bound** (Thm 2, sharp transductive form) | ERM saturates the lower bound to `2·R^trans_n(H_d) + 5.05·M²·√((n+u)·log(2/η)/(n·u))`; rho factor eliminated via El-Yaniv-Pechyony 2006 (notes/04) | proved (notes/02, 04) |
 | **Berry–Esseen minimax tightness** (Thm 3) | No estimator can drive the slack below `Ω(M²/√(N-n))` in the worst case, even with oracle access to `y` on `V` | proved (notes/02) |

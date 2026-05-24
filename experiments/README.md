@@ -21,8 +21,8 @@ where :
 
 ## Scripts in this repository
 
-| ID  | Purpose | Output |
-| :---: | :--- | :--- |
+|ID|Purpose|Output|
+|:---:|:---|:---|
 | d01 | Spectral-projection picture: scatter of R²_spec vs ΔR²_LSO on the 8-task MatBench panel | `figures/fig1_spectral_projection.pdf` |
 | d02 | Slack-rate comparison: rho/sqrt(n) vs transductive vs Berry-Esseen | `figures/fig2_slack_comparison.pdf` |
 
@@ -34,8 +34,8 @@ For full reproducibility of the empirical numbers (Spearman computations, permut
 
 A complete paper typically has the following scripts.  Use this as a checklist :
 
-| ID  | Purpose | Notes |
-| :---: | :--- | :--- |
+|ID|Purpose|Notes|
+|:---:|:---|:---|
 | d03 | Empirical-validation re-runner (consolidates Tier 1 numbers from sibling repos) | Reads upstream `outputs/d*.json` from `materials-applicability-bound`, `mobility-applicability-bound`, `bikeshare-demand-forecasting` |
 | d04 | Negative-transfer (C2) empirical anchor on QM9 → MatBench task pair | Validates Theorem 6 (spectral-disjointness lower bound) |
 | d05 | Active-learning (C3) empirical anchor: leverage-score sampling vs uniform LSO | Validates Theorem 7 (parametric 1/n rate) |

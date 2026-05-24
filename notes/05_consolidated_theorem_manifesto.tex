@@ -1,0 +1,182 @@
+% notes/05_consolidated_theorem_manifesto.tex
+%
+% Research notes — consolidated one-page theorem manifesto.
+%
+% Single reference document summarising all main results across the
+% structural-bounds-framework program with cross-references to the
+% relevant proofs and the paper sections that absorb them.  Intended
+% as a quick-access summary for collaborators, reviewers, and future
+% selves to navigate the four prior notes (01-04) plus the main
+% paper.
+
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[margin=2cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+
+\usepackage[authoryear,round]{natbib}
+
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\PR}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Rcal}{\mathcal{R}}
+
+\title{\textbf{Consolidated theorem manifesto:\\
+the universal spectral lower bound and its corollaries}}
+\author{Rohan Fossé \and Gaël Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, May 2026 — single-page reference}
+
+\begin{document}
+
+\maketitle
+
+\section*{Setup (one paragraph)}
+
+Let $G = (V, E)$ be a finite undirected graph with $|V| = N$,
+symmetric-normalised Laplacian $L = \bU \boldsymbol{\Lambda} \bU^\top$.
+Let $\by \in \R^N$ be a centred bounded target signal,
+$\|\by\|_\infty \leq M$, $\bone^\top \by = 0$,
+$\Var(\by) = N^{-1}\|\by\|^2$.  Let $\Acal$ be a learner with closed
+hypothesis class $\Hcal_d \subseteq \R^N$ truncated to $[-M, M]$, ERM,
+with population-risk minimiser $f^\star_{\Hcal_d} := \arg\min_{f \in
+\Hcal_d} L_V(f)$ and \emph{learner-specific spectral $R^2$}
+$\Rspec(\Hcal_d, \by) := 1 - L_V(f^\star_{\Hcal_d})/\Var(\by)$.
+Evaluation protocol $\Pi_{\mathrm{LSO}}$ is uniform-without-replacement
+sampling of a training set $T \subset V$ at $|T| = n$, $u := N - n$,
+$\rho(\Pi) := N/u$.
+
+\section*{The results, in one table}
+
+\begin{tabularx}{\textwidth}{l Y l l}
+\toprule
+\textbf{Result} & \textbf{Statement} & \textbf{Status} & \textbf{Loc.}\\
+\midrule
+\textbf{Theorem~1} (Universal LB)
+& $\E_T[L_{T^c}(\hat f_\Acal(T))] \geq (1 - \Rspec(\Hcal_d, \by)) \cdot \Var(\by)$, exact in expectation
+& proved
+& paper §5; notes/01\\
+\midrule
+\textbf{Theorem~2} (Sharp transductive UB)
+& $L_{T^c}(\hat f_\Acal(T)) \leq (1 - \Rspec)\Var(\by) + 2\Rcal_n^{\mathrm{trans}}(\Hcal_d) + 5.05 M^2\sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}$, with $\Rcal_n^{\mathrm{trans}}$ the transductive Rademacher of \citet*{ElYanivPechyony2006}
+& proved
+& paper §6; notes/02, 03, 04\\
+\midrule
+\textbf{Theorem~3} (Berry-Esseen minimax)
+& $\PR_T[L_{T^c}(\hat f) - (1-\Rspec)\Var(\by) \geq c M^2/\sqrt{u}] \geq 1 - \eta$ for some signal $\by \in \Hcal_d^\perp$; uniform in $\hat f$, even oracle
+& proved
+& paper §7; notes/02\\
+\midrule
+\textbf{Corollary~1} (Cramér-Rao analog)
+& Combining Thm 1 + Thm 2 + Thm 3: minimax slack rate is $\Theta(M^2/\sqrt{u} + \Rcal_n^{\mathrm{trans}}(\Hcal_d))$, matching to a factor $\leq 10$
+& direct
+& paper §4\\
+\midrule
+\textbf{Corollary~C1} (Encoding gap)
+& $\E_T[L_{T^c}(\hat f_{\mathrm{cat}}) - L_{T^c}(\hat f_{\mathrm{comp}})] \geq \Rspec(\Hcal_{\mathrm{comp}}, \by) \cdot \Var(\by)$, recovering the MLST paper exactly
+& proved
+& paper §8.1\\
+\midrule
+\textbf{Theorem~6 / C2} (Negative transfer)
+& Under spectral disjointness of $(\by_{\mathrm{src}}, \by_{\mathrm{tgt}})$ on $\Hcal_d$: $\E[\mathrm{NT}(\Acal)] \geq (\|\bP_{\Hcal_d}\tilde\by_{\mathrm{src}}\|^2 + \|\bP_{\Hcal_d}\tilde\by_{\mathrm{tgt}}\|^2)/n_t$.  Transfer is unavoidably harmful.
+& proved
+& paper §8.2\\
+\midrule
+\textbf{Corollary~2 (NT vacuity)}
+& Under spectral alignment of $(\by_{\mathrm{src}}, \by_{\mathrm{tgt}})$ on $\Hcal_d$, $\E[\mathrm{NT}(\Acal)] = 0$
+& direct
+& paper §8.2\\
+\midrule
+\textbf{Theorem~7 / C3} (Active learning)
+& Importance-weighted ERM under leverage-score sampling $\pi^\star(v) \propto \|\bB(v, :)\|^2$ achieves slack $O(M^2 \sqrt{dN \log(1/\eta)}/n)$, i.e.\ rate $1/n$ (parametric) instead of passive $1/\sqrt{n}$
+& proved
+& paper §8.3\\
+\midrule
+\textbf{Withdrawn} (Conj. 1, notes/02 §3)
+& Non-realisable minimax rate has factor $\sigma_\Pi^{-1}$
+& \textcolor{red!50!black}{withdrawn}
+& notes/03 §4--5\\
+\midrule
+\textbf{Withdrawn} (``Thm 2'', notes/01)
+& Saturation slack scales as $\rho(\Pi)/\sqrt{n \sigma_\Pi}$
+& \textcolor{red!50!black}{withdrawn}
+& notes/02 §1 (erratum)\\
+\bottomrule
+\end{tabularx}
+
+\section*{Resolved open questions (post notes/01--04)}
+
+\begin{enumerate}
+\item \textbf{Saturation of the lower bound.}  Resolved by Thm~2.
+    Pesenson-ridge is not needed; the population-risk minimiser
+    $f^\star_{\Hcal_d}$ serves as a clean witness (notes/03).
+\item \textbf{Non-realisable regime.}  Vacuous (notes/03).  No
+    separate minimax theory required.
+\item \textbf{Sharp $\rho(\Pi)$ constant.}  Resolved: $\rho$ was loose.
+    Transductive Rademacher (\citealp*{ElYanivPechyony2006}) eliminates
+    it (notes/04).  Sharp constant within a factor of $\leq 10$;
+    multi-point Fano (sketched, notes/04 §4) would tighten to $\leq 4$.
+\end{enumerate}
+
+\section*{Remaining (non-foundational) open questions}
+
+\begin{enumerate}
+\item Exact Fano multi-point constants in Theorem~3
+    (cosmetic refinement; deferred).
+\item Importance-weighted transduction identity for general
+    non-uniform sampling distributions (mechanical extension required
+    for C3, partially done in paper §8.3).
+\item Empirical anchor for C2 (negative transfer) on a QM9 $\to$
+    MatBench task pair (companion repo \texttt{negative-transfer-corollary}
+    in preparation).
+\item Empirical anchor for C3 (active learning) showing the
+    $\sqrt{n/d}$ improvement of leverage-score over uniform sampling
+    (companion repo \texttt{active-learning-corollary} in preparation).
+\end{enumerate}
+
+\section*{Where to start reading}
+
+\begin{itemize}
+\item \textbf{Newcomers}: start with the main paper's
+    \texttt{paper.tex} §1 (Introduction) and §4 (Main results) for
+    the headline statements, then §8 (Corollaries) for the empirical
+    instantiation. The Cramér-Rao analogy is established in §4
+    (Corollary~1).
+\item \textbf{Collaborators reviewing the proofs}: paper §5--§8 contain
+    the full proofs (transductive Rademacher, Berry-Esseen, NT, AL).
+    For the historical development and superseded statements, see
+    notes/01--04 in order; notes/05 (this document) is the consolidated
+    summary.
+\item \textbf{Reviewers}: cover\_letter.md positions the contribution.
+    Falsifiability section (paper §9.2) lists three pre-registered
+    statistical tests; F1 passes with exact $p = 4.96 \times 10^{-5}$ on
+    the 8-task MatBench panel.  The SI (\texttt{paper\_si.tex}, 5
+    appendices) contains technical details deferred from the main
+    paper.
+\end{itemize}
+
+\bibliographystyle{plainnat}
+\bibliography{../references/references}
+
+\end{document}
