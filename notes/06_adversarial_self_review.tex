@@ -1,0 +1,315 @@
+% notes/06_adversarial_self_review.tex
+%
+% Research notes — adversarial self-review of the v0.4 working draft.
+%
+% Intended as a pre-emptive "Gemini Pro 2.5"-style review pass
+% (mirroring the convention from materials-applicability-bound,
+% where Gemini reviewer comments are incorporated before formal
+% submission). Lists likely reviewer objections, categorised by
+% severity, with proposed responses.
+%
+% Authored: 2026-05-24.
+% Target: ratchet pass before tagging v0.5 (post-review-response).
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+
+\newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Rcal}{\mathcal{R}}
+
+\definecolor{majorobj}{rgb}{0.8, 0.1, 0.1}
+\definecolor{minorobj}{rgb}{0.85, 0.55, 0.0}
+\definecolor{nitobj}{rgb}{0.15, 0.45, 0.7}
+
+\newcommand{\Major}{\textcolor{majorobj}{\textbf{[MAJOR]}}\ }
+\newcommand{\Minor}{\textcolor{minorobj}{\textbf{[MINOR]}}\ }
+\newcommand{\Nit}{\textcolor{nitobj}{\textbf{[NIT]}}\ }
+
+\title{\textbf{Adversarial self-review of structural-bounds-framework v0.4}\\
+\large{Pre-empt of likely reviewer objections + proposed responses}}
+\author{Rohan Fossé \and Gaël Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, 2026-05-24 --- \emph{not for distribution beyond co-authors}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We enumerate likely objections from a JMLR / FoCM editorial pass and
+a Gemini-Pro-2.5-style adversarial reviewer.  For each, we propose a
+response and a manuscript edit category (text-only / new theorem /
+new experiment / acknowledge open question).  The intent is to ratchet
+the manuscript through the most predictable critiques before formal
+submission.
+\end{abstract}
+
+% =========================================================================
+\section{Theoretical objections}
+
+\Major \textbf{``The lower bound is trivial under expansive hypothesis
+classes.''}  A neural network with sufficient capacity has
+$\Hcal_d = \R^N$, $\Rspec(\Hcal_d, \by) = 1$, and the bound reduces
+to $\E[L_{T^c}] \geq 0$.  Reviewer may object that the bound has no
+content in the practically interesting regime of large-capacity
+models.
+
+\emph{Response.} (a) The bound's interest is at fixed $\Hcal_d$, where
+it characterises the irreducible component of LSO error for any
+algorithm operating within that class.  Real neural networks have
+implicit biases (small effective $\Hcal_d$) that the bound's
+\emph{learner-specific} formulation captures; the empirically operative
+$\Hcal_d$ is not the parametric capacity but the SGD-reachable subspace
+\citep{NeyshaburTomiokaSrebro2014}, which is much smaller.
+(b) The bound is most informative for the regime where $\Rspec
+\in (0, 1)$, i.e., where the learner's class is a non-trivial subset of
+$\R^N$.  This is the standard regime for materials informatics
+(Magpie / CHGNet), mobility (IMD-4), and recommender systems
+(item-feature subspaces).  Manuscript edit: add a Remark in
+§Setup about the trivial-vs-informative regimes.
+
+\smallskip
+\Major \textbf{``The Berry-Esseen lower bound uses an adversarial signal
+in $\Hcal_d^\perp$; this is unrealistic for practical signals which are
+typically $\Hcal_d$-aligned by design.''}  Reviewer may object that the
+lower bound is not informative for the typical regime where the
+practitioner has chosen $\Hcal_d$ \emph{to capture} most of $\by$.
+
+\emph{Response.}  The lower bound is exact in expectation regardless
+of signal-class alignment (Theorem~1).  The Berry-Esseen high-probability
+slack \emph{additionally} forces a worst-case fluctuation; this is
+not the typical-case slack but the worst-case one.  For the typical
+case, the bound is tight in expectation with no slack.  The argument
+also shows that the algorithm cannot do better than the floor on
+\emph{adversarial} signals, ruling out claims of universally-tight
+performance.  Manuscript edit: add a paragraph in §Discussion
+clarifying that the lower bound is informative in two distinct ways
+(typical-case in-expectation; worst-case high-probability).
+
+\smallskip
+\Minor \textbf{``The Rademacher complexity $\Rcal^{\mathrm{trans}}_n(\Hcal_d)$
+is not estimable from data.''}  Reviewer may ask for an
+explicit upper bound on $\Rcal^{\mathrm{trans}}_n$ for the regressors
+used in the empirical section (LightGBM, kernel ridge).
+
+\emph{Response.}  For closed-linear $\Hcal_d$ of dimension $d$,
+$\Rcal^{\mathrm{trans}}_n(\Hcal_d) \leq C \sqrt{d/u}$ for an absolute
+constant $C$ (Lemma~B.1 of SI).  For LightGBM, the effective $d$ is
+bounded by $T \cdot L \cdot d_{\mathrm{leaves}}$ where $T$ is the tree
+count, $L$ the depth, $d_{\mathrm{leaves}}$ the per-leaf dimension
+(usually 1).  Manuscript edit: in SI Appendix B, add a paragraph with
+explicit $\Rcal^{\mathrm{trans}}_n$ bounds for the regressor families
+appearing in Table~1.
+
+\smallskip
+\Minor \textbf{``The negative-transfer spectral-disjointness condition
+is hard to verify in practice.''}  How does a practitioner know whether
+their source / target are spectrally disjoint?
+
+\emph{Response.}  The condition is checkable by computing the joint
+graph $G$ on the union $V_{\mathrm{src}} \cup V_{\mathrm{tgt}}$, then
+computing the projection of $\by_{\mathrm{src}}$ and $\by_{\mathrm{tgt}}$
+onto the bottom-$K$ Laplacian eigenvectors.  For closed-linear
+$\Hcal_d$, the relevant projection is $\bP_{\Hcal_d}\by$, computable
+in $O(d^2 N)$ time.  This is the same computational cost as the
+spectral $R^2$ computation already used in Corollary~C1
+empirically.  Manuscript edit: add a paragraph in §C2 with the
+practical computational recipe.
+
+\smallskip
+\Nit \textbf{``The factor-$\sqrt{\rho - 1}$ improvement from
+transductive Rademacher (§notes/04) is undersold.''}  Reviewer may
+note that this is a non-trivial result on its own.
+
+\emph{Response.}  Agreed; notes/04 stands alone as a methodological
+contribution.  Manuscript edit: elevate the transductive Rademacher
+observation from a passing Remark in §6 to a labelled paragraph
+in the Contributions list (§1), making explicit that this is a
+substantive improvement over the naive Mohri-routed proof.
+
+% =========================================================================
+\section{Empirical objections}
+
+\Major \textbf{``Spearman $\rho = +1.000$ on $n = 8$ tasks is
+suspiciously perfect.''}  Reviewer may question whether the rank-order
+match is too good and indicates over-fitting to the framework.
+
+\emph{Response.}  (a) The exact permutation test gives $p = 4.96 \times
+10^{-5}$, accounting for the small-$n$ over-claim risk.  (b) The
+partial Spearman controlling for $\log N$ and $\log \Var(\by)$ is
+$+0.79$ with $p = 0.032$, confirming the signal survives the obvious
+confounders.  (c) The shuffled-$k$NN null on a degree-and-clustering-matched
+graph gives partial $\rho = +0.25$, $p = 0.31$, showing the chemistry
+graph is essential, not the GroupKFold protocol per se.  (d) The CIG
+ratio of $18\times$ to $145\times$ above null further rules out
+accidental alignment.  No manuscript edit needed; falsifiability
+section already addresses this.
+
+\smallskip
+\Minor \textbf{``The cross-domain pilots (MovieLens, QSAR, AFLOW) lack
+$\Rspec$ values, breaking the consistency of Table~1.''}  Reviewer may
+ask why these rows have ``---'' in the $\Rspec$ column.
+
+\emph{Response.}  Computing $\Rspec$ requires a domain-specific
+similarity graph, which is non-trivial outside materials informatics
+(QSAR molecules need pharmacophore-similarity graphs; MovieLens users
+need user-user similarity from collaborative-filtering structure).  We
+deliberately chose to report only the $\Delta R^2_{\mathrm{LSO}}$
+values for these rows to avoid hand-tuning graph choices for the
+cross-domain pilots.  Manuscript edit: add a sentence in
+§sec:empirics explaining the deliberate omission.
+
+\smallskip
+\Minor \textbf{``Bike-share and mobility rows have ranges or are
+unfilled; not a serious empirical anchor.''}
+
+\emph{Response.}  The bike-share row reports $\Delta R^2 \in [+0.06,
++0.55]$ across 9 networks (from \texttt{bikeshare-demand-forecasting}
+README, d19 leave-station-out).  The mobility row is from a
+companion paper in preparation; we report a placeholder rather than
+omit, with explicit notation.  Both are secondary anchors; the
+primary anchor is the 8-task MatBench panel with its falsifiability
+guarantees.  Manuscript edit: replace the mobility ``---'' values
+with a concrete summary statistic once \texttt{mobility-applicability-bound}
+v0.2 is ready.
+
+\smallskip
+\Nit \textbf{``Figure~1's marker-size encoding for $\log_{10} N$ is
+hard to read.''}
+
+\emph{Response.}  Agreed; a sub-figure with a marker-size legend would
+help.  Manuscript edit (post-v1.0): add a small inset legend showing
+marker scale for $N = 10^3, 10^4, 10^5$.
+
+% =========================================================================
+\section{Methodological objections}
+
+\Major \textbf{``Why not just cite the existing leave-one-out PAC-Bayes
+literature?''}  Reviewer (likely from the PAC-Bayes lane) may ask
+why our framework is needed when leave-one-out PAC-Bayes
+\citep{LangfordCaruana2002,DziugaiteRoy2017} already exists.
+
+\emph{Response.}  PAC-Bayes bounds are upper bounds on excess risk
+under \emph{stochastic} predictors; ours is a lower bound on \emph{any}
+deterministic ERM under leave-node-out.  The two lanes are complementary
+and largely non-overlapping; our framework provides the irreducible
+floor that PAC-Bayes upper bounds aspire toward.  Manuscript edit: add
+a paragraph in §1.2 (Relation to prior work) explicitly distinguishing
+the two lanes.
+
+\smallskip
+\Minor \textbf{``The Cramér-Rao analogy is loose --- there is no Fisher
+information here.''}
+
+\emph{Response.}  The analogy is structural, not parametric.  Cramér-Rao
+bounds the variance of any unbiased estimator from below by
+$1/I(\theta)$; we bound the expected leave-node-out loss from below by
+the irreducible $(1 - \Rspec) \Var(\by)$.  Both establish that the
+estimator's reach (parametric for Cramér-Rao, geometric for ours)
+fixes a floor that no algorithmic ingenuity can beat.  We do not
+claim a literal Fisher-information identity; the analogy is at the
+level of the \emph{role} of the irreducibility floor.  Manuscript edit:
+soften the Cramér-Rao language in §1 and §4 if reviewer pushback is
+substantial; alternatively, keep the analogy but add a Remark
+clarifying what is and is not analogous.
+
+\smallskip
+\Nit \textbf{``The transductive Rademacher constant 5.05 is mysterious.''}
+
+\emph{Response.}  The constant decomposes as $11/4 + \sqrt{\log(2/\eta)/2}$
+for $\eta = 0.05$ (SI Appendix B, around eq.\ for
+$\Rcal^{\mathrm{trans}}_n$).  Manuscript edit: expand the SI
+derivation to spell this out explicitly.
+
+% =========================================================================
+\section{Editorial objections}
+
+\Minor \textbf{``Length is borderline excessive for a JMLR submission
+(20 pp main + 5 pp SI + 5 notes + cover letter).''}
+
+\emph{Response.}  JMLR has no hard page limit and routinely publishes
+20--40 pp manuscripts; the SI compresses additional technical content
+that would otherwise inflate the main paper.  Notes are research-stage
+documents, not part of the submission package per se --- only the
+main paper + SI go to the editorial portal.  No manuscript edit
+needed.
+
+\smallskip
+\Minor \textbf{``Why JMLR and not Annals of Statistics or IEEE TIT?''}
+
+\emph{Response.}  JMLR is the natural home for this work because it
+unifies a theoretical contribution (the bound) with a substantial
+empirical-validation programme (8 MatBench tasks + cross-domain
+pilots); Annals of Statistics and TIT lean too theoretical for the
+empirical companion.  FoCM is the explicit backup.  Manuscript edit:
+no change; cover letter already addresses this.
+
+\smallskip
+\Nit \textbf{``Bibliography is not author-year-consistent (some
+entries lack DOIs).''}
+
+\emph{Response.}  Most entries have DOIs; a few historical ones
+(Bikelis 1969, Talagrand 1996) lack them as the journals were not
+DOI-indexed at publication.  No manuscript edit needed.
+
+% =========================================================================
+\section{Triage plan toward v0.5}
+
+Edits needed for the next manuscript milestone (v0.5), in priority
+order:
+
+\begin{enumerate}[label=\textbf{P\arabic*.}]
+\item \textbf{Practical recipe paragraph in §C2 (NT)} for the spectral-disjointness
+    check.  $O(d^2 N)$ computation; 1 paragraph.
+\item \textbf{Add Remark in §Setup} on the trivial-vs-informative
+    regimes for varying $\Hcal_d$ capacity.
+\item \textbf{Elevate the transductive Rademacher contribution} from
+    a Remark to a labelled item in the Contributions list (§1).
+\item \textbf{Add deliberate-omission sentence} in §sec:empirics about
+    cross-domain $\Rspec$ values being out of scope.
+\item \textbf{Add a paragraph in §1.2} distinguishing the leave-one-out
+    PAC-Bayes lane from our spectral lane.
+\item \textbf{Add a paragraph in §Discussion} clarifying the two
+    distinct senses in which the lower bound is informative
+    (typical / worst-case).
+\item \textbf{Expand SI Appendix B} with explicit transductive
+    Rademacher bounds for LightGBM and kernel ridge, plus
+    derivation of the $5.05$ constant.
+\end{enumerate}
+
+None of these are blockers for v0.4 → v0.5; all are text-only edits
+that can be done in a focused 2-day session.
+
+% =========================================================================
+\section*{Acknowledgements (working notes)}
+
+These notes pre-empt likely reviewer objections by enumerating them
+explicitly.  The convention is borrowed from the
+\texttt{materials-applicability-bound} repository, which incorporated
+Gemini Pro 2.5 reviewer comments in two rounds before MLST submission.
+The present notes are intended for a single Gemini Pro 2.5 self-review
+pass before tagging v0.5.
+
+\bibliography{../references/references}
+
+\end{document}
