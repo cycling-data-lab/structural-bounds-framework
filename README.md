@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/MIT)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
-[![Status: working draft v0.4](https://img.shields.io/badge/Status-working%20draft%20v0.4-orange.svg)](./paper.tex)
+[![Status: working draft v0.5](https://img.shields.io/badge/Status-working%20draft%20v0.5-orange.svg)](./paper.tex)
 [![Target: JMLR / FoCM](https://img.shields.io/badge/Target-JMLR%20%2F%20FoCM-blue.svg)](./paper.tex)
 [![DOI](https://img.shields.io/badge/DOI-pending%20Zenodo-blue.svg)](./CITATION.cff)
 
@@ -27,7 +27,7 @@ The bound is *learner-specific*: `R²_spec(H_d, y) := 1 - L_V(f*_{H_d}) / Var(y)
 
 ```text
 structural-bounds-framework/
-├── paper.tex                              # Main manuscript (working draft v0.4, 20 pages, C1+C2+C3 full, 2 figures, full empirical section)
+├── paper.tex                              # Main manuscript (working draft v0.5, 21 pages, C1+C2+C3 full, 2 figures, full empirical section, 4 P-polish edits from notes/06 applied)
 ├── paper.pdf                              # Compiled manuscript (regenerable via pdflatex)
 ├── paper_si.tex                           # Supplementary Information (5 appendices, 5 pages compiled)
 ├── paper_si.pdf                           # Compiled SI
@@ -37,6 +37,8 @@ structural-bounds-framework/
 │   ├── 02_minimax_saturation.tex            # Theorem 2 (UB) + Theorem 3 (BE)
 │   ├── 03_non_realisable_resolution.tex     # Closure: non-realisable regime is vacuous
 │   ├── 04_sharp_transductive_constant.tex   # Sharp transductive constant via El-Yaniv-Pechyony
+│   ├── 05_consolidated_theorem_manifesto.tex # One-page reference: all 7 theorems + status
+│   ├── 06_adversarial_self_review.tex       # Gemini-Pro-2.5-style pre-empt of reviewer objections
 │   └── README.md                            # Conventions and reading order
 ├── references/references.bib              # BibTeX
 ├── experiments/                           # d01 ... dNN reproducible scripts (stubs)

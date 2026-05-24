@@ -284,6 +284,18 @@ entropy or PAC-Bayes.  Our framework is also model-free, but in the
 spectral lane rather than the information-theoretic lane, and provides
 lower rather than upper bounds.
 
+\textbf{(b$'$) Leave-one-out PAC-Bayes.}  The leave-one-out PAC-Bayes
+literature \citep{LangfordCaruana2002,DziugaiteRoy2017} provides
+\emph{upper} bounds on the leave-one-out (and by extension
+leave-node-out) excess risk for \emph{stochastic} predictors via
+posterior--prior divergence.  Our framework is complementary: it
+provides a \emph{lower} bound on the leave-node-out expected loss for
+\emph{deterministic} ERM-on-projection predictors, characterising the
+irreducible floor that the PAC-Bayes upper bounds aspire toward.  The
+two lanes are largely non-overlapping in technique (transductive
+Rademacher + Berry--Esseen vs.\ posterior--prior KL) and complementary
+in direction (lower vs.\ upper).
+
 \textbf{(c) Graph signal processing on bandlimited subspaces.}  The
 classical bandlimited reconstruction theorems of
 \citet{Pesenson2008,AnisGaddeOrtega2016} and the recent generalisation
@@ -412,6 +424,27 @@ $\Rspec$ is the population-variance-explained ceiling of the class.
     expected, since an arbitrarily expressive learner has no structural
     floor.
 \end{itemize}
+\end{remark}
+
+\begin{remark}[Where the bound is informative vs trivial]
+\label{rem:trivial-vs-informative}
+The bound is most informative in the regime $\Rspec(\Hcal_d, \by) \in
+(0, 1)$, where the learner's reachable subspace is a non-trivial
+proper subset of $\R^N$.  This is the operationally standard regime:
+classical machine-learning models (linear / ridge / kernel-ridge / MLP
+with bounded weights / gradient-boosted trees of bounded depth) all
+operate in $\Hcal_d \subsetneq \R^N$ by construction.  Even
+nominally over-parametrised neural networks have, in practice, an
+\emph{implicit} $\Hcal_d$ much smaller than their parametric capacity
+suggests (e.g., the SGD-reachable subspace under stochastic gradient
+descent; \citealp{NeyshaburTomiokaSrebro2014}).  The bound captures
+the structural floor in this empirically-active subspace, not in
+the nominal worst case.  Conversely, an arbitrarily expressive learner
+with $\Hcal_d = \R^N$ is not constrained by the bound (it returns the
+trivial $\E[L_{T^c}] \geq 0$); but such a learner has no useful
+generalisation in any leave-node-out regime regardless of our
+framework, since it can fit arbitrary functions on $T$ with zero
+residual signal for $T^c$.
 \end{remark}
 
 \subsection{Assumptions}
@@ -1029,6 +1062,32 @@ negative-transfer phenomenon to a precise spectral-geometric property
 of the (joint-graph, source-signal, target-signal) triple, independent
 of the regressor's architecture or training procedure.
 
+\paragraph{Practical check for spectral disjointness.}  In closed-linear
+$\Hcal_d$ with orthonormal basis $\bB \in \R^{N \times d}$, the
+spectral-disjointness condition of
+Definition~\ref{def:spectral-disjointness} is checkable in
+$O(d^2 N)$ time:
+\begin{enumerate}[label=(\arabic*),leftmargin=*]
+\item Build the joint similarity graph $G$ on $V = V_{\mathrm{src}}
+    \cup V_{\mathrm{tgt}}$ and compute the bottom-$K$ eigenvectors
+    $\bu_1, \ldots, \bu_K$ of its Laplacian (for some practitioner-chosen
+    bandlimit $K$; typically $K = O(\dim \Hcal_d \cdot \log N)$).
+\item Compute the in-class projections
+    $\bP_{\Hcal_d}\tilde\by_{\mathrm{src}}$ and
+    $\bP_{\Hcal_d}\tilde\by_{\mathrm{tgt}}$ (zero-padded outside their
+    respective node sets) and their Fourier coefficients $\hat y_{\mathrm{src}, k},
+    \hat y_{\mathrm{tgt}, k}$ for $k \leq K$.
+\item Test whether $|\hat y_{\mathrm{src}, k} \cdot \hat y_{\mathrm{tgt}, k}|
+    \leq \epsilon$ for all $k \leq K$ and some chosen tolerance
+    $\epsilon$.  If yes, the pair is approximately spectrally disjoint
+    and Theorem~\ref{thm:nt-lower-bound} predicts unavoidable negative
+    transfer.
+\end{enumerate}
+Computationally, this is the same cost as the spectral $R^2$
+computation already standard for Corollary~C1 evaluation
+\citep{FossePallares2026applicabilityBound}, applied to the union
+graph instead of the single-domain graph.
+
 \paragraph{Empirical validation programme.}  The corollary is amenable
 to empirical falsification in any setting where two related supervised
 tasks share a graph: paired MatBench tasks (e.g.,
@@ -1426,6 +1485,39 @@ of the population variance, no choice of optimiser, regulariser, or
 ensembling strategy can drive the expected leave-node-out error below
 $60\%$ of the target variance.  Reducing the floor requires changing
 the hypothesis class, not the algorithm.
+
+\subsection{Two senses of informativeness: typical-case and worst-case}
+\label{subsec:two-senses}
+
+The framework's bounds operate in two distinct informativeness regimes
+that should not be conflated.
+
+\paragraph{Typical-case (Theorem~\ref{thm:universal-lower-bound}, in
+expectation).}  In the operationally typical regime, the
+practitioner has chosen $\Hcal_d$ \emph{to capture} most of $\by$:
+$\Rspec(\Hcal_d, \by)$ is high (e.g., $0.5$--$0.9$ across the
+8-task MatBench panel), and the expected leave-node-out loss is well
+predicted by the irreducible floor $(1 - \Rspec) \Var(\by)$, with no
+slack.  This is the directly empirically actionable regime, in which
+the bound is a sharp prediction of typical performance up to
+$O(M^2/\sqrt{N-n})$ Berry--Esseen fluctuations.
+
+\paragraph{Worst-case (Theorem~\ref{thm:minimax-lower-bound},
+high probability).}  In addition, the framework rules out
+\emph{universally-tight} performance claims: there exists an
+adversarial signal $\by^\star \in \Hcal_d^\perp$ on which any
+estimator (even an oracle) is forced into an $\Omega(M^2/\sqrt{N-n})$
+deviation by Berry--Esseen anticoncentration.  This is the
+worst-case minimax bound; it does not predict typical performance,
+but instead provides an information-theoretic limit on what is
+achievable under \emph{any} pattern of source signal.
+
+The two senses are complementary.  Typical-case informativeness
+applies when the framework is used as a forecasting tool
+(``how much LSO error should I expect from my LightGBM regressor on
+MatBench?''); worst-case informativeness applies when the framework
+is used as a falsification tool (``can any clever algorithm beat
+the floor?'').
 
 \subsection{Open questions remaining}
 \label{subsec:open}
