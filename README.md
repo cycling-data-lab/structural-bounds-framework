@@ -13,11 +13,13 @@ This repository develops the foundational theoretical paper of the [cycling-data
 ## Headline result
 
 | Theorem | Statement | Status |
-|:---|:---|:---:|
+| :---    | :---      | :---:  |
 | **Universal lower bound** (Thm 1) | `E[L_{T^c}(f̂)] ≥ (1 - R²_spec(H_d, y)) · Var(y)` — exact in expectation, no concentration slack | proved (notes/01) |
-| **Universal upper bound** (Thm 2) | ERM saturates the lower bound to `ρ(Π) · [2 R_n(H_d) + 3 M² √(log(2/η) / (2n))] + O(M²/√n)` | proved (notes/02) |
+| **Universal upper bound** (Thm 2, sharp transductive form) | ERM saturates the lower bound to `2·R^trans_n(H_d) + 5.05·M²·√((n+u)·log(2/η)/(n·u))`; rho factor eliminated via El-Yaniv-Pechyony 2006 (notes/04) | proved (notes/02, 04) |
 | **Berry–Esseen minimax tightness** (Thm 3) | No estimator can drive the slack below `Ω(M²/√(N-n))` in the worst case, even with oracle access to `y` on `V` | proved (notes/02) |
-| **Cramér–Rao analog** (Cor 1) | The pair of bounds is the graph-supervised-learning analog of `Var(θ̂) ≥ 1/I(θ)` | direct corollary |
+| **Cramér–Rao analog** (Cor 1) | The pair of bounds is the graph-supervised-learning analog of `Var(θ̂) ≥ 1/I(θ)`; rates and constants match to a factor ≤ 10 | direct corollary |
+| **Negative transfer** (Thm 6, Cor 2 = C2) | Under spectral disjointness, `E[NT] ≥ (‖P_{H_d}y_src‖² + ‖P_{H_d}y_tgt‖²)/n_t`; transfer is unavoidably harmful | proved (paper §C2) |
+| **Active learning** (Thm 7, Cor C3) | Importance-weighted leverage-score sampling achieves rate `O(M²·√(d·N·log(1/η))/n)` — parametric `1/n` instead of passive `1/√n` | proved (paper §C3) |
 
 The bound is *learner-specific*: `R²_spec(H_d, y) := 1 - L_V(f*_{H_d}) / Var(y)` where `f*_{H_d} := argmin_{f ∈ H_d} L_V(f)` is the population-risk minimiser of the learner's hypothesis class. For closed linear `H_d`, this reduces to the projection-`R²` of `y` on `H_d` in the eigenbasis of the graph Laplacian.
 
