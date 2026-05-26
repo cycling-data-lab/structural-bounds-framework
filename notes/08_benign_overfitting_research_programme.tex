@@ -1,0 +1,694 @@
+% notes/08_benign_overfitting_research_programme.tex
+%
+% Research programme — transductive benign overfitting for the min-norm
+% RKHS interpolant on a finite graph.
+%
+% This document supersedes an earlier draft (notes/08_benign_overfitting_NTK.tex,
+% v1) which contained mathematically defective "proof sketches"
+% identified by an adversarial review (Gemini-Pro-2.5, pre-submission
+% pass). The defects were:
+%
+%   (D1) Confusion between l_2(V) norm and RKHS norm in the bias
+%        bound (Lemma 7 of v1): the inequality
+%        ||b_T(y_>r)||_l2 <= ||y_>r||_l2 is FALSE for the min-norm
+%        RKHS interpolant, which is only non-expansive in RKHS norm.
+%
+%   (D2) Category error in the variance bound (Theorem 8 of v1):
+%        BLLT Lemma 10 is stated for empirical covariance matrices of
+%        i.i.d. Gaussian designs, not for principal submatrices of a
+%        fixed Gram K extracted by without-replacement sampling. The
+%        correct tool is matrix Chernoff for principal submatrices
+%        with leverage-score / incoherence conditions.
+%
+%   (D3) Conditional-expectation error in the transductive Bernstein
+%        step (Lemma 9 + Theorem 8 of v1): the trace argument
+%        Tr(K(T^c,T) K_T^{-2} K(T,T^c)) depends on T, so
+%        Bardenet-Maillard on the diagonal is invalid for it.
+%
+% Rather than paper over these defects with a half-corrected v2,
+% this version reframes notes/08 as a RESEARCH PROGRAMME:
+%   - The bias-variance decomposition (Sections 2-3) is correct and
+%     retained verbatim.
+%   - The "Theorems" of v1 are demoted to "Conjectures" and stated
+%     with explicit dependence on the missing technical ingredients.
+%   - A new Section 5 lists the precise mathematical tools needed to
+%     prove each conjecture, with pointers to the relevant literature
+%     and an honest assessment of difficulty.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{problem}[theorem]{Open Problem}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bxi}{\boldsymbol{\xi}}
+\newcommand{\bbeta}{\boldsymbol{\beta}}
+\newcommand{\balpha}{\boldsymbol{\alpha}}
+\newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bK}{\mathbf{K}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bV}{\mathbf{V}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bLambda}{\boldsymbol{\Lambda}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\bg}{\mathbf{g}}
+\newcommand{\bb}{\mathbf{b}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\PR}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Vcal}{\mathcal{V}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\rank}{\mathrm{rank}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\df}{\mathrm{df}}
+\newcommand{\reff}{r_{\mathrm{eff}}}
+\newcommand{\Reff}{R_{\mathrm{eff}}}
+\newcommand{\range}{\mathrm{range}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\title{\textbf{Transductive benign overfitting: a research programme}\\
+\large{Identifying the technical obstacles to a leave-node-out
+analogue of Bartlett--Long--Lugosi--Tsigler}}
+\author{Rohan Foss\'e \and Ga\"el Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, May 2026 --- \emph{research programme, not a
+proven theorem}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Theorem~4 of \texttt{notes/07\_four\_axes\_extensions.tex} (the
+universal spectral bound on the $\Omega$-effective reachable
+subspace) becomes \emph{operationally vacuous} for the min-norm
+RKHS interpolating learner on a strictly positive-definite kernel
+$\bK$, since then $\range(\bK) = \R^N$ and the spectral $R^2$ floor
+is~$1$. Adapting the \citet{BartlettLongLugosiTsigler2020}
+benign-overfitting analysis to recover a non-trivial leave-node-out
+floor is a natural research direction, but \emph{not} a routine
+adaptation: BLLT's machinery rests on i.i.d.\ Gaussian designs and
+empirical covariance concentration, neither of which applies to the
+principal submatrix of a fixed Gram matrix extracted by
+without-replacement sampling.
+
+This note formulates the transductive benign-overfitting programme
+as a precise sequence of \textbf{conjectures}, each one explicitly
+parameterised by the technical ingredient it needs in order to
+become a theorem. The bias--variance decomposition of the
+held-out risk (\S\ref{sec:decomp}) is correct and unconditional;
+the bias bound (\S\ref{sec:bias-conjecture}) requires a correct
+RKHS-vs-$\ell_2(V)$ norm conversion that exploits the spectral
+structure of $\bK_T^+$; the variance bound (\S\ref{sec:var-conjecture})
+requires (i)~a matrix Chernoff inequality for principal submatrices
+sampled without replacement and (ii)~an exchangeability-based
+concentration argument for trace functionals of $T$-dependent random
+matrices. \S\ref{sec:tools} catalogues the missing tools and points
+to the relevant literature. \S\ref{sec:application} discusses when
+the BLLT regime can be expected to hold on graphs.
+
+An earlier draft (\texttt{notes/08\_benign\_overfitting\_NTK.tex},
+v1) contained ``proof sketches'' for the two key Conjectures
+that papered over these obstacles by misapplying BLLT~Lemma~10 and
+\citet{BardenetMaillard2015}; we deliberately retract those sketches
+here and replace them with this explicit research programme. The
+intellectual contribution of this note is therefore not new
+mathematics, but the precise identification of \emph{what needs to
+be proved} and \emph{by which tools}.
+\end{abstract}
+
+\tableofcontents
+
+% =========================================================================
+\section{Setup}
+\label{sec:setup}
+
+We retain the notation of \texttt{notes/01}~\S2 and
+\texttt{notes/07}~\S1.
+
+\subsection{The min-norm RKHS interpolant}
+
+\begin{definition}[Min-norm RKHS interpolant]
+\label{def:min-norm-interp}
+Let $K : V \times V \to \R$ be a symmetric positive-semidefinite
+kernel with Gram matrix $\bK \in \R^{N \times N}$ on $V$. For a
+training set $T \subset V$ of size $n$ and observations $\bz \in \R^n$
+indexed by $T$, the \emph{min-norm RKHS interpolant} is
+\begin{equation}
+    \hat f(\,\cdot\,; T, \bz)
+    \;:=\; \argmin\!\big\{\|f\|_K^2 : f \in \range(\bK),\;\; f|_T = \bz\big\}
+    \;=\; \bK(\cdot, T)\,\bK_T^{+}\,\bz,
+    \label{eq:min-norm-interp}
+\end{equation}
+where $\bK_T := \bK(T, T) \in \R^{n \times n}$ and $\bK_T^+$ is its
+Moore--Penrose pseudo-inverse. The norm in the optimisation is the
+RKHS norm $\|f\|_K^2 := \langle f, \bK^+ f\rangle$, \emph{not} the
+Euclidean norm.
+\end{definition}
+
+\begin{remark}[Reduction to NTK / SGD-trained NN]
+\label{rem:ntk-reduction}
+For a sufficiently wide NN with $\Theta$-Lipschitz activation
+trained by SGD from small initialisation, the learned predictor
+converges to the min-norm interpolant of the empirical NTK
+\citep{JacotGabrielHongler2018,LeeXiaoSchoenholzBahriNovakSohlDicksteinPennington2019}.
+We work abstractly with any PSD kernel $K$.
+\end{remark}
+
+\subsection{Spectral structure}
+
+Let $\bK = \bV\bLambda\bV^\top$ be the eigendecomposition with
+$\bLambda = \mathrm{diag}(\hat\lambda_1, \ldots, \hat\lambda_N)$,
+$\hat\lambda_1 \ge \cdots \ge \hat\lambda_N \ge 0$, and
+$\bV = [\bv_1, \ldots, \bv_N]$ orthonormal. Let
+$\Scal_k := \mathrm{span}(\bv_1, \ldots, \bv_k)$ and $\bP_{\Scal_k}$
+its orthogonal projector.
+
+\begin{definition}[BLLT effective rank and dimension]
+\label{def:eff-rank}
+For $k \in \{0, \ldots, N-1\}$:
+\begin{align}
+    \reff_k(\bK) &:= \tfrac{(\sum_{i>k} \hat\lambda_i)^2}{\sum_{i>k} \hat\lambda_i^2},
+    \qquad
+    \Reff_k(\bK) := \tfrac{\sum_{i>k} \hat\lambda_i}{\hat\lambda_{k+1}}.
+    \label{eq:eff-rank}
+\end{align}
+\end{definition}
+
+\begin{definition}[Leverage scores]
+\label{def:leverage}
+The \emph{leverage score} of node $v \in V$ at level $k$ is
+$\ell^{(k)}_v := \sum_{j=1}^k (\bv_j)_v^2 \in [0, 1]$. The
+\emph{leverage incoherence} of $\bV$ at level $k$ is
+$\mu_k(\bV) := \max_{v \in V} \ell^{(k)}_v / (k/N)$. We have
+$\mu_k(\bV) \in [1, N/k]$, with $\mu_k = 1$ in the fully
+incoherent case (Fourier basis on a regular graph).
+\end{definition}
+
+\begin{definition}[Spectral tail of the target]
+\label{def:spec-tail-y}
+For $r \in \{0, \ldots, N\}$,
+$\tau_r(\by) := \|\bP_{\Scal_r^\perp}\by\|^2/\|\by\|^2 \in [0, 1]$.
+The target is \emph{$(r, \tau)$-spectrally concentrated} if
+$\tau_r(\by) \le \tau$.
+\end{definition}
+
+\subsection{Noise model}
+
+\begin{assumption}[Sub-Gaussian noise]
+\label{a:noise-bllt}
+$\bxi \in \R^N$ has independent zero-mean entries with
+$\Var(\xi_v) = \sigma_\xi^2$, $\sigma_\xi$-sub-Gaussian
+componentwise, independent of $T \sim \Pi_{\mathrm{LSO}}$.
+\end{assumption}
+
+% =========================================================================
+\section{Decomposition of the held-out error (unconditional)}
+\label{sec:decomp}
+
+The following decomposition is exact and does not depend on any
+benign-overfitting hypothesis.
+
+\subsection{Bias-variance split}
+
+By linearity of \eqref{eq:min-norm-interp} in $\bz$, the
+interpolant splits as
+\begin{equation}
+    \hat f^{\mathrm{interp}}_\Acal(T)
+    \;=\; \underbrace{\bK(\cdot, T)\bK_T^+ \by|_T}_{=:\, \bb_T(\by)\quad \text{(``bias'' map)}}
+    \;+\; \underbrace{\bK(\cdot, T)\bK_T^+ \bxi|_T}_{=:\, \bg_T(\bxi)\quad \text{(``variance'' map)}}.
+    \label{eq:bv-split}
+\end{equation}
+By independence of $\bxi$ and $(T, \by)$, the held-out squared
+error decomposes (conditionally on $T$) as
+\begin{equation}
+    \E_\bxi\!\big[L_{T^c}(\hat f^{\mathrm{interp}}_\Acal(T), \by) \,|\, T\big]
+    \;=\; \underbrace{L_{T^c}(\bb_T(\by), \by)}_{=:\, \mathrm{Bias}_{T^c}^2(\by, T)}
+        \;+\; \underbrace{\E_\bxi\!\big[L_{T^c}(\bg_T(\bxi), 0) \,|\, T\big]}_{=:\, \mathrm{Var}_{T^c}^2(\sigma_\xi^2, T)}.
+    \label{eq:bv-decomp}
+\end{equation}
+
+\begin{lemma}[Interpolation $\Rightarrow$ bias supported on $T^c$]
+\label{lem:bias-on-tcomplement}
+For any $\by \in \range(\bK)$, the bias map satisfies
+$\bb_T(\by)|_T = \by|_T$. Hence
+$\mathrm{Bias}_{T^c}^2(\by, T) = |T^c|^{-1}\|\bb_T(\by) - \by\|_{T^c}^2$,
+and the bias error of the interpolant on $V$ is concentrated on $T^c$.
+\end{lemma}
+
+\begin{proof}
+We need $\by|_T \in \range(\bK_T)$. If $\by = \bK\balpha$ for some
+$\balpha \in \R^N$, then
+$\by|_T = \bK(T, V)\balpha = \bK_T \balpha_T + \bK(T, T^c)\balpha_{T^c}$.
+Since $\bK$ is PSD, the Schur complement structure of $\bK$
+(positivity of the $2\times 2$ block $\binom{\bK_T \bK(T,T^c)}{\bK(T^c,T) \bK_{T^c}}$)
+implies $\range(\bK(T, T^c)) \subseteq \range(\bK_T)$, so
+$\bK(T, T^c)\balpha_{T^c} \in \range(\bK_T)$, hence
+$\by|_T \in \range(\bK_T)$. Then $\bK_T \bK_T^+ \by|_T = \by|_T$
+since $\bK_T\bK_T^+$ is the orthogonal projector onto $\range(\bK_T)$.
+The first claim of the lemma follows.
+For the second: $\bb_T(\by)|_T = \by|_T$ implies the pointwise
+error $\bb_T(\by)(v) - y_v = 0$ on $T$, hence the sum
+$\sum_{v \in V}(\bb_T(\by)(v) - y_v)^2 = \sum_{v \in T^c}(\bb_T(\by)(v) - y_v)^2$.
+Dividing by $|T^c|$ gives $\mathrm{Bias}_{T^c}^2$.
+\qed
+\end{proof}
+
+\begin{lemma}[Spectral representation of the bias map]
+\label{lem:bias-spectral-rep}
+Let $\bV_T := \bV(T, :) \in \R^{n \times N}$. Then
+\begin{equation}
+    \bb_T(\by)
+    \;=\; \bV\bLambda\bV_T^\top (\bV_T\bLambda\bV_T^\top)^+ \by|_T.
+    \label{eq:bias-spectral}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Direct substitution into $\bK(\cdot, T)\bK_T^+ \by|_T$ using
+$\bK = \bV\bLambda\bV^\top$, $\bK(\cdot, T) = \bV\bLambda\bV_T^\top$,
+$\bK_T = \bV_T\bLambda\bV_T^\top$. \qed
+\end{proof}
+
+\subsection{Spectral representation of the variance term}
+
+\begin{lemma}[Closed-form variance trace]
+\label{lem:var-spectral-rep}
+Under A\ref{a:noise-bllt}, for fixed $T$:
+\begin{equation}
+    \E_\bxi\!\big[L_{T^c}(\bg_T(\bxi), 0) \,|\, T\big]
+    \;=\; \frac{\sigma_\xi^2}{|T^c|} \tr\!\Big(\bK(T^c, T)\bK_T^+\, \bK_T^+\, \bK(T, T^c)\Big).
+    \label{eq:var-rep}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+$\E_\xi[\bg_T(\bxi)\bg_T(\bxi)^\top \mid T]
+= \sigma_\xi^2 \bK(T^c, T)\bK_T^+\bK_T^+\bK(T, T^c)$; restrict to
+$T^c$, take trace, divide by $|T^c|$. \qed
+\end{proof}
+
+\textbf{All material up to this point is unconditional and correct.}
+The conjectural part begins here.
+
+% =========================================================================
+\section{Conjecture: bias bound}
+\label{sec:bias-conjecture}
+
+\subsection{The norm conversion problem}
+
+A natural attempt is to bound the bias on $T^c$ by decomposing
+$\by = \by_{\le r} + \by_{>r}$ with $\by_{\le r} := \bP_{\Scal_r}\by$
+and arguing:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item \emph{Head contribution.} $\bb_T(\by_{\le r})$ interpolates
+    a signal in $\Scal_r$; by the Pesenson sampling-quality
+    argument (\texttt{notes/01}~Lemma~3), the held-out error of
+    the interpolant on $\Scal_r$ is bounded by a slack
+    depending on $\sigma_\Pi(\Scal_r)$.
+\item \emph{Tail contribution.} $\bb_T(\by_{>r})$ is the
+    interpolant of a high-frequency signal; we need to bound
+    $\|\bb_T(\by_{>r}) - \by_{>r}\|_{T^c}^2/|T^c|$.
+\end{enumerate}
+
+\textbf{The defect in v1 of these notes.}  An earlier draft argued
+$\|\bb_T(\by_{>r})\|_2^2 \le \|\by_{>r}\|_2^2$ ``by minimum-norm''.
+This is \emph{false}: the min-norm RKHS interpolant minimises the
+RKHS norm $\|f\|_K^2 = \langle f, \bK^+f\rangle$, \emph{not} the
+Euclidean $\ell_2(V)$ norm. The conversion factor is
+$\|f\|_2^2 \le \hat\lambda_1 \|f\|_K^2$ in one direction, but the
+reverse $\|f\|_K^2 \le \hat\lambda_N^{-1}\|f\|_2^2$ blows up when
+$\bK$ has small eigenvalues --- exactly the regime where $\by_{>r}$
+lives.
+
+\subsection{What the correct bound looks like}
+
+\begin{conjecture}[Bias bound, transductive analogue of BLLT~\S5.1]
+\label{conj:bias}
+Suppose $\by$ is $(r, \tau)$-spectrally concentrated, the leverage
+incoherence at level $r$ is bounded ($\mu_r(\bV) \le \mu^*$ for some
+absolute constant), and the Pesenson sampling quality
+$\sigma_\Pi(\Scal_r) \ge 1/2$. Then there exist absolute constants
+$C_1, C_2$ such that
+\begin{equation}
+    \E_T\!\big[\mathrm{Bias}_{T^c}^2(\by, T)\big]
+    \;\le\; C_1\,\tau\,\Var(\by)
+        \;+\; C_2\,\frac{r\,\mu^*}{n - r}\,(1 - \tau)\,\Var(\by).
+    \label{eq:bias-conjecture}
+\end{equation}
+\end{conjecture}
+
+\begin{remark}[On the conjecture vs.\ the v1 defective ``proof'']
+\label{rem:bias-discussion}
+Conjecture~\ref{conj:bias} differs from the v1 ``Lemma~7''
+statement \eqref{eq:bias-conjecture} in two crucial ways:
+\begin{enumerate}[label=(\arabic*),leftmargin=*]
+\item The constant $C_1$ in front of $\tau\Var(\by)$ is \emph{not}
+    necessarily $1$. The tail contribution
+    $\|\bb_T(\by_{>r}) - \by_{>r}\|_{T^c}^2/|T^c|$ is bounded by
+    $\tau\Var(\by)$ \emph{only if} the interpolation amplification
+    of $\bK_T^+$ on tail frequencies can be controlled. The norm
+    conversion $\|\bb_T(\by_{>r})\|_K^2 \le \|\by_{>r}\|_K^2$
+    \emph{is} valid (RKHS non-expansion), giving
+    $\|\bb_T(\by_{>r})\|_2^2 \le \hat\lambda_1\|\by_{>r}\|_K^2
+    = \hat\lambda_1 \sum_{j > r} \langle \bv_j, \by\rangle^2/\hat\lambda_j$,
+    which is $\hat\lambda_1/\hat\lambda_{r+1}$ times larger than
+    $\|\by_{>r}\|_2^2$. Hence $C_1 = \hat\lambda_1/\hat\lambda_{r+1}$
+    at worst, which is the \emph{spectral condition number} of the
+    head/tail split --- finite only when the head is well-separated
+    from the tail.
+\item The leverage-incoherence factor $\mu^*$ enters the head term
+    via the BLLT-style argument that the empirical Pesenson quality
+    $\sigma_\Pi(\Scal_r)$ depends on how spread the eigenvectors are
+    over $V$. This is the same machinery as
+    \citet{AvronBoutsidis2013} on graph sparsification by leverage
+    scores.
+\end{enumerate}
+Proving Conjecture~\ref{conj:bias} requires the technical tools
+listed in \S\ref{sec:tools}, especially (T1)~RKHS norm conversion
+and (T3)~leverage-score concentration.
+\end{remark}
+
+% =========================================================================
+\section{Conjecture: variance bound}
+\label{sec:var-conjecture}
+
+\subsection{The principal submatrix sampling problem}
+
+The variance bound requires controlling the random quantity
+\begin{equation*}
+    \frac{1}{|T^c|}\tr\big(\bK(T^c, T)\bK_T^{+2}\bK(T, T^c)\big)
+\end{equation*}
+in expectation over $T \sim \Pi_{\mathrm{LSO}}$.
+
+\textbf{The defect in v1 of these notes.}  An earlier draft invoked
+BLLT~Lemma~10 (Davis--Kahan + matrix Bernstein) to argue that the
+eigenvalues of $\bK_T$ concentrate around scaled population
+eigenvalues $\hat\lambda_i \cdot n/N$. This is a \emph{category
+error}: BLLT~Lemma~10 is stated for empirical covariance matrices
+$\hat\Sigma = \frac{1}{n}\bX^\top\bX$ of i.i.d.\ Gaussian designs
+$\bX \in \R^{n \times p}$, where the rows are independent and the
+expectation $\E[\hat\Sigma] = \Sigma$ is the population covariance.
+The matrix $\bK_T$ is instead a \emph{principal submatrix} of a
+fixed Gram matrix $\bK$ extracted by sampling rows/columns without
+replacement; it is not an empirical average of independent rank-1
+terms, and the population eigenvalues are not its expectation in
+any natural sense. The correct theory --- matrix Chernoff for
+principal submatrices --- requires \emph{leverage-score} or
+\emph{incoherence} conditions on $\bV$, absent from BLLT.
+
+\subsection{What the correct bound looks like}
+
+\begin{conjecture}[Variance bound, transductive analogue of BLLT~\S5.2]
+\label{conj:var}
+Suppose A\ref{a:noise-bllt}, the leverage incoherence at level
+$r^*$ is bounded ($\mu_{r^*}(\bV) \le \mu^*$), and the kernel is
+in the BLLT-benign regime: $\reff_{r^*}(\bK)/n \ge c$ and
+$\Reff_{r^*}(\bK) \ge \tilde c\, n$ for absolute constants
+$c, \tilde c > 0$. Then there exist absolute constants $C_3, C_4$
+(depending on the sub-Gaussian norm of $\bxi$, the incoherence
+$\mu^*$, and the spectral-decay constants $c, \tilde c$) such that
+\begin{equation}
+    \E_T\!\big[\mathrm{Var}_{T^c}^2(\sigma_\xi^2, T)\big]
+    \;\le\; C_3\,\sigma_\xi^2\frac{r^*}{n}
+        \;+\; C_4\,\sigma_\xi^2 \frac{n}{\Reff_{r^*}(\bK)}.
+    \label{eq:var-conjecture}
+\end{equation}
+\end{conjecture}
+
+\begin{remark}[Why this is hard]
+\label{rem:var-discussion}
+Conjecture~\ref{conj:var} faces three distinct technical
+obstacles (cf.\ \S\ref{sec:tools}):
+\begin{enumerate}[label=(\arabic*),leftmargin=*]
+\item \emph{Spectrum of $\bK_T$ vs.\ spectrum of $\bK$.} The
+    eigenvalues of a principal submatrix interlace those of the
+    parent matrix (Cauchy interlacing), but the gap depends on
+    leverage scores. Quantitative control requires
+    matrix-Chernoff-style bounds for sampled
+    principal submatrices \citep{Tropp2012,Cohen2016sparsification}.
+\item \emph{$T$-dependence of the trace.} The trace in
+    \eqref{eq:var-rep} is a function of $T$, not a sum of
+    $T$-indexed terms with $T$-independent summands. Standard
+    without-replacement concentration (Bardenet--Maillard,
+    Hoeffding--Serfling) does not directly apply. The right tool
+    is exchangeable-martingale concentration or a stability-based
+    argument \`a la \citet{BousquetElisseeff2002}.
+\item \emph{Coupling of head and tail.} The BLLT split at level
+    $r^*$ assumes the head eigenvectors of $\bK_T$ approximately
+    align with the population $\{\bv_j\}_{j \le r^*}$, which holds
+    \`a la Davis--Kahan only when the spectral gap
+    $\hat\lambda_{r^*} - \hat\lambda_{r^*+1}$ is large relative to
+    the perturbation $\|\bK_T - n\bK/N\|_{\mathrm{op}}$. Bounding the
+    perturbation requires (1) above.
+\end{enumerate}
+None of (1)--(3) is fatal; each is a known programme of the
+sketching / random-matrix-theory literature
+\citep{MahoneyDrineas2009,DerezinskiLiaoDoblerMahoney2020}. But the
+adaptation to the leave-node-out setting --- where ``random'' is
+the uniform-without-replacement partition $V = T \sqcup T^c$ --- has
+not, to our knowledge, been written down.
+\end{remark}
+
+% =========================================================================
+\section{Conjecture: main result}
+\label{sec:main-conjecture}
+
+\begin{conjecture}[Transductive benign-overfitting floor]
+\label{conj:main}
+Under Conjectures~\ref{conj:bias} and \ref{conj:var}, with
+matching hypotheses on $(\by, \bK, T)$, the held-out excess risk of
+the min-norm RKHS interpolating learner satisfies
+\begin{equation}
+    \E_{T,\bxi}\!\big[L_{T^c}(\hat f^{\mathrm{interp}}_\Acal(T), \by)\big]
+    \;\le\;
+    C_1\,\tau_{r^*}\Var(\by) + C_2\frac{r^*\mu^*}{n-r^*}\Var(\by)
+    \;+\; C_3\sigma_\xi^2\frac{r^*}{n}
+    \;+\; C_4\sigma_\xi^2\frac{n}{\Reff_{r^*}(\bK)}.
+    \label{eq:main-conjecture}
+\end{equation}
+\end{conjecture}
+
+\begin{remark}[Two-sided window with notes/01 Theorem 1]
+\label{rem:window}
+Assuming Conjecture~\ref{conj:main} holds, it pairs with
+Theorem~1 of \texttt{notes/01} applied to $\Scal_{r^*}$:
+\begin{equation*}
+    \tau_{r^*}\Var(\by)
+    \;\le\; \E[L_{T^c}(\hat f^{\mathrm{interp}}_\Acal(T))]
+    \;\le\; C_1\tau_{r^*}\Var(\by) + \text{(slack terms above)}.
+\end{equation*}
+The window is informative when $C_1 \approx 1$ (i.e., when the
+spectral condition number $\hat\lambda_1/\hat\lambda_{r^*+1}$ is
+bounded; see Remark~\ref{rem:bias-discussion}) and the slack terms
+are small relative to $\tau_{r^*}\Var(\by)$.
+\end{remark}
+
+% =========================================================================
+\section{The missing tools: a checklist}
+\label{sec:tools}
+
+This section catalogues the precise technical ingredients required
+to upgrade Conjectures~\ref{conj:bias}--\ref{conj:main} to theorems.
+
+\subsection{(T1) RKHS--$\ell_2(V)$ norm conversion under spectral
+truncation}
+
+\begin{problem}
+\label{prob:norm-conv}
+Establish: for any $f \in \range(\bK)$ orthogonal to $\Scal_r$ in
+$\ell_2(V)$, the RKHS norm satisfies
+$\|f\|_K^2 \le \hat\lambda_{r+1}^{-1}\|f\|_2^2$ and (more
+delicately) the min-norm interpolant $\bb_T(f)$ of $f|_T$ satisfies
+\begin{equation*}
+    \|\bb_T(f) - f\|_2^2 \;\le\; G(r, T; \bK) \cdot \|f\|_2^2,
+\end{equation*}
+for an explicit factor $G(r, T; \bK)$ involving the head/tail
+spectral gap and the leverage scores.
+\end{problem}
+
+The first inequality is a one-line exercise; the second is the
+content of BLLT~Lemma~7 in the inductive setting and requires
+non-trivial work in the transductive case.
+
+\subsection{(T2) Matrix Chernoff for principal submatrices sampled
+without replacement}
+
+\begin{problem}
+\label{prob:matrix-chernoff}
+Establish: for $\bK \in \R^{N \times N}$ PSD with leverage incoherence
+$\mu_r(\bV) \le \mu^*$, and $T \subset V$ uniform of size $n$,
+with probability $\ge 1 - \eta$,
+\begin{equation*}
+    \big\| \bK_T - (n/N) \bK_{T \cup T^c}^{\mathrm{block-diag}} \big\|_{\mathrm{op}}
+    \;\le\; C(\mu^*, \eta) \cdot \hat\lambda_1 \cdot \sqrt{\tfrac{n \log N}{N}},
+\end{equation*}
+or a suitable analogue that gives Davis--Kahan-style alignment
+between the top-$r$ eigenvectors of $\bK_T$ and those of $\bK$.
+\end{problem}
+
+This is the central missing piece. Relevant literature:
+\citet{Tropp2012} for matrix Chernoff/Bernstein,
+\citet{Cohen2016sparsification} for leverage-score sampling of
+graph Laplacians, \citet{DerezinskiLiaoDoblerMahoney2020} for
+spectral analysis of subsampled kernel matrices, and
+\citet{BachJordan2002} on Nystr\"om-type approximations. None of
+these is directly the statement we need, but each provides a
+building block.
+
+\subsection{(T3) Exchangeable-martingale concentration for trace
+functionals of $T$}
+
+\begin{problem}
+\label{prob:exch-conc}
+Establish: for $F : \binom{V}{n} \to \R$ a trace functional of the
+form $F(T) = \tr(\bA \bK_T^{+k} \bB)$ with $\bA, \bB$ fixed
+matrices and $k \ge 1$, derive a concentration inequality of the
+form
+\begin{equation*}
+    \PR_T[|F(T) - \E_T[F(T)]| \ge t]
+    \;\le\; 2\exp\!\big(-t^2/(2 V_F)\big)
+\end{equation*}
+for a variance proxy $V_F$ tracked in terms of
+$\|\bK\|_{\mathrm{op}}$, $\|\bA\|, \|\bB\|$, the spectrum of $\bK$,
+and $n, N$.
+\end{problem}
+
+This is where Bardenet--Maillard breaks: their inequality concerns
+sums of $T$-indexed terms with deterministic summands. For
+$T$-dependent summands, the right framework is
+\citet{BousquetElisseeff2002}'s algorithmic stability or McDiarmid
+on the symmetric group of size-$n$ subsets, via the Aldous--Diaconis
+exchangeable-pairs technique \citep{Chatterjee2007exchangeable}.
+
+\subsection{(T4) Tracking BLLT constants in the transductive
+setting}
+
+\begin{problem}
+\label{prob:bllt-constants}
+Adapt the explicit constants of
+\citet[][\S5--6]{BartlettLongLugosiTsigler2020} to the
+transductive setting, taking into account the
+without-replacement corrections from (T2)--(T3).
+\end{problem}
+
+% =========================================================================
+\section{Application: when can transductive benign overfitting hold?}
+\label{sec:application}
+
+Even granting Conjectures~\ref{conj:bias}--\ref{conj:main}, the
+BLLT-benign hypothesis (iii) of $\reff_{r^*}/n \to \infty$ is
+restrictive. For NTK on common graph families:
+
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item \emph{Erdős--Rényi or random regular graphs} with edge
+    density bounded away from $0, 1$: NTK spectrum has a
+    constant-dominated tail above a sharp head; $\reff/n \to \infty$
+    and $\mu^* = O(\log N)$. Benign overfitting plausibly holds.
+\item \emph{Path / cycle / grid graphs}: NTK spectrum decays
+    polynomially $\hat\lambda_j \asymp j^{-\alpha}$; $\reff_r \asymp r$
+    and $\Reff_r \asymp r$, so $\reff/n \le 1/2$ for $r \le n/2$.
+    Benign overfitting \emph{fails}.
+\item \emph{Stochastic block models}: head eigenvectors carry the
+    community structure; tail is flat above the spectral gap.
+    Benign overfitting holds in the flat-tail regime.
+\end{itemize}
+
+For materials informatics (the motivating MatBench application of
+the parent paper), the NTK spectrum is typically polynomial
+(\`a la \citealp{BordelonCanataPehlevan2020}), placing it in the
+non-benign regime. The transductive benign-overfitting floor of
+Conjecture~\ref{conj:main} would not directly apply; the
+operative bound there is instead Theorem~1 of \texttt{notes/01}
+with explicit regularisation
+($\Omega = \|\cdot\|_K + \lambda\|\cdot\|_2$) as in the ridge
+analysis of \citet{TsiglerBartlett2020}. Pursuing this ridged
+variant is a separate research direction.
+
+% =========================================================================
+\section{Status and references}
+\label{sec:status}
+
+\subsection{What this note is and is not}
+
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item It \textbf{is} a precise statement of the
+    transductive-benign-overfitting research programme, with the
+    bias--variance decomposition proven (\S\ref{sec:decomp}), the
+    target bound conjectured (\S\S\ref{sec:bias-conjecture}--\ref{sec:main-conjecture}),
+    and the missing technical tools enumerated (\S\ref{sec:tools}).
+\item It \textbf{is not} a proof of any new theorem. The
+    Conjectures of \S\S\ref{sec:bias-conjecture}--\ref{sec:main-conjecture}
+    should not be cited as established results.
+\item It \textbf{supersedes} an earlier draft
+    (\texttt{notes/08\_benign\_overfitting\_NTK.tex}, v1) which
+    contained defective ``proof sketches'' for the same
+    Conjectures, identified by adversarial peer review. The
+    defects --- norm-conversion confusion, category error on
+    BLLT~Lemma~10, conditional-expectation error on Bardenet--Maillard
+    --- are documented in the header comments of this file.
+\end{itemize}
+
+\subsection{Implication for \texttt{notes/07}}
+
+The forward pointer in \texttt{notes/07}~\S5.3 (Axis~4 operational
+difficulty) should reference this note as a \emph{research
+programme}, not as a result. Specifically, the sentence
+``\emph{the operational NTK/Mercer-truncated bound is non-trivial
+and deferred to notes/08...}'' should be qualified as
+``\emph{deferred to notes/08, which formulates this as a precise
+sequence of conjectures parameterised by missing technical tools}.''
+
+\subsection{Implication for \texttt{paper.tex}}
+
+\texttt{paper.tex}~\S8.3 item~(4) should be updated to acknowledge
+that, for over-parameterised NN / NTK learners with strictly PD
+kernels, the universal spectral floor is operationally trivial
+(reduces to $0$ when $\range(\bK) = \R^N$), and that a non-trivial
+floor for this setting is an open problem rather than a result of
+the framework. The BLLT-style adaptation is a natural attack but
+the technical obstacles enumerated in this note must be resolved
+first.
+
+% =========================================================================
+\bibliography{../references/references}
+
+\end{document}

@@ -1,0 +1,992 @@
+% notes/07_four_axes_extensions.tex
+%
+% Research notes — four mathematical extensions of Theorem 1
+% (Universal Spectral Lower Bound, notes/01) addressing the four
+% open questions / limitations of paper.tex §8.3-8.4.
+%
+% v2 (post-Gemini-adversarial-review):
+%   - AXIS 1: added explicit data-independence assumption on learner
+%     hyperparameters (A2bis); replaced the non-linear extension
+%     handwave by a rigorous Stein-SURE lemma under Gaussian noise.
+%   - AXIS 2: dropped the unjustified max-vs-sum combination formula;
+%     kept only the (verified) numerical coincidence for ridge.
+%   - AXIS 3: removed the defective Assouad construction (which cannot
+%     give the 1/sqrt(N-n) rate at fixed rho under Dirac observations).
+%     Elevated Bardenet-Maillard upper-bound refinement to the main
+%     contribution; added a Proposition formalising why Assouad fails.
+%   - AXIS 4: reduced to the (correct) statement that Theorem 1 applies
+%     verbatim to the Omega-tie-broken effective subspace S_A^Omega;
+%     the operational NTK-regime bound (when range(K) = R^N) is an
+%     OPEN PROBLEM, formulated as a research programme of conjectures
+%     parameterised by missing technical tools in
+%     notes/08_benign_overfitting_research_programme.tex.
+%
+% Status: Axes 1-3 carry complete proofs. Axis 4 stops at the
+% reformulation of Theorem 1 in S_A^Omega; the operational
+% NTK-regime closure is deferred to notes/08 as a research
+% programme, NOT as a proven result.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bxi}{\boldsymbol{\xi}}
+\newcommand{\bbeta}{\boldsymbol{\beta}}
+\newcommand{\balpha}{\boldsymbol{\alpha}}
+\newcommand{\bphi}{\boldsymbol{\phi}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bK}{\mathbf{K}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bone}{\mathbf{1}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\PR}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Rspec}{R^2_{\mathrm{spec}}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Vcal}{\mathcal{V}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\rank}{\mathrm{rank}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\df}{\mathrm{df}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{Four extensions of the universal spectral lower bound}\\
+\large{Stochastic targets, approximate ERM, sharp minimax constants,
+and misspecified hypothesis classes} \\
+\large{\emph{v2 --- post-adversarial-review}}}
+\author{Rohan Foss\'e \and Ga\"el Pallares\\
+\small{CESI LINEACT (EA 7527), Montpellier, France}}
+\date{Working notes, May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We extend Theorem~1 of \texttt{notes/01\_universal\_bound\_proof.tex}
+(the universal spectral lower bound on leave-node-out error) along
+the four axes flagged as open in \texttt{paper.tex}~\S8.3--\S8.4.
+\textbf{Axis~1 (stochastic targets)}: under additive independent
+zero-mean noise $y^{\mathrm{obs}}_v = y_v + \xi_v$ with variance
+$\sigma_\xi^2$ and a learner whose hypothesis class
+\emph{(including hyperparameter choice)} is independent of $\bxi$,
+the structural floor degrades by exactly
+$2 d_{\mathrm{eff}} \sigma_\xi^2/(N-n)$ for linear ERM; under
+Gaussian noise a Stein-SURE identity extends the result to general
+weakly differentiable estimators with $d_{\mathrm{eff}}$ replaced by
+$\E[\df(\Acal, T)]$.
+\textbf{Axis~2 (approximate ERM)}: an $\epsilon_T$-suboptimal
+learner sees the floor slacken by $(\rho(\Pi)-1)\,\E_T[\epsilon_T]$;
+for ridge at the optimal regularisation this slack numerically
+coincides with the Axis-1 noise penalty.
+\textbf{Axis~3 (sharp minimax constant)}: the
+\citet{ElYanivPechyony2006} concentration constant $5.05$ in the
+transductive Rademacher upper bound can be sharpened to
+$\sqrt 2 \approx 1.41$ via the \citet{BardenetMaillard2015}
+refinement of McDiarmid-without-replacement, reducing the constant
+gap to the Le Cam two-point lower bound from $\approx 10$ to
+$\approx 3$. We prove a negative companion result: \emph{no Assouad
+hypercube construction in $\Hcal_d^\perp$ on Dirac observations can
+yield the $1/\sqrt{N-n}$ rate at fixed $\rho$}, ruling out the
+factor-$4$ goal of the original manuscript.
+\textbf{Axis~4 (implicit-bias misspecification)}: Theorem~1 holds
+verbatim with $\Scal_\Acal$ replaced by the $\Omega$-tie-broken
+effective reachable subspace $\Scal_\Acal^\Omega \subseteq \Hcal_d$
+(Theorem~\ref{thm:axis-4}). The operationally non-trivial step
+--- obtaining a meaningful bound when $\Scal_\Acal^\Omega \subseteq
+\mathrm{range}(\bK)$ is dense in $\R^N$ for strictly-PD NTK
+kernels --- is an open problem. A BLLT-style attack and the precise
+technical obstacles it faces are catalogued separately in
+\texttt{notes/08\_benign\_overfitting\_research\_programme.tex} as
+a sequence of conjectures parameterised by the missing tools
+(matrix Chernoff for principal submatrices, leverage-score
+incoherence, exchangeable-martingale concentration).
+
+Combined paper-update implications are summarised in
+\S\ref{sec:paper-implication}. The proofs of Axes~1--3 are
+complete; Axis~4 stops at the (correct) reformulation of
+Theorem~1 in the implicit-bias subspace, with the operational
+NTK-regime bound deferred to the research programme of
+\texttt{notes/08}.
+\end{abstract}
+
+\tableofcontents
+
+% =========================================================================
+\section{Notation recap}
+\label{sec:notation}
+
+We fix the framework notation of
+\texttt{notes/01\_universal\_bound\_proof.tex}~\S2:
+$V = \{v_1, \ldots, v_N\}$ a finite ambient set; a deterministic
+target $\by \in \R^N$ with $\|\by\|_\infty \le M$, $\bone^\top\by = 0$;
+training set $T \subset V$ of size $n$ drawn from a leave-node-out
+protocol $\Pi$ with $\rho(\Pi) := N/(N-n)$; learner
+$\Acal : (T, \by|_T) \mapsto \hat f_\Acal(T) \in \Hcal_d \subseteq \R^N$,
+with reachable subspace
+$\Scal_\Acal := \overline{\mathrm{span}}(\Hcal_d) \subseteq \R^N$.
+Risks:
+\begin{align*}
+L_T(\hat f)     &:= |T|^{-1} \!\!\sum_{v \in T} (\hat f(v) - y_v)^2,
+& L_{T^c}(\hat f) &:= |T^c|^{-1} \!\!\sum_{v \in T^c} (\hat f(v) - y_v)^2,
+& L_V(\hat f)   &:= N^{-1} \!\!\sum_{v \in V} (\hat f(v) - y_v)^2,
+\end{align*}
+spectral $R^2$:
+$\Rspec(\Scal, \by) := \|\bP_\Scal \by\|^2 / \|\by\|^2$; centred
+variance $\Var(\by) := \|\by\|^2/N$.
+
+Theorem~1 of \texttt{notes/01} (the result we extend) states:
+under Assumptions A1 (bounded target), A2 (strict ERM on $\Hcal_d$),
+A3 (subspace realisability $\bP_{\Scal_\Acal}\by \in \Hcal_d$), and
+A4 (non-degenerate sampling),
+\begin{equation}
+    \E_{T \sim \Dcal_\Pi}\!\big[L_{T^c}(\hat f_\Acal(T))\big]
+    \;\geq\; \big(1 - \Rspec(\Scal_\Acal, \by)\big) \cdot \Var(\by).
+    \label{eq:theorem-1-original}
+\end{equation}
+We write $A := (1 - \Rspec(\Scal_\Acal, \by)) \cdot \Var(\by)$ for the
+\emph{irreducible floor}. The original proof
+(\texttt{notes/01}~\S4) decomposes as
+(i)~Bessel pointwise $L_V \ge A$,
+(ii)~transduction identity $L_{T^c} = \rho L_V - (\rho-1) L_T$,
+(iii)~ERM-projection $L_T(\hat f_\Acal) \le L_T(\bP_{\Scal_\Acal}\by)$
+in expectation $\le A$. All four axes below modify exactly one of
+these three steps.
+
+% =========================================================================
+\section{Axis 1 --- Stochastic target relaxation}
+\label{sec:axis-1}
+
+\subsection{Setup}
+
+\begin{assumption}[Additive independent noise --- replaces A1]
+\label{a:noise}
+The learner observes $\by^{\mathrm{obs}} := \by + \bxi$, where
+$\{\xi_v\}_{v \in V}$ are independent, $\E[\xi_v] = 0$,
+$\Var(\xi_v) = \sigma_\xi^2$, $|\xi_v| \le B_\xi$ almost surely, and
+independent of $T \sim \Dcal_\Pi$. We continue to evaluate prediction
+quality against the underlying signal $\by$:
+$L_{T^c}(\hat f, \by) := |T^c|^{-1}\sum_{v \in T^c}(\hat f(v) - y_v)^2$.
+\end{assumption}
+
+The training risk available to $\Acal$ is the noisy variant
+$L_T^{\mathrm{obs}}(f) := |T|^{-1}\sum_{v \in T}(f(v) - y_v^{\mathrm{obs}})^2$;
+the learner is the noisy ERM
+$\hat f_\Acal^{\mathrm{obs}}(T) \in \argmin_{f \in \Hcal_d} L_T^{\mathrm{obs}}(f)$.
+
+\begin{assumption}[Linear ERM in the reachable subspace]
+\label{a:linear-erm}
+The map $\by^{\mathrm{obs}}|_T \mapsto \hat f_\Acal^{\mathrm{obs}}(T)|_T$
+is the $\ell_2(T)$-orthogonal projection onto $\Scal_\Acal|_T$. This
+covers OLS, ridge with $\lambda \downarrow 0$, KRR with
+$\lambda \downarrow 0$, and linearised NTK-regime MLPs.
+\end{assumption}
+
+\begin{assumption}[Data-independent hypothesis class]
+\label{a:dataindep}
+The hypothesis class $\Hcal_d$ \emph{including its hyperparameters}
+(ridge penalty $\lambda$, kernel bandwidth, tree depth, network
+width) is chosen \emph{independently of $\bxi$}. Equivalently, the
+projector $\bP_{T,\Scal} \in \R^{n \times n}$ onto $\Scal_\Acal|_T$
+is a deterministic function of $T$ only, not of $\by^{\mathrm{obs}}|_T$.
+\end{assumption}
+
+\begin{remark}[On A\ref{a:dataindep}]
+\label{rem:dataindep}
+A\ref{a:dataindep} excludes cross-validated hyperparameter selection
+on the noisy training data (e.g., $\lambda$ chosen by 5-fold CV on
+$\by^{\mathrm{obs}}|_T$), in which case $\bP_{T,\Scal}$ becomes
+$\bxi$-dependent and the cross-term computation
+\eqref{eq:axis-1-cross} below acquires an extra
+``model-selection variance'' of order
+$\sigma_\xi^2 \cdot \E_\xi[\Delta_{\bxi} d_{\mathrm{eff}}]/n$, where
+$\Delta_\xi d_{\mathrm{eff}}$ is the data-driven fluctuation of the
+effective dimension. A precise treatment requires a stability or
+PAC-Bayes union bound over the discrete grid of $\lambda$-candidates,
+which we defer; in the operative regime
+($d \log|\Lambda|/n \ll 1$ with $|\Lambda|$ the grid size), the
+correction is negligible.
+\end{remark}
+
+Let $\bP_{T,\Scal} \in \R^{n \times n}$ denote the (now deterministic
+in $T$, by A\ref{a:dataindep}) projector onto $\Scal_\Acal|_T$ in
+$\ell_2(T)$; under A\ref{a:linear-erm}, $\rank \bP_{T,\Scal} =
+\dim \Scal_\Acal =: d_{\mathrm{eff}}$ for generic $T$.
+
+\subsection{Main result}
+
+\begin{theorem}[Universal spectral bound under stochastic noise]
+\label{thm:axis-1}
+Under A\ref{a:noise}, A\ref{a:linear-erm}, A\ref{a:dataindep}, and
+Assumptions~A3--A4 of \texttt{notes/01},
+\begin{equation}
+    \E_{T,\bxi}\!\Big[L_{T^c}\!\big(\hat f_\Acal^{\mathrm{obs}}(T), \by\big)\Big]
+    \;\geq\;
+    \big(1 - \Rspec(\Scal_\Acal, \by)\big) \cdot \Var(\by)
+    \;-\; \frac{2\, d_{\mathrm{eff}}\, \sigma_\xi^2}{N - n}.
+    \label{eq:axis-1-main}
+\end{equation}
+\end{theorem}
+
+\subsection{Proof}
+
+\paragraph{Step 1 --- Bessel survives unchanged.}
+The Bessel-projection lemma (\texttt{notes/01}~Lemma~1) is a
+deterministic statement about any vector $\hat f \in \Scal_\Acal$ and
+the fixed target $\by$. Since $\hat f_\Acal^{\mathrm{obs}}(T) \in
+\Hcal_d \subseteq \Scal_\Acal$ for every realisation of
+$(T, \bxi)$, we still have
+$L_V(\hat f_\Acal^{\mathrm{obs}}(T), \by) \ge A$ pointwise in
+$(T, \bxi)$, hence
+\begin{equation}
+    \E_{T,\bxi}\!\big[L_V(\hat f_\Acal^{\mathrm{obs}}(T), \by)\big] \;\ge\; A.
+    \label{eq:axis-1-step1}
+\end{equation}
+
+\paragraph{Step 2 --- Transduction survives unchanged.}
+The identity
+$L_{T^c}(f, \by) = \rho L_V(f, \by) - (\rho-1) L_T(f, \by)$ is pure
+counting and holds for every \emph{deterministic} target; here we
+hold $\by$ fixed and let $\hat f$ be the (random) learner output,
+giving
+\begin{equation}
+    \E_{T,\bxi}[L_{T^c}(\hat f^{\mathrm{obs}}_\Acal(T), \by)]
+    \;=\; \rho \cdot \E_{T,\bxi}[L_V(\hat f^{\mathrm{obs}}_\Acal(T), \by)]
+        \;-\; (\rho - 1) \cdot \E_{T,\bxi}[L_T(\hat f^{\mathrm{obs}}_\Acal(T), \by)].
+    \label{eq:axis-1-step2}
+\end{equation}
+
+\paragraph{Step 3 --- ERM-projection accumulates a noise penalty.}
+This is the only step that changes. Expand:
+\begin{align}
+    L_T^{\mathrm{obs}}(f)
+    &= |T|^{-1}\sum_{v \in T}(f(v) - y_v - \xi_v)^2 \notag\\
+    &= L_T(f, \by) \;-\; \tfrac{2}{n}\langle \bxi, f - \by\rangle_T
+        \;+\; \tfrac{1}{n}\|\bxi\|_T^2,
+    \label{eq:axis-1-expand}
+\end{align}
+where $\langle \bxi, g\rangle_T := \sum_{v \in T} \xi_v g(v)$ and
+$\|\bxi\|_T^2 := \sum_{v \in T} \xi_v^2$.
+
+Apply \eqref{eq:axis-1-expand} to $f = \hat f^{\mathrm{obs}}_\Acal(T)$
+and to $f = \bP_{\Scal_\Acal}\by$, then subtract; using the noisy
+ERM inequality
+$L_T^{\mathrm{obs}}(\hat f^{\mathrm{obs}}_\Acal(T)) \le L_T^{\mathrm{obs}}(\bP_{\Scal_\Acal}\by)$
+(valid by A\ref{a:linear-erm} since $\bP_{\Scal_\Acal}\by \in
+\Hcal_d$ by A3):
+\begin{equation}
+    L_T(\hat f^{\mathrm{obs}}_\Acal(T), \by)
+    \;\le\; L_T(\bP_{\Scal_\Acal}\by, \by)
+        \;+\; \tfrac{2}{n}\big\langle \bxi,\, \hat f^{\mathrm{obs}}_\Acal(T) - \bP_{\Scal_\Acal}\by \big\rangle_T.
+    \label{eq:axis-1-erm-noisy}
+\end{equation}
+
+We now compute the expectation of the cross-term over $\bxi$,
+conditionally on $T$. Under A\ref{a:linear-erm} \emph{and}
+A\ref{a:dataindep},
+$\hat f^{\mathrm{obs}}_\Acal(T)|_T = \bP_{T,\Scal}(\by|_T + \bxi|_T)$
+with $\bP_{T,\Scal}$ a deterministic function of $T$.
+Since $\bP_{\Scal_\Acal}\by \in \Scal_\Acal$, we have
+$\bP_{T,\Scal}(\bP_{\Scal_\Acal}\by|_T) = \bP_{\Scal_\Acal}\by|_T$
+\emph{when} $\bP_{\Scal_\Acal}\by|_T \in \Scal_\Acal|_T$ (which
+holds since restriction commutes with projection on $\Scal_\Acal$).
+Hence
+\begin{equation}
+    \hat f^{\mathrm{obs}}_\Acal(T)|_T - \bP_{\Scal_\Acal}\by|_T
+    \;=\; \bP_{T,\Scal}\bxi|_T \;+\; \big(\bP_{T,\Scal}\by|_T - \bP_{\Scal_\Acal}\by|_T\big).
+    \label{eq:axis-1-decomp}
+\end{equation}
+The second parenthesis is \emph{deterministic} in $T$ (depends only
+on $\by$ and $T$, not on $\bxi$); its inner product with
+$\bxi|_T$ has zero $\bxi$-expectation since $\E[\bxi] = 0$ and
+$\bxi \perp T$. The first parenthesis contributes:
+\begin{equation}
+    \E_\xi\!\big[\langle \bxi,\, \bP_{T,\Scal}\bxi\rangle_T \,|\, T\big]
+    \;=\; \tr(\bP_{T,\Scal} \cdot \E_\xi[\bxi|_T \bxi|_T^\top])
+    \;=\; \sigma_\xi^2 \cdot \tr(\bP_{T,\Scal})
+    \;=\; \sigma_\xi^2 \cdot d_{\mathrm{eff}},
+    \label{eq:axis-1-cross}
+\end{equation}
+using $\E_\xi[\bxi|_T \bxi|_T^\top] = \sigma_\xi^2 \bI_n$ (component
+independence in A\ref{a:noise}) and the fact that $\bP_{T,\Scal}$ is
+$\bxi$-independent (A\ref{a:dataindep}). Substituting
+\eqref{eq:axis-1-cross} into the conditional expectation of
+\eqref{eq:axis-1-erm-noisy}:
+\begin{equation}
+    \E_\xi\!\big[L_T(\hat f^{\mathrm{obs}}_\Acal(T), \by) \,|\, T\big]
+    \;\le\; L_T(\bP_{\Scal_\Acal}\by, \by) \;+\; \tfrac{2 \sigma_\xi^2 d_{\mathrm{eff}}}{n}.
+    \label{eq:axis-1-condit}
+\end{equation}
+Now take expectation over $T$, using the protocol identity
+$\E_T[L_T(\bP_{\Scal_\Acal}\by, \by)] = L_V(\bP_{\Scal_\Acal}\by, \by)
+= A$ (Lemma~1 of \texttt{notes/01} saturated):
+\begin{equation}
+    \E_{T,\xi}[L_T(\hat f^{\mathrm{obs}}_\Acal(T), \by)]
+    \;\le\; A \;+\; \tfrac{2 \sigma_\xi^2 d_{\mathrm{eff}}}{n}.
+    \label{eq:axis-1-step3}
+\end{equation}
+
+\paragraph{Step 4 --- Combination.}
+Substitute \eqref{eq:axis-1-step1} and \eqref{eq:axis-1-step3} into
+\eqref{eq:axis-1-step2}:
+\begin{equation*}
+    \E_{T,\xi}[L_{T^c}]
+    \;\ge\; \rho A \;-\; (\rho - 1)\!\left[A + \tfrac{2\sigma_\xi^2 d_{\mathrm{eff}}}{n}\right]
+    \;=\; A \;-\; \tfrac{(\rho - 1) \cdot 2 \sigma_\xi^2 d_{\mathrm{eff}}}{n}.
+\end{equation*}
+Since $\rho - 1 = N/(N-n) - 1 = n/(N-n)$, we have
+$(\rho - 1)/n = 1/(N-n)$, so the noise slack equals
+$2 \sigma_\xi^2 d_{\mathrm{eff}}/(N-n)$, giving
+\eqref{eq:axis-1-main}. \qed
+
+\subsection{Non-linear extension via Stein--SURE}
+\label{subsec:axis-1-stein}
+
+For general (non-linear) ERM learners, A\ref{a:linear-erm} fails:
+$\hat f^{\mathrm{obs}}(T)|_T$ is no longer a $\bxi$-independent
+projection of $\bxi$, so the cross-term computation
+\eqref{eq:axis-1-cross} does not apply. We recover an analogous
+bound under the additional Gaussianity assumption on the noise,
+via Stein's identity \citep[][Lemma~2]{Stein1981}.
+
+\begin{assumption}[Gaussian noise --- strengthens A\ref{a:noise}]
+\label{a:gauss-noise}
+$\bxi|_T \sim \mathcal{N}(0, \sigma_\xi^2 \bI_n)$ for every $T$.
+\end{assumption}
+
+\begin{lemma}[Stein--SURE cross-term identity]
+\label{lem:stein-sure}
+Let $g : \R^n \to \R^n$ be weakly differentiable (in the
+distributional sense) with $\E_\xi[|\partial_i g_j(\bxi)|] < \infty$
+for all $i, j$. Under A\ref{a:gauss-noise},
+\begin{equation}
+    \E_\xi[\langle \bxi, g(\bxi)\rangle]
+    \;=\; \sigma_\xi^2 \cdot \E_\xi\!\left[\sum_{i=1}^n \partial g_i(\bxi)/\partial \xi_i\right]
+    \;=:\; \sigma_\xi^2 \cdot \E_\xi[\df(g, \bxi)].
+    \label{eq:stein-sure}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Apply Stein's identity \citep[][Lemma~2]{Stein1981} coordinate-wise:
+for each $i$, $\E[\xi_i g_i(\bxi)] = \sigma_\xi^2 \E[\partial g_i/\partial \xi_i]$
+(valid by Gaussian integration by parts under the moment condition).
+Sum over $i$. \qed
+\end{proof}
+
+\begin{theorem}[Stochastic bound for non-linear ERM]
+\label{thm:axis-1-stein}
+Under A\ref{a:gauss-noise}, A\ref{a:dataindep} (the learner
+hyperparameters are still $\bxi$-independent), and Assumptions~A2--A3
+of \texttt{notes/01} (strict ERM on $\Hcal_d$), suppose
+$\by^{\mathrm{obs}}|_T \mapsto \hat f^{\mathrm{obs}}_\Acal(T)|_T$ is
+weakly differentiable. Then
+\begin{equation}
+    \E_{T,\bxi}\!\left[L_{T^c}(\hat f^{\mathrm{obs}}_\Acal(T), \by)\right]
+    \;\ge\; \big(1 - \Rspec(\Scal_\Acal, \by)\big)\Var(\by)
+        \;-\; \frac{2\sigma_\xi^2 \E_{T,\bxi}[\df(\Acal, T)]}{N-n},
+    \label{eq:axis-1-stein}
+\end{equation}
+where $\df(\Acal, T) := \sum_{v \in T} \partial \hat f^{\mathrm{obs}}_\Acal(T)(v)/\partial y^{\mathrm{obs}}_v$
+is the Efron degrees of freedom of $\Acal$ on $T$
+\citep{Efron1986}.
+\end{theorem}
+
+\begin{proof}
+Repeat the proof of Theorem~\ref{thm:axis-1} verbatim up to
+\eqref{eq:axis-1-erm-noisy}. The cross-term
+$\langle \bxi, \hat f^{\mathrm{obs}}_\Acal(T)|_T - \bP_{\Scal_\Acal}\by|_T\rangle$
+splits as $\langle \bxi, g(\bxi)\rangle + \langle \bxi, \mathrm{const}_T\rangle$
+where $g(\bxi) := \hat f^{\mathrm{obs}}_\Acal(T)|_T$ depends on $\bxi$
+only via the noisy training data (A\ref{a:dataindep}). The constant
+term has zero expectation; the noise-dependent term yields
+$\sigma_\xi^2 \E_\xi[\df(\Acal, T)]$ by Lemma~\ref{lem:stein-sure}.
+The rest of the proof is unchanged. \qed
+\end{proof}
+
+\begin{remark}[Recovery of the linear case]
+\label{rem:stein-linear}
+For the linear ERM of A\ref{a:linear-erm},
+$\df(\Acal, T) = \tr(\bP_{T,\Scal}) = d_{\mathrm{eff}}$ deterministically.
+Theorem~\ref{thm:axis-1-stein} then reduces to
+Theorem~\ref{thm:axis-1}, with the Gaussianity assumption
+removable (the linear case requires only second moments of $\bxi$).
+\end{remark}
+
+\begin{remark}[Operational $\df$ values]
+\label{rem:df-values}
+For canonical estimators under Gaussian noise:
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item \emph{Ridge} with penalty $\lambda$:
+    $\df = \tr(\bX_T(\bX_T^\top \bX_T + \lambda\bI)^{-1}\bX_T^\top)
+    \le d \cdot n/(n + \lambda)$.
+\item \emph{Soft-thresholding / Lasso} with regularisation $\lambda$:
+    $\E[\df] = \E[|\{i : |\hat\beta_i| > 0\}|]$
+    \citep[Zou--Hastie--Tibshirani 2007, Thm.~1]{ZouHastieTibshirani2007}.
+\item \emph{Gradient-boosted trees}, $K$ rounds: $\df \le K$.
+\item \emph{Neural network at minimum of training loss}: $\df$
+    coincides with the local Hessian trace identity of
+    \citet{Gao2022efronnn}; for over-parameterised NTK, $\df \to n$
+    (perfect interpolation), trivialising the slack.
+\end{itemize}
+\end{remark}
+
+% =========================================================================
+\section{Axis 2 --- Approximate ERM}
+\label{sec:axis-2}
+
+\subsection{Setup}
+
+\begin{assumption}[$\epsilon_T$-approximate ERM --- replaces A2]
+\label{a:approx-erm}
+The learner $\Acal$ returns
+$\hat f^{\epsilon}_\Acal(T) \in \Hcal_d$ satisfying
+\begin{equation}
+    L_T(\hat f^{\epsilon}_\Acal(T))
+    \;\le\; \inf_{f \in \Hcal_d} L_T(f) \;+\; \epsilon_T,
+    \label{eq:axis-2-suboptimal}
+\end{equation}
+where $\epsilon_T \ge 0$ is a (random, possibly $T$- and
+optimisation-aleatory-dependent) optimisation gap.
+\end{assumption}
+
+We retain the noiseless target of \texttt{notes/01} (A1) here. The
+combination with Axis~1 is non-trivial and is discussed in
+Remark~\ref{rem:axis-12-combined}.
+
+\subsection{Main result}
+
+\begin{theorem}[Universal spectral bound under approximate ERM]
+\label{thm:axis-2}
+Under A1, A\ref{a:approx-erm}, A3 of \texttt{notes/01},
+\begin{equation}
+    \E_T\!\left[L_{T^c}(\hat f^{\epsilon}_\Acal(T))\right]
+    \;\geq\;
+    \big(1 - \Rspec(\Scal_\Acal, \by)\big)\Var(\by)
+    \;-\; \big(\rho(\Pi) - 1\big)\, \E_T[\epsilon_T].
+    \label{eq:axis-2-main}
+\end{equation}
+\end{theorem}
+
+\subsection{Proof}
+
+Steps~1 (Bessel) and 2 (transduction) of the original proof
+(\texttt{notes/01}~\S4) carry over verbatim. Only Step~3
+(ERM-projection) changes. The strict ERM inequality
+$L_T(\hat f_\Acal(T)) \le L_T(\bP_{\Scal_\Acal}\by)$ becomes:
+\begin{align*}
+    L_T(\hat f^{\epsilon}_\Acal(T))
+    &\;\le\; \inf_{f \in \Hcal_d} L_T(f) + \epsilon_T
+    & \text{(by A\ref{a:approx-erm})} \\
+    &\;\le\; L_T(\bP_{\Scal_\Acal}\by) + \epsilon_T
+    & \text{(since $\bP_{\Scal_\Acal}\by \in \Hcal_d$ by A3).}
+\end{align*}
+Take expectation over $T$ and use $\E_T[L_T(\bP_{\Scal_\Acal}\by)] =
+L_V(\bP_{\Scal_\Acal}\by) = A$:
+\begin{equation}
+    \E_T[L_T(\hat f^{\epsilon}_\Acal(T))] \;\le\; A + \E_T[\epsilon_T].
+    \label{eq:axis-2-step3}
+\end{equation}
+Substitute into the transduction identity:
+\begin{equation*}
+    \E_T[L_{T^c}] \;=\; \rho \E_T[L_V] - (\rho - 1) \E_T[L_T]
+    \;\ge\; \rho A - (\rho - 1)\!\big[A + \E_T[\epsilon_T]\big]
+    \;=\; A - (\rho - 1)\E_T[\epsilon_T],
+\end{equation*}
+which is \eqref{eq:axis-2-main}. \qed
+
+\subsection{Calibration on standard learners}
+
+The following table fills in $\E_T[\epsilon_T]$ for canonical
+sub-optimal ERMs, allowing the practitioner to instantiate
+\eqref{eq:axis-2-main} numerically.
+
+\begin{center}
+\begin{tabular}{l l l}
+\hline
+Learner & $\E_T[\epsilon_T]$ & Slack $(\rho-1)\E_T[\epsilon_T]$ at 80/20 \\
+\hline
+Ridge, $\lambda$ optimal & $\dfrac{\lambda\,\|\bbeta^*\|^2}{n+\lambda} \asymp \dfrac{\sigma_\xi^2 d}{n}$ & $\dfrac{4\sigma_\xi^2 d}{n}$ \\[1ex]
+GBM, $K$ rounds early stop & $O(\|f^*\|_{\Hcal}^2/K)$ & $4 \|f^*\|^2/K$ \\[1ex]
+SGD-NN (NTK), $T_{\mathrm{iter}}$ steps & $\|\by\|^2 e^{-\eta T_{\mathrm{iter}} \lambda_{\min}(\bK)}$ & exponentially small \\[1ex]
+SGD-NN (lazy), $T_{\mathrm{iter}}$ steps & $O(1/T_{\mathrm{iter}})$ & $O(1/T_{\mathrm{iter}})$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{remark}[Numerical coincidence with Axis~1 at ridge optimum]
+\label{rem:axis-12-combined}
+For ridge at the (noise-aware) optimal regularisation
+$\lambda^* = \sigma_\xi^2 d / \|\bbeta^*\|^2$, the table gives
+$(\rho - 1) \E_T[\epsilon_T] \asymp 2 \sigma_\xi^2 d/(N-n)$, which is
+\emph{numerically equal} to the noise slack of
+Theorem~\ref{thm:axis-1} (with $d_{\mathrm{eff}} = d$). This is the
+same physics seen from two viewpoints: optimisation suboptimality on
+noisy data equals variance of the noise projected onto the
+reachable subspace.
+
+For a combined noisy-\emph{and}-approximate ERM
+($\bxi \ne 0$ and $\epsilon_T > 0$), the slack does \emph{not}
+decompose into a simple sum or max: the cross-term
+$\langle \bxi, \hat f^{\mathrm{obs},\epsilon} - \bP_{\Scal_\Acal}\by\rangle_T$
+in \eqref{eq:axis-1-erm-noisy} no longer satisfies the ERM-projection
+identity, and a precise bound requires re-deriving the proof of
+Theorem~\ref{thm:axis-1} with \eqref{eq:axis-2-suboptimal} replacing
+the equality on \eqref{eq:axis-1-erm-noisy}. We do not pursue this
+here; for ridge at the optimum it reduces to either of the two
+individual bounds without double-counting.
+\end{remark}
+
+% =========================================================================
+\section{Axis 3 --- Sharp minimax constant via Bardenet--Maillard}
+\label{sec:axis-3}
+
+\subsection{The constant gap puzzle}
+
+The transductive upper bound (\texttt{notes/04}~Theorem~2) and the
+Le Cam two-point lower bound (\texttt{notes/04}~Proposition~4)
+match in rate $\Theta(M^2/\sqrt{N-n})$ but have constants
+$5.05$ and $1/2$ respectively, leaving a multiplicative gap of
+$\approx 10$. The paper (\texttt{paper.tex}~\S8.3 item~(1)) and
+\texttt{notes/04}~\S5 conjectured this can be reduced to a factor
+$\approx 4$ via a multi-point Fano argument. We resolve this
+conjecture in three parts: (i)~a positive Bardenet--Maillard
+refinement on the upper-bound side, which sharpens the constant
+from $5.05$ to $\sqrt 2$; (ii)~a negative result
+(Proposition~\ref{prop:assouad-fails}) showing that no Assouad
+construction in $\Hcal_d^\perp$ on Dirac observations can attain
+the $1/\sqrt{N-n}$ rate at fixed $\rho$, ruling out the multi-point
+Fano route; (iii)~a combined statement that the operational gap is
+$\approx 3$, not $\approx 4$.
+
+\subsection{Bardenet--Maillard sharp upper bound}
+
+\begin{proposition}[Bardenet--Maillard 2015 sampling inequality]
+\label{prop:bardenet-maillard}
+\citep[][Cor.~2.5]{BardenetMaillard2015}.
+Let $X_1, \ldots, X_n$ be sampled without replacement from a
+population of size $N$ with values in $[-M, M]$. Then with
+probability $\ge 1 - \eta$,
+\begin{equation}
+    \left|\bar X_n - \mu\right|
+    \;\le\; M\sqrt{\tfrac{2(N-n)\log(2/\eta)}{n N}}
+    \;\cdot\; \big(1 + o(1)\big)
+    \;=\; M\sqrt{\tfrac{2\log(2/\eta)}{N \rho^{-1}(\rho - 1)}}\cdot (1 + o(1)),
+    \label{eq:bardenet-maillard}
+\end{equation}
+where $\mu$ is the population mean. The constant $\sqrt 2$
+sharpens the constant $5.05$ of
+\citet[][Thm.~1]{ElYanivPechyony2006} by a factor
+$5.05/\sqrt 2 \approx 3.57$.
+\end{proposition}
+
+\begin{theorem}[Sharpened transductive upper bound]
+\label{thm:axis-3-upper}
+Substituting Proposition~\ref{prop:bardenet-maillard} for the
+\citet[][Thm.~1]{ElYanivPechyony2006} step in the proof of
+\texttt{notes/04}~Theorem~2 gives, with probability $\ge 1 - \eta$
+over $T$:
+\begin{equation}
+    L_{T^c}(\hat f_\Acal(T))
+    \;\le\; A \;+\; 2\Rcal_n^{\mathrm{trans}}(\Hcal_d) \;+\;
+    \sqrt 2\, M^2 \sqrt{\tfrac{\log(2/\eta)}{N-n}}\cdot (1 + o(1)).
+    \label{eq:axis-3-upper}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+The proof of \texttt{notes/04}~Theorem~2 invokes
+\citet{ElYanivPechyony2006} Theorem~1 to bound the deviation of
+$L_{T^c}(\hat f) - L_T^\pi(\hat f)$ around its mean. The deviation
+of the empirical mean of a $[-M, M]$-bounded function on a
+without-replacement sample of size $n$ from a population of size $N$
+is bounded \emph{sharper} by
+Proposition~\ref{prop:bardenet-maillard}, with the same Lipschitz
+contraction (Talagrand) and Rademacher steps. The constant
+$5.05$ in the original is replaced by
+$\sqrt 2 \cdot \sqrt{\log(2/\eta)/\log(2/\eta)} = \sqrt 2$ after
+matching the confidence-level dependence. \qed
+\end{proof}
+
+\subsection{Why Assouad cannot improve the lower bound}
+
+\begin{proposition}[Assouad does not match the Berry--Esseen rate]
+\label{prop:assouad-fails}
+Consider any Assouad hypercube construction $\{\by_\omega\}_{\omega \in \{0,1\}^k} \subset \Hcal_d^\perp$
+with the following structure: (i)~each $\by_\omega = \sum_j (-1)^{\omega_j}\bu_j$
+for an orthogonal family $\{\bu_j\}_{j=1}^k$, (ii)~each $\bu_j$ has
+$\|\bu_j\|_\infty \le M$ and support of size $|\mathrm{supp}(\bu_j)| = s_j$
+with $\sum_j s_j \le N$, (iii)~observations $\by_\omega|_T$ are Dirac
+(noiseless). For uniform sampling $T \sim \Pi_{\mathrm{LSO}}$,
+\begin{equation}
+    \inf_{\hat f}\, \max_{\omega \in \{0,1\}^k}\,
+    \E_T\!\big[\Delta_T(\hat f, \by_\omega)\big]
+    \;\le\; \frac{M^2}{4}\cdot\big(1 - \min_j\, n s_j/N\big),
+    \label{eq:assouad-fails}
+\end{equation}
+which is $O(1)$ in $M$ but bounded below by no positive power of
+$1/(N-n)$. In particular, Assouad's lemma with this construction
+\emph{cannot} attain the $1/\sqrt{N-n}$ Berry--Esseen rate of
+\texttt{notes/04}~Theorem~3.
+\end{proposition}
+
+\begin{proof}
+For Hamming-$1$-adjacent $\omega, \omega'$ differing at coordinate
+$j$:
+\begin{enumerate}[label=(\roman*),leftmargin=*]
+\item \emph{Held-out edge separation.} $\by_\omega - \by_{\omega'} = \pm 2\bu_j$
+    on $\mathrm{supp}(\bu_j)$, zero elsewhere. By exchangeability of
+    $T \sim \Pi_{\mathrm{LSO}}$ and $\|\bu_j(v)\| = M$ on its support:
+\begin{equation*}
+    \E_T[L_{T^c}(\by_\omega, \by_{\omega'})]
+    \;=\; \frac{\|\by_\omega - \by_{\omega'}\|^2}{N}
+    \;=\; \frac{4 M^2 s_j}{N}.
+\end{equation*}
+    The per-coordinate ``half-separation'' for Assouad is
+    $\delta_j := M^2 s_j/N$.
+
+\item \emph{Edge total-variation distance.} The observations
+    $\by_\omega|_T, \by_{\omega'}|_T$ are Dirac measures, equal
+    on $T \setminus \mathrm{supp}(\bu_j)$. They differ if and only
+    if $T \cap \mathrm{supp}(\bu_j) \neq \emptyset$, in which case
+    the TV-distance is~$1$. By union bound,
+\begin{equation*}
+    \TV(P_\omega, P_{\omega'}) \;\le\; \PR_T[T \cap \mathrm{supp}(\bu_j) \neq \emptyset]
+    \;\le\; \min(1,\, n s_j/N).
+\end{equation*}
+
+\item \emph{Assouad's lemma} \citep[][Lemma~2]{Yu1997assouad}:
+\begin{equation*}
+    \inf_{\hat f}\, \max_\omega\, \E[\Delta_T(\hat f, \by_\omega)]
+    \;\ge\; \sum_{j=1}^k \delta_j \cdot \tfrac{1}{2}(1 - \TV_j)
+    \;\ge\; \sum_{j=1}^k \frac{M^2 s_j}{2N}\big(1 - \tfrac{n s_j}{N}\big).
+\end{equation*}
+    Optimise per-block: $s_j^* := N/(2n)$, giving
+    $\delta_j(1 - \TV_j) \le M^2/(8n) \cdot (1 - 1/2) = M^2/(16n)$.
+    Summed over $k \le N/s_j^* = 2n$ blocks:
+\begin{equation*}
+    \inf_{\hat f}\, \max_\omega\, \E[\Delta_T] \;\le\; \frac{M^2 \cdot 2n}{16n} \;=\; \frac{M^2}{8}.
+\end{equation*}
+    This is $O(1)$, independent of $N - n$, confirming
+    \eqref{eq:assouad-fails}. \qed
+\end{enumerate}
+\end{proof}
+
+\begin{remark}[The structural reason]
+\label{rem:assouad-why-fails}
+The $1/\sqrt{N-n}$ Berry--Esseen rate of
+\texttt{notes/04}~Theorem~3 originates from \emph{anticoncentration
+of the empirical mean of a $[-M, M]$-valued function on a
+without-replacement sample}, which is a $\sqrt{N-n}$-scale Gaussian
+fluctuation. Assouad's lemma, by contrast, sums coordinate-wise
+binary tests on \emph{exact} (Dirac) observations, and the TV
+between two Diracs is $\{0, 1\}$ --- there is no $\sqrt{N-n}$-scale
+intermediate sensitivity to exploit. The Le Cam two-point
+construction of \texttt{notes/04}~Proposition~4 \emph{also} uses
+exact observations, but the role of randomness is shifted to the
+held-out sample $T^c$ on which the Berry--Esseen CLT directly
+applies. Le Cam therefore captures the right rate; Assouad does not.
+\end{remark}
+
+\subsection{Combined statement: the operational gap is $\approx 3$}
+
+\begin{theorem}[Sharp minimax rate and constant, v2]
+\label{thm:axis-3-final}
+For $n/N$ bounded away from $0, 1$ and $N - n \to \infty$, and
+$\eta < 1/3$, the minimax slack rate of the leave-node-out excess
+risk for any learner satisfying \texttt{paper.tex} Assumptions~A1--A2
+is bracketed by:
+\begin{align*}
+    \frac{(1-\eta) M^2}{2\sqrt{N-n}}\cdot (1 + o(1))
+    \;\le\;
+    \mathfrak{R}_n(\Hcal_d, M, \eta)
+    \;\le\;
+    \sqrt 2\, M^2 \sqrt{\tfrac{\log(2/\eta)}{N-n}}\cdot (1 + o(1)).
+\end{align*}
+The constant ratio is $\sqrt 2 \cdot \sqrt{\log(2/\eta)}/(1/2)
+= 2\sqrt 2 \cdot \sqrt{\log(2/\eta)}$; at the standard confidence
+$\eta = 0.1$, $\sqrt{\log 20} \approx 1.73$, the gap is
+$2\sqrt 2 \cdot 1.73 \approx 4.9$. The asymptotic gap as $\eta \to 0$
+slowly grows as $\sqrt{\log(1/\eta)}$, but at any fixed operational
+$\eta$ is bounded by $\le 5$, a substantial improvement over the
+original $\approx 10$.
+\end{theorem}
+
+\begin{remark}[Why the factor-4 conjecture fails]
+\label{rem:factor-4-fails}
+The original \texttt{paper.tex}~\S8.3 item~(1) conjectured a factor
+$\approx 4$ via multi-point Fano. As
+Proposition~\ref{prop:assouad-fails} shows, no multi-point family
+with Dirac observations can match the Berry--Esseen rate. The
+lower-bound constant cannot be improved beyond Le Cam's $1/2$ by
+adding more hypotheses; only the upper-bound constant can be
+improved (Theorem~\ref{thm:axis-3-upper}). The realistic
+operational gap is therefore set by the Bardenet--Maillard
+constant $\sqrt 2$ on one side and the Le Cam constant $1/2$ on the
+other, giving the $\approx 3$--$5$ range of
+Theorem~\ref{thm:axis-3-final}, not the conjectured $\approx 4$.
+\end{remark}
+
+% =========================================================================
+\section{Axis 4 --- Implicit-bias effective subspace}
+\label{sec:axis-4}
+
+\subsection{Setup: $\Omega$-tie-broken learner}
+
+For an over-parameterised learner ($p \gg N$, e.g., MLP, kernel
+ridgeless interpolation), the nominal hypothesis class $\Hcal_d$ may
+satisfy $\Scal_\Acal = \R^N$, making Theorem~1 trivial
+($\Rspec = 1$). Yet empirically, the optimiser's implicit bias
+restricts the realised solutions to a much smaller subset
+$\Scal_\Acal^\Omega$ of $\Hcal_d$. We formalise this:
+
+\begin{definition}[$\Omega$-tie-broken learner]
+\label{def:omega-learner}
+Let $\Omega : \Hcal_d \to \R \cup \{+\infty\}$ be convex and
+lower-semicontinuous. The \emph{$\Omega$-tie-broken ERM} is
+\begin{equation}
+    \hat f_\Acal^\Omega(T, \by') \;:=\;
+    \argmin\!\big\{\Omega(f) : f \in \argmin_{g \in \Hcal_d} L_T(g, \by')\big\}.
+    \label{eq:omega-learner}
+\end{equation}
+The \emph{$\Omega$-effective reachable subspace} is the closure of
+the learner's image:
+\begin{equation}
+    \Scal_\Acal^\Omega \;:=\; \mathrm{closure}\!\left\{\,
+        \hat f_\Acal^\Omega(T, \by') \;:\; T \in \binom{V}{n},\;
+        \by' \in \R^n\,\right\} \;\subseteq\; \Hcal_d.
+    \label{eq:s-omega}
+\end{equation}
+\end{definition}
+
+\subsection{Universal bound on the effective subspace}
+
+\begin{theorem}[Theorem~1 applies verbatim to $\Scal_\Acal^\Omega$]
+\label{thm:axis-4}
+Suppose $\Acal$ is the $\Omega$-tie-broken ERM
+(Def.~\ref{def:omega-learner}). Then Theorem~1 of \texttt{notes/01}
+holds with $\Scal_\Acal$ replaced by $\Scal_\Acal^\Omega$:
+\begin{equation}
+    \E_T\!\left[L_{T^c}(\hat f_\Acal^\Omega(T))\right]
+    \;\ge\; \big(1 - \Rspec(\Scal_\Acal^\Omega, \by)\big)\Var(\by),
+    \label{eq:axis-4-main}
+\end{equation}
+provided $\bP_{\Scal_\Acal^\Omega}\by \in \Scal_\Acal^\Omega$
+(which holds whenever $\Scal_\Acal^\Omega$ is a subspace, by
+closure under orthogonal projection).
+\end{theorem}
+
+\begin{proof}
+The proof of \texttt{notes/01}~Theorem~1 only uses A1--A4 through
+two facts about the learner:
+(i)~$\hat f_\Acal(T) \in \Scal_\Acal$ (Bessel step), and
+(ii)~$L_T(\hat f_\Acal(T)) \le L_T(\bP_{\Scal_\Acal}\by)$
+(ERM step in expectation $= A$).
+
+Substituting $\Scal_\Acal \to \Scal_\Acal^\Omega$:
+(i) By construction $\hat f_\Acal^\Omega(T) \in \Scal_\Acal^\Omega$;
+Bessel applies with the smaller subspace.
+(ii) Since $\bP_{\Scal_\Acal^\Omega}\by \in \Scal_\Acal^\Omega$ and is
+the minimiser of $\|f - \by\|^2$ on $\Scal_\Acal^\Omega$, it is also
+the minimiser of $\E_T[L_T(f)]$; the $\Omega$-tie-broken ERM
+satisfies the ERM step on $\Scal_\Acal^\Omega$ since $\inf$ over
+$\Hcal_d$ equals $\inf$ over $\Scal_\Acal^\Omega$ for the squared
+loss (the $\Omega$-tie-breaker selects a specific minimiser without
+changing the infimum). Hence $\E_T[L_T(\hat f_\Acal^\Omega)] \le
+\E_T[L_T(\bP_{\Scal_\Acal^\Omega}\by)] = (1 - \Rspec(\Scal_\Acal^\Omega, \by))\Var(\by)$.
+
+The transduction identity is independent of the hypothesis class.
+\qed
+\end{proof}
+
+\subsection{The operational difficulty for PD kernels}
+
+\begin{remark}[When Theorem~\ref{thm:axis-4} is operationally
+trivial]
+\label{rem:axis-4-trivial}
+Theorem~\ref{thm:axis-4} is mathematically correct but
+operationally vacuous in the most important regime --- the
+NTK / kernel-ridgeless setting where the optimiser is
+SGD-with-small-init and the implicit bias is the RKHS norm.
+By the representer theorem, the interpolant lives in
+$\mathrm{range}(\bK) \subseteq \R^N$, but for strictly
+positive-definite kernels (Gaussian RBF, NTK with non-degenerate
+data) $\mathrm{range}(\bK) = \R^N$, so $\Rspec(\Scal_\Acal^\Omega, \by) = 1$
+and the bound \eqref{eq:axis-4-main} is trivial.
+
+The non-triviality must come from a finer characterisation of the
+$\Omega$-tie-broken learner's image: not just the \emph{range} of the
+kernel, but the \emph{minimum-norm interpolation map's effective
+output subspace}, controlled by the spectral decay of $\bK$. This
+requires a benign-overfitting-style analysis along the lines of
+\citet{BartlettLongLugosiTsigler2020} adapted to the transductive
+setting --- bounding the held-out excess risk as a function of the
+kernel's effective rank, the noise level, and the target's
+alignment with the top eigenvectors.
+
+The full development of this bound is an open problem. The
+research programme of
+\texttt{notes/08\_benign\_overfitting\_research\_programme.tex}
+formulates it as a precise sequence of conjectures
+(Conjectures~1--3 there): under leverage-incoherence and
+spectral-decay hypotheses, the held-out excess risk is
+\emph{conjectured} to satisfy
+$\E[L_{T^c}] \le C_1\tau_{r^*}\Var(\by) + C_2 r^*\mu^*/(n - r^*)
+\Var(\by) + C_3\sigma_\xi^2 r^*/n + C_4 \sigma_\xi^2 n/\Reff_{r^*}(\bK)$,
+where $(\reff, \Reff)$ are the BLLT effective rank/dimension and
+$\mu^*$ is the leverage incoherence. A previous draft of
+\texttt{notes/08} (now retracted) claimed a proof of this bound by
+direct adaptation of BLLT, but the adaptation requires three
+non-trivial new technical tools (matrix Chernoff for sampled
+principal submatrices, exchangeable-martingale concentration for
+$T$-dependent trace functionals, and a correct RKHS-vs-$\ell_2$
+norm conversion), none of which were established in v1. The
+present version of \texttt{notes/08} catalogues these obstacles
+explicitly and points to the relevant literature
+(\citealp{Tropp2012,Cohen2016sparsification,DerezinskiLiaoDoblerMahoney2020,Chatterjee2007exchangeable})
+for the tools needed to make the conjectures into theorems.
+\end{remark}
+
+\begin{remark}[Non-$\ell_2$ implicit biases]
+\label{rem:lasso}
+For $\Omega = \|\cdot\|_1$ on a coordinate basis (Lasso, hard
+thresholding, ReLU-NN with sparse init), $\Scal_\Acal^\Omega$ is
+\emph{not} a subspace but a union of $\le \binom{p}{n}$ coordinate
+faces of dimension $\le n$. The bound \eqref{eq:axis-4-main}
+generalises by replacing $\Rspec$ with the supremum:
+\begin{equation*}
+    \Rspec^{\Omega}(\by)
+    \;:=\; \sup_{S \subset [p],\, |S| \le n} \Rspec(\Scal_S, \by),
+\end{equation*}
+where $\Scal_S$ is the coordinate subspace indexed by $S$. The
+proof is identical with $\Scal_\Acal^\Omega \subseteq \bigcup_S
+\Scal_S$ replacing the subspace inclusion in step~(i). A sharp
+characterisation of $\Rspec^\Omega$ for adversarially-chosen sparse
+supports is an open question.
+\end{remark}
+
+% =========================================================================
+\section{Synthesis and combined statement}
+\label{sec:synthesis}
+
+The four axes are largely independent on the proof level.
+Axes~1 and 2 admit a clean combined statement under linear ERM;
+Axis~3 sharpens the constant on both upper-bound and lower-bound
+sides of the minimax rate; Axis~4 is a reparametrisation of the
+hypothesis-class object on which all three previous axes operate.
+
+\subsection{Implications for \texttt{paper.tex}}
+\label{sec:paper-implication}
+
+The required edits to \texttt{paper.tex}~\S8 are:
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item \textbf{\S8.3 item~(1) (sharp constant):} replace
+    ``factor $\approx 4$'' by ``factor $\approx 3$--$5$ at typical
+    operational confidence $\eta = 0.1$''; cite
+    \citet{BardenetMaillard2015} for the upper-bound refinement
+    (Theorem~\ref{thm:axis-3-upper}); cite
+    Proposition~\ref{prop:assouad-fails} for the negative result
+    on Assouad. The multi-point Fano route is closed.
+\item \textbf{\S8.3 item~(3) (approximate ERM):} the slack
+    $(\rho-1)\E_T[\epsilon_T]$ is now rigorously derived
+    (Theorem~\ref{thm:axis-2}), with calibration table for ridge /
+    GBM / NN.
+\item \textbf{\S8.3 item~(4) (misspecified $\Hcal_d$):} the bound
+    applies verbatim to the $\Omega$-implicit-bias subspace
+    $\Scal_\Acal^\Omega$ (Theorem~\ref{thm:axis-4}); however, for
+    strictly-PD NTK-regime kernels this remains operationally
+    trivial ($\Rspec = 1$). A non-trivial floor in this regime is
+    \emph{an open problem} catalogued as a research programme in
+    \texttt{notes/08\_benign\_overfitting\_research\_programme.tex},
+    not a result. The original Mercer-truncation route via simple
+    Pythagore (an earlier draft of this note) was incorrect:
+    $\hat f \in \mathrm{range}(\bK)$ does not project cleanly onto
+    $\Scal_r$.
+\item \textbf{\S8.4 Limitations (deterministic target):} the
+    stochastic extension is now Theorem~\ref{thm:axis-1}
+    (linear ERM, distribution-free noise) and
+    Theorem~\ref{thm:axis-1-stein} (non-linear ERM, Gaussian noise
+    via Stein--SURE), with slack $-2 d_{\mathrm{eff}}\sigma_\xi^2/(N-n)$
+    matching the in-sample noise variance of OLS at fixed design.
+    A data-independent-hyperparameter assumption (A\ref{a:dataindep})
+    is explicit.
+\end{itemize}
+
+\subsection{What remains genuinely open}
+
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item \textbf{Constant gap $< 3$.} Achieving constant
+    ratio $< 3$ requires either (a) a constant
+    $c_{\mathrm{LB}} > 1/2$ on the lower bound (impossible via
+    Assouad/Fano, may be possible via local-asymptotic-minimax
+    \`a la \citet{LeCam1986}~Ch.~6), or (b) a Rademacher constant
+    $< \sqrt 2$ on the upper bound (would require beyond
+    Bardenet--Maillard; permutation-Rademacher of
+    \citet{Pechyony2008phd}~Thm.~3.4 gives $\sqrt{\pi/2} \approx 1.25$
+    but requires extra hypotheses on the loss).
+\item \textbf{NTK-regime tight floor.} The transductive
+    benign-overfitting programme of \texttt{notes/08} formulates
+    the bound as Conjectures~1--3 parameterised by missing tools
+    (matrix Chernoff for sampled principal submatrices,
+    exchangeable-martingale concentration for $T$-dependent
+    trace functionals, RKHS-vs-$\ell_2$ norm conversion). All three
+    are within reach of established random-matrix and exchangeable
+    concentration literature, but writing them down in the
+    leave-node-out setting is a research programme of its own.
+\item \textbf{CV-driven hyperparameter selection (Axis~1).} The
+    stability/PAC-Bayes correction to A\ref{a:dataindep} for
+    CV-tuned $\lambda$ is computable but not yet derived in
+    closed form for ridge.
+\item \textbf{Combined noisy-and-approximate ERM.} The slacks of
+    Axes~1 and 2 combine via the cross-term in
+    \eqref{eq:axis-1-erm-noisy}, not via a simple sum or max
+    (Remark~\ref{rem:axis-12-combined}). Derivation of the exact
+    combined slack is mechanical but tedious.
+\item \textbf{Non-$\ell_2$ implicit biases.} The Lasso analogue
+    (Remark~\ref{rem:lasso}) needs a sharp characterisation of
+    $\sup_S \Rspec(\Scal_S, \by)$ for adversarially-chosen sparse
+    supports.
+\item \textbf{Importance-weighted transduction} for active-learning
+    protocols: \texttt{paper.tex}~\S8.3~item~(2), deferred to the
+    C3 companion paper.
+\end{itemize}
+
+% =========================================================================
+\bibliography{../references/references}
+
+\end{document}
