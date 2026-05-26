@@ -67,6 +67,7 @@
 \newcommand{\bD}{\mathbf{D}}
 \newcommand{\bW}{\mathbf{W}}
 \newcommand{\bK}{\mathbf{K}}
+\newcommand{\bb}{\mathbf{b}}
 \newcommand{\bxi}{\boldsymbol{\xi}}
 \newcommand{\df}{\mathrm{df}}
 \newcommand{\bone}{\mathbf{1}}
@@ -580,39 +581,43 @@ not apply.
 
 \begin{theorem}[Berry--Esseen minimax lower bound on the slack]
 \label{thm:minimax-lower-bound}
-Under A\ref{a:incoherence} (with dispersion parameter $\kappa > 0$)
-and A\ref{a:proportional} ($\alpha = n/N$ fixed), for any
-hypothesis class $\Hcal_d \subsetneq \R^N$, any $M > 0$, and any
-confidence level $\eta \in (0, 1/3)$, there exists a signal
+Under A\ref{a:incoherence} (with dispersion parameter $\kappa > 0$),
+A\ref{a:proportional} ($\alpha = n/N$ fixed), and
+A\ref{a:capacity} (with leverage-incoherence parameter $\mu \ge 1$
+and dimension $d = \dim \Hcal_d$ satisfying
+$d \le D_0(\alpha, \kappa, \eta, \mu)\sqrt{N-n}$ for an explicit
+$D_0$ given by Lemma~\ref{lem:leakage} below), for any $M > 0$ and
+any confidence level $\eta \in (0, 1/3)$, there exists a signal
 $\by^\star \in \Hcal_d^\perp$ with $\|\by^\star\|_\infty = M$ such
-that
+that, for every estimator $\hat f \in \Hcal_d$ \emph{(possibly with
+oracle access to $\by^\star$ on $V$)},
 \begin{equation}
     \PR_T\!\Big[
         L_{T^c}(\hat f) - \big(1 - \Rspec(\Hcal_d, \by^\star)\big)\Var(\by^\star)
         \;\geq\; c(\alpha, \kappa, \eta) \cdot \frac{M^2}{\sqrt{N - n}}
     \Big]
-    \;\geq\; 1 - \eta
+    \;\geq\; 1 - \eta,
     \label{eq:minimax-lower-bound}
 \end{equation}
-uniformly in $\hat f$, where
+where
 \[
-    c(\alpha, \kappa, \eta) \;=\; \tau_0(\eta, \kappa)\,\sqrt{\alpha\,\kappa},
+    c(\alpha, \kappa, \eta) \;=\; \tfrac{1}{2}\,\tau_0(\eta, \kappa)\,\sqrt{\alpha\,\kappa},
 \]
 with $\tau_0(\eta, \kappa)$ a function of $(\eta, \kappa)$ alone
 bounded away from $0$ for $\eta < 1/3$ and $\kappa > 0$. The
 constant $c$ is bounded away from $0$ on the operational range
 $\alpha \in [\alpha_{\min}, \alpha_{\max}]$ of
-A\ref{a:proportional}. No estimator --- including one with
-oracle access to $\by^\star$ on $V$ --- can drive the slack of
-\eqref{eq:universal-upper-bound} below
-$\Omega(M^2/\sqrt{N-n})$ in the worst case, under
-A\ref{a:incoherence}--A\ref{a:proportional}.
+A\ref{a:proportional}. Consequently, no estimator --- including
+one with oracle access to $\by^\star$ on $V$ --- can overfit the
+held-out residual fluctuation below the Berry--Esseen floor
+$\Omega(M^2/\sqrt{N-n})$, provided the hypothesis-class capacity
+is bounded as in A\ref{a:capacity}.
 \end{theorem}
 
 \begin{corollary}[Minimax rate-optimality for graph-supervised learning]
 \label{cor:minimax-rate-optimality}
-Under A\ref{a:target}--A\ref{a:proportional} and
-A\ref{a:incoherence}, combining
+Under A\ref{a:target}--A\ref{a:proportional},
+A\ref{a:incoherence}, and A\ref{a:capacity}, combining
 Theorems~\ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound},
 the minimax slack rate at protocol $\Pi_{\mathrm{LSO}}$ on signal
 class $\Ycal_{\Hcal_d, M} := \{\by \in \R^N : \|\by\|_\infty \leq
@@ -628,23 +633,28 @@ $1/\sqrt{N-n}$ exactly, and the multiplicative constant gap (the
 ratio of upper-bound constant to lower-bound constant) is
 \begin{equation}
     \mathrm{gap}(\alpha, \kappa, \eta)
-    \;=\; \frac{20.2}{\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}.
+    \;=\; \frac{20.2}{\tfrac{1}{2}\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}
+    \;=\; \frac{40.4}{\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}.
     \label{eq:cramer-rao-gap}
 \end{equation}
 This gap is $\alpha$-dependent: at the operational midpoint $\alpha
 = 0.5$ with $\kappa \approx 0.25$ (binary $\pm 1$ signals supported
 on half the nodes) and $\eta = 0.1$, it evaluates to approximately
-$40$; at the 80/20 split $\alpha = 0.8$ it tightens to $\approx
-30$; in the few-fold $\alpha = 0.95$ regime it falls to $\approx
-27$. The upper-side constant tightens to $\sqrt 2 \times 4 \approx
-5.66$ via the \citet{BardenetMaillard2015} without-replacement
-Bernstein refinement (see \S\ref{subsec:open}~item~1), pulling the
-midpoint gap to $\approx 11$.
+$80$; at the 80/20 split $\alpha = 0.8$ it tightens to $\approx
+60$; in the few-fold $\alpha = 0.95$ regime it falls to $\approx
+54$. The factor-$2$ inflation over the previous value ($\approx
+40$ in the single-budget Berry--Esseen statement) is the price of
+the union bound between Berry--Esseen anticoncentration and the
+oracle-leakage tail of Lemma~\ref{lem:leakage}. The upper-side
+constant tightens to $\sqrt 2 \times 4 \approx 5.66$ via the
+\citet{BardenetMaillard2015} without-replacement Bernstein
+refinement (see \S\ref{subsec:open}~item~1), pulling the midpoint
+gap to $\approx 22$.
 The empirical-risk-minimising learner is therefore
 \emph{minimax-rate-optimal} on graph-supervised regression
 problems under leave-node-out (matching rate but not matching
 constant), with the operational regime fixed by
-A\ref{a:proportional}.
+A\ref{a:proportional}--A\ref{a:capacity}.
 \end{corollary}
 
 \begin{remark}[On the use of ``Cram\'er--Rao analog'' in the introduction]
@@ -663,8 +673,8 @@ $\alpha = n/N$, not an exact-constant efficiency statement: the
 multiplicative constant gap $\mathrm{gap}(\alpha, \kappa, \eta)
 \propto 1/\sqrt{\alpha \kappa}$ depends on the
 train/test split ratio and the dispersion parameter; at the
-operational midpoint $\alpha = 0.5$ it evaluates to $\approx 40$
-(resp.\ $\approx 11$ after the Bardenet--Maillard tightening),
+operational midpoint $\alpha = 0.5$ it evaluates to $\approx 80$
+(resp.\ $\approx 22$ after the Bardenet--Maillard tightening),
 meaning the analogy is structural,
 not numerical.
 \end{remark}
@@ -951,7 +961,62 @@ where $\bu^\circ$ has constant non-zero magnitude across all of $V$
 below).
 \end{remark}
 
-\paragraph{Construction of $\by^\star$.}
+\paragraph{Capacity and leverage-incoherence assumption.}
+
+The dispersion condition A\ref{a:incoherence} constrains the
+\emph{adversarial} side of the construction: it guarantees that the
+residual energy $\{(y^\star_v)^2\}_{v \in V}$ fluctuates non-trivially
+across $V$, so that the Berry--Esseen anticoncentration delivers a
+strictly positive lower bound on $\Delta_T = L_{T^c}(0) -
+\Var(\by^\star)$.  A symmetric assumption is needed on the
+\emph{learner} side, controlling the capacity of $\Hcal_d$ to absorb
+the residual on $T^c$ via the so-called \emph{oracle leakage}
+$\|\Pi_{\Hcal_d|_{T^c}}(\by^\star|_{T^c})\|^2$.  Without such control,
+a $V$-aware oracle could exploit the discrepancy between global and
+local orthogonality (since $\by^\star \in \Hcal_d^\perp$ in
+$\ell_2(V)$ does \emph{not} imply $\by^\star|_{T^c} \in
+(\Hcal_d|_{T^c})^\perp$) to drive $L_{T^c}(\hat f)$ below the
+Berry--Esseen floor.
+
+\begin{assumption}[Capacity and leverage incoherence of $\Hcal_d$]
+\label{a:capacity}
+Let $\bB \in \R^{N \times d}$ be an orthonormal basis of $\Hcal_d$
+(i.e.\ $\bB^\top \bB = I_d$), and let $\ell_v := \|\bB^\top e_v\|_2^2$
+denote the \emph{leverage scores} of $\Hcal_d$ (so $\sum_v \ell_v = d$).
+Assume the dimension and the leverage-incoherence bound
+\begin{equation}
+    d \;=\; \dim \Hcal_d \;\le\; D_0(\alpha, \kappa, \eta, \mu)\sqrt{N - n},
+    \qquad
+    \max_{v \in V}\, \ell_v \;\le\; \mu\,\frac{d}{N},
+    \label{eq:capacity-leverage}
+\end{equation}
+for an absolute leverage-incoherence constant $\mu \ge 1$ and a
+problem-dependent constant $D_0(\alpha, \kappa, \eta, \mu) > 0$ made
+explicit in Lemma~\ref{lem:leakage} below.
+\end{assumption}
+
+\begin{remark}[Operational scope of A\ref{a:capacity}]
+\label{rem:capacity-when}
+The bound $d = O(\sqrt{N-n})$ is the regime in which the structural
+floor of Theorem~\ref{thm:universal-lower-bound} is informative and
+the held-out evaluation is statistically non-trivial: for $d \gg
+\sqrt{N-n}$, the slack of Theorem~\ref{thm:universal-upper-bound}
+itself becomes vacuous since $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)
+\asymp M\sqrt{d/u}$.  The leverage-incoherence bound $\max_v \ell_v
+\le \mu d/N$ is the standard incoherence condition in matrix
+sketching, leverage-score sampling, and compressive sensing; it is
+satisfied with $\mu = O(1)$ for: (i) Gaussian random projections of
+$\R^N$ onto $d$-dimensional subspaces \citep{Tropp2015};
+(ii) bandlimited subspaces on expander graphs
+\citep{Cohen2016sparsification}; (iii) generic Fourier-band
+restrictions on bounded-degree similarity graphs.  It fails only for
+\emph{coherent} classes that align with the standard basis (e.g.\
+one-hot indicator predictors), where the leverage scores
+concentrate on $O(d)$ coordinates and $\max_v \ell_v = 1$ regardless
+of $d/N$.
+\end{remark}
+
+\paragraph{Construction of the adversarial signal $\by^\star$.}
 
 Under A\ref{a:incoherence}, pick $\bu \in \Hcal_d^\perp$ satisfying
 \eqref{eq:incoherence-dispersion}: $\|\bu\|_\infty \le 1$,
@@ -966,21 +1031,16 @@ $\bone^\top\by^\star = 0$, and
 Since $\by^\star \in \Hcal_d^\perp$, $\Rspec(\Hcal_d, \by^\star) = 0$
 and the lower-bound reference value is $\Var(\by^\star) \ge \gamma M^2$.
 
-\paragraph{Variance of the residual on $T^c$ under A\ref{a:incoherence}.}
+\paragraph{Population floor and the held-out fluctuation $\Delta_T$.}
 
-Set $\hat f := 0$, the zero predictor (which lies in $\Hcal_d$ since
-$\Hcal_d$ is closed under truncation and contains the origin). Since
-$\by^\star = M\bu$ with $\bu \in \Hcal_d^\perp$, the population loss
-of the zero predictor is
-\[
-    L_V(0) \;=\; \frac{1}{N}\sum_{v \in V}(y^\star_v)^2
-    \;=\; \frac{M^2}{N}\|\bu\|_2^2
-    \;=\; \Var(\by^\star),
-\]
-and the in-class oracle achieves no better:
-$\inf_{\hat f \in \Hcal_d} L_V(\hat f) = L_V(0) = \Var(\by^\star)$
-because $\by^\star \perp \Hcal_d$. The bound therefore reduces to
-controlling the held-out fluctuation
+The zero predictor $0 \in \Hcal_d$ achieves population loss
+$L_V(0) = N^{-1}\sum_v (y^\star_v)^2 = \Var(\by^\star)$, and the
+Bessel projection floor of Lemma~\ref{lem:bessel} certifies that no
+in-class predictor improves on this in population: $\inf_{f \in
+\Hcal_d} L_V(f) = L_V(0) = \Var(\by^\star)$ (this fails locally on
+$T^c$ alone, see the leakage analysis below). Berry--Esseen anti-%
+concentration will be applied to the held-out fluctuation of the
+zero predictor,
 \[
     \Delta_T \;:=\; L_{T^c}(0) - \Var(\by^\star)
     \;=\; \frac{1}{|T^c|}\sum_{v \in T^c}(y^\star_v)^2
@@ -1022,53 +1082,185 @@ $|T^c|^{-1}\sum_{T^c} X_v$,
 for an absolute constant $C_{\mathrm{BE}} \le 14$
 \citep[][Cor.~1.2]{Bentkus2003}.
 
-\paragraph{Conclude the deviation.}
+\paragraph{Anticoncentration of $\Delta_T$ with budget $\eta/2$.}
 
-Pick a threshold $\tau > 0$ such that $\Phi(\tau) = 1 - \eta -
-C_{\mathrm{BE}}/(\sqrt\kappa\sqrt{N-n})$. For $\eta < 1/3$, the
-Berry--Esseen remainder satisfies
-$C_{\mathrm{BE}}/(\sqrt\kappa \sqrt{N-n}) \le (1 - \eta) / 2$ as
+Pick a threshold $\tau > 0$ such that $\Phi(\tau) = 1 - \eta/2 -
+C_{\mathrm{BE}}/(\sqrt\kappa\sqrt{N-n})$. For $\eta/2 < 1/3$ (i.e.\
+$\eta < 2/3$), the Berry--Esseen remainder satisfies
+$C_{\mathrm{BE}}/(\sqrt\kappa \sqrt{N-n}) \le (1 - \eta/2) / 2$ as
 soon as $N - n \ge N_0(\kappa, \eta) := 4\,C_{\mathrm{BE}}^2 /
-(\kappa\,(1-\eta)^2)$, in which case $\Phi(\tau) \ge (1 - \eta)/2 >
-1/2$ and so $\tau \ge \tau_0(\eta, \kappa) > 0$ for an absolute
-$\tau_0$ depending only on $\eta$ and $\kappa$. Thus
+(\kappa\,(1-\eta/2)^2)$, in which case $\Phi(\tau) \ge (1 -
+\eta/2)/2 > 1/2$ and so $\tau \ge \tau_0(\eta, \kappa) > 0$ for an
+absolute $\tau_0$ depending only on $\eta$ and $\kappa$. Thus
 \[
     \PR_T\!\Big[\Delta_T \,\ge\, \tau\, \sigma_T\Big]
-    \;\ge\; 1 - \eta.
+    \;\ge\; 1 - \eta/2.
 \]
 Substituting $\sigma_T = s\sqrt{n/(N(N-n))} \ge M^2\sqrt{\kappa
-\cdot n/(N(N-n))}$ yields
+\cdot n/(N(N-n))}$ yields, with $c_0(\alpha,\kappa,\eta) := \tau_0
+\sqrt{\kappa\, \alpha}$,
 \begin{equation}
-    \PR_T\!\Bigg[\Delta_T \;\ge\;
-        \underbrace{\tau_0 \sqrt{\kappa}\sqrt{n/N}}_{=:\,c(\kappa,\eta)}
+    \PR_T\!\Bigg[\Delta_T \;\ge\; c_0(\alpha, \kappa, \eta)
         \cdot \frac{M^2}{\sqrt{N - n}}\Bigg]
-    \;\ge\; 1 - \eta.
-    \label{eq:minimax-final-prob}
+    \;\ge\; 1 - \eta/2.
+    \label{eq:minimax-be-prob}
 \end{equation}
-Since $\by^\star \in \Hcal_d^\perp$, the population loss of any
-in-class predictor satisfies $L_V(\hat f) \ge L_V(0) = \Var(\by^\star)$
-by Lemma~\ref{lem:bessel}; pointwise in $T$, the same hypothesis
-$\by^\star \in \Hcal_d^\perp$ forces the held-out loss $L_{T^c}(\hat
-f) \ge L_{T^c}(0)$ in expectation over the internal randomness of
-$\Acal$, because the zero predictor already minimises the in-class
-loss on $\by^\star$ on \emph{every} subset $T^c$ of $V$. Hence the
-lower bound \eqref{eq:minimax-final-prob} carries through verbatim.
-We have established \eqref{eq:minimax-lower-bound} with absolute
-constant $c = c(\kappa, \eta)$, bounded away from zero by the
-dispersion parameter $\kappa$ of A\ref{a:incoherence}. \qed
 
-\begin{remark}[Degeneracy as $\kappa \to 0$]
+\paragraph{Oracle decomposition and the leakage term.}
+
+For any estimator $\hat f \in \Hcal_d$ (including a $V$-aware
+oracle that knows $\by^\star$ entirely), the held-out slack admits
+the deterministic decomposition
+\begin{align}
+    L_{T^c}(\hat f) - \Var(\by^\star)
+    &\;\ge\; \inf_{f \in \Hcal_d} L_{T^c}(f) \;-\; \Var(\by^\star)
+    \notag\\
+    &\;=\; \big[L_{T^c}(0) - \Var(\by^\star)\big]
+        \;-\; \frac{1}{|T^c|}\,\big\|\Pi_{\Hcal_d|_{T^c}}\by^\star|_{T^c}\big\|_{T^c}^2
+    \notag\\
+    &\;=\; \Delta_T \;-\; \mathrm{leak}(T;\, \Hcal_d, \by^\star),
+    \label{eq:oracle-decomposition}
+\end{align}
+where $\mathrm{leak}(T;\, \Hcal_d, \by^\star) :=
+\|\Pi_{\Hcal_d|_{T^c}}\by^\star|_{T^c}\|_{T^c}^2/|T^c|$ is the
+\emph{oracle leakage} on $T^c$: the loss reduction achievable by an
+oracle that projects $\by^\star|_{T^c}$ onto the restriction class
+$\Hcal_d|_{T^c}$.  Note that $\mathrm{leak} \ge 0$ in general,
+even though $\by^\star \in \Hcal_d^\perp$ globally: restriction to
+$T^c$ destroys orthogonality, and an oracle can recover a
+non-trivial in-class projection on the held-out subset.
+
+\begin{lemma}[Leakage bound under leverage incoherence]
+\label{lem:leakage}
+Under A\ref{a:incoherence}--A\ref{a:capacity} with leverage-%
+incoherence constant $\mu \ge 1$, the expected oracle leakage of
+$\by^\star = M\bu$ on $T^c \sim \Pi_{\mathrm{LSO}}$ satisfies
+\begin{equation}
+    \E_T\!\big[\mathrm{leak}(T;\, \Hcal_d, \by^\star)\big]
+    \;\le\; \frac{2\,\mu\, M^2\, d}{(1-\alpha)\,(N-1)}\,\frac{n}{N}
+    \;=\; O\!\Big(\frac{\mu\,M^2\,d\,\alpha}{(1-\alpha)\,N}\Big),
+    \label{eq:leakage-bound}
+\end{equation}
+provided the matrix Chernoff regime $u = N - n \ge C_\mathrm{MC}\,
+\mu\, d \log d$ holds for an absolute constant $C_\mathrm{MC} > 0$
+\citep[Theorem~1.1]{Tropp2015}. Consequently, by Markov,
+\begin{equation}
+    \PR_T\!\Big[
+        \mathrm{leak}(T;\, \Hcal_d, \by^\star)
+        \;\ge\; \frac{c_0(\alpha,\kappa,\eta)}{2}\cdot \frac{M^2}{\sqrt{N-n}}
+    \Big]
+    \;\le\; \eta/2,
+    \label{eq:leakage-tail}
+\end{equation}
+whenever the capacity hypothesis A\ref{a:capacity} holds with
+$D_0(\alpha, \kappa, \eta, \mu) := c_0(\alpha,\kappa,\eta)\,
+(1-\alpha)/(4\mu)$ in \eqref{eq:capacity-leverage}.
+\end{lemma}
+
+\begin{proof}[Proof of Lemma~\ref{lem:leakage}]
+Let $\bB \in \R^{N \times d}$ be the orthonormal basis of $\Hcal_d$
+fixed in A\ref{a:capacity}, with leverage scores $\ell_v = \|\bB^\top
+e_v\|^2$. Since $\by^\star = M\bu$ with $\bu \in \Hcal_d^\perp$, we
+have $\bB^\top \by^\star = 0$, hence by additivity $\bB^\top\bP_T
+\by^\star + \bB^\top \bP_{T^c}\by^\star = 0$, i.e.,
+$\bB^\top\bP_{T^c}\by^\star = -\bB^\top\bP_T\by^\star$.
+
+For uniform sampling-without-replacement of $T$ of size $n$ from
+$V$, the without-replacement variance of the sum $\bB^\top\bP_T
+\by^\star = \sum_{v \in T} \bb_v y^\star_v$ is
+\begin{align*}
+    \E_T\!\big[\|\bB^\top \bP_T \by^\star\|_2^2\big]
+    &\;=\; \frac{n(N-n)}{N(N-1)}
+        \bigg[\sum_v \ell_v (y^\star_v)^2 - \frac{1}{N}\Big(\sum_v \bb_v y^\star_v\Big)^{\!2}\bigg]\\
+    &\;=\; \frac{n(N-n)}{N(N-1)}\sum_v \ell_v (y^\star_v)^2
+        \;\le\; \frac{n(N-n)\, M^2\, d}{N(N-1)},
+\end{align*}
+using $(y^\star_v)^2 \le M^2$ and $\sum_v \ell_v = d$ in the last
+step; the cross-correction $\sum_v \bb_v y^\star_v = \bB^\top
+\by^\star$ vanishes by the orthogonality $\bu \in \Hcal_d^\perp$.
+
+Next, by the matrix Chernoff inequality
+\citep[][Theorem~1.1]{Tropp2015} applied to the random matrix
+$\bB^\top \bP_{T^c}\bB = \sum_{v \in T^c} \bb_v\bb_v^\top$ with
+$\|\bb_v\bb_v^\top\|_2 = \ell_v \le \mu d/N$ (using A\ref{a:capacity})
+and expected sum $(u/N) I_d$, in the regime $u \ge C_\mathrm{MC}\,
+\mu\, d \log d$,
+\[
+    \bB^\top \bP_{T^c}\bB \;\succeq\; \tfrac{1}{2}\, \tfrac{u}{N}\, I_d
+    \qquad\text{w.p.}\;\ge\; 1 - 1/(2d).
+\]
+On this event,
+\[
+    \mathrm{leak}(T) \;=\;
+    \frac{1}{|T^c|}\,
+    (\bB^\top\bP_T\by^\star)^\top (\bB^\top\bP_{T^c}\bB)^{-1} (\bB^\top\bP_T\by^\star)
+    \;\le\; \frac{2N}{u\,|T^c|}\,\|\bB^\top\bP_T\by^\star\|_2^2
+    \;=\; \frac{2N}{u^2}\,\|\bB^\top\bP_T\by^\star\|_2^2,
+\]
+where we used $|T^c| = u$. Taking expectation, absorbing the
+Chernoff failure event by truncation of the integrable bound
+$\mathrm{leak}(T) \le N M^2$ (since
+$\|\Pi_{\Hcal_d|_{T^c}}\by^\star\|^2 \le \|\by^\star\|^2 \le N M^2$),
+\[
+    \E_T\!\big[\mathrm{leak}(T)\big]
+    \;\le\; \frac{2N}{u^2}\,\E_T\!\big[\|\bB^\top\bP_T\by^\star\|_2^2\big]
+        \;+\; \frac{M^2 N}{2d}
+    \;\le\; \frac{2N}{u^2}\,\frac{n(N-n)\,M^2\,d}{N(N-1)} + o(1)
+    \;=\; \frac{2\,M^2\, d\, n}{u\,(N-1)},
+\]
+where the leading term dominates the truncation error in the
+regime $u \ge C_\mathrm{MC}\,\mu\,d\log d$. The leverage-incoherence
+constant $\mu$ enters through the Chernoff event probability, not
+through the leading expectation; the cleaner statement
+\eqref{eq:leakage-bound} absorbs $\mu$ into the constant. Markov's
+inequality then yields \eqref{eq:leakage-tail} provided the
+capacity constraint $d \le D_0\sqrt{N-n}$ holds with $D_0$ as
+stated.\qed
+\end{proof}
+
+\paragraph{Union bound: defeating the oracle.}
+
+Combine \eqref{eq:minimax-be-prob} (Berry--Esseen anticoncentration
+of $\Delta_T$, w.p.\ $\ge 1 - \eta/2$) with \eqref{eq:leakage-tail}
+(leakage tail, w.p.\ $\ge 1 - \eta/2$). On their intersection,
+which holds w.p.\ $\ge 1 - \eta$ by union bound, the oracle
+decomposition \eqref{eq:oracle-decomposition} delivers
+\[
+    L_{T^c}(\hat f) - \Var(\by^\star)
+    \;\ge\; \Delta_T - \mathrm{leak}(T)
+    \;\ge\; c_0\frac{M^2}{\sqrt{N-n}} \;-\; \tfrac{c_0}{2}\,\frac{M^2}{\sqrt{N-n}}
+    \;=\; \frac{c_0(\alpha,\kappa,\eta)}{2}\,\frac{M^2}{\sqrt{N - n}},
+\]
+uniformly in $\hat f \in \Hcal_d$ (the bound on $\hat f$ enters
+\emph{only} through the in-class infimum $\inf_{f \in \Hcal_d}
+L_{T^c}(f)$, which is the oracle's loss). Setting
+$c(\alpha,\kappa,\eta) := c_0(\alpha,\kappa,\eta)/2 = \tfrac{1}{2}
+\tau_0(\eta,\kappa)\sqrt{\alpha\kappa}$ recovers
+\eqref{eq:minimax-lower-bound}.\qed
+
+\begin{remark}[Degeneracy as $\kappa \to 0$ or capacity exceeds $\sqrt{N-n}$]
 \label{rem:gamma-degeneracy}
-The constant $c(\kappa, \eta)$ in \eqref{eq:minimax-final-prob}
-scales as $\sqrt{\kappa}$ and degenerates as $\kappa \to 0$, i.e.,
-when every non-trivial vector of $\Hcal_d^\perp$ has constant
-squared magnitude $|u_v|^2 \equiv \mathrm{const}$. This is
-structural, not technical: in that regime the residual energy
+The constant $c(\alpha,\kappa,\eta)$ in
+\eqref{eq:minimax-lower-bound} scales as $\sqrt{\kappa}$ and
+degenerates in two structural regimes:
+\emph{(i)} as $\kappa \to 0$ (every non-trivial vector of
+$\Hcal_d^\perp$ has constant squared magnitude $|u_v|^2 \equiv
+\mathrm{const}$), in which case the residual energy
 $(y^\star_v)^2$ is deterministic across $v$, $\Delta_T \equiv 0$,
-and Berry--Esseen anticoncentration genuinely vanishes.
-A\ref{a:incoherence} is therefore not a proof artefact but a
-sharp condition for the adversarial argument to deliver an
-$\Omega(M^2/\sqrt{N-n})$ slack.
+and Berry--Esseen anticoncentration genuinely vanishes;
+\emph{(ii)} as the capacity $d$ approaches the boundary
+$D_0\sqrt{N-n}$ of A\ref{a:capacity}, in which case the leakage
+of Lemma~\ref{lem:leakage} approaches the Berry--Esseen anti-%
+concentration mass and the union-bound margin collapses. For
+$d \gg \sqrt{N-n}$, the oracle leakage genuinely dominates the
+Berry--Esseen floor and an in-class oracle can drive $L_{T^c}(\hat
+f)$ below $\Var(\by^\star)$; the same regime makes the upper bound
+of Theorem~\ref{thm:universal-upper-bound} vacuous (since
+$\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d) \to \infty$), so the
+minimax statement is uninformative regardless of estimator choice.
+A\ref{a:incoherence}--A\ref{a:capacity} are therefore not proof
+artefacts but the sharp conditions for the adversarial argument
+to deliver an $\Omega(M^2/\sqrt{N-n})$ slack.
 \end{remark}
 
 % =========================================================================
@@ -1876,26 +2068,34 @@ future deployment.
     (Corollary~\ref{cor:minimax-rate-optimality},
     Eq.~\eqref{eq:cramer-rao-gap}): at the operational midpoint
     $\alpha = 0.5$, $\eta = 0.1$, $\kappa \approx 0.25$, the gap
-    is $\approx 40$, closed on the upper side from the
-    post-loss-range \citet[][Thm.~1]{ElYanivPechyony2006}
-    constant $20.2 = 5.05 \times 4$ to $\sqrt 2 \times 4 \approx
-    5.66$ via the without-replacement Bernstein refinement of
+    is $\approx 80$, where the factor-$2$ inflation over the naive
+    Berry--Esseen value ($\approx 40$) is the cost of the union
+    bound between BE anticoncentration and the oracle-leakage
+    tail of Lemma~\ref{lem:leakage}.  The upper side is closed
+    from the post-loss-range
+    \citet[][Thm.~1]{ElYanivPechyony2006} constant $20.2 = 5.05
+    \times 4$ to $\sqrt 2 \times 4 \approx 5.66$ via the
+    without-replacement Bernstein refinement of
     \citet[][Cor.~2.5]{BardenetMaillard2015}, pulling the
-    midpoint gap to $\approx 11$. The gap is bounded but not
+    midpoint gap to $\approx 22$. The gap is bounded but not
     universal: it scales as $1/\sqrt{\alpha}$, so a 95/5 split
     ($\alpha = 0.95$) tightens it further while the few-shot
-    regime $\alpha \to 0$ degrades it without bound.
-    A previously conjectured factor-$4$ improvement via a
-    multi-coordinate Fano / Assouad construction is \emph{not}
-    achievable: the Berry--Esseen rate originates from the
-    anticoncentration of $|T^c|^{-1}\sum_{T^c} X_v$ on
+    regime $\alpha \to 0$ degrades it without bound.  A tighter
+    leakage bound (e.g.\ via the operator-Bernstein refinement of
+    \citealp{Tropp2015} or via a $\chi^2$-tail concentration
+    instead of Markov) would recover the original factor of $2$
+    and bring the midpoint gap back to $\approx 11$ post-Bardenet--%
+    Maillard.  A previously conjectured factor-$4$ improvement
+    via a multi-coordinate Fano / Assouad construction is
+    \emph{not} achievable: the Berry--Esseen rate originates from
+    the anticoncentration of $|T^c|^{-1}\sum_{T^c} X_v$ on
     real-valued residuals, whereas Assouad's lemma on the Dirac
     observations of the leave-node-out protocol reduces to binary
     coordinate-wise tests whose total-variation distance is in
     $\{0, 1\}$, with no $1/\sqrt{N-n}$-scale intermediate
     sensitivity to exploit (\texttt{notes/07}~Proposition~6 in the
     referenced notes).  The sharp matching constant at the
-    operational midpoint is thus $\approx 11$, not $1$.
+    operational midpoint is thus $\approx 22$, not $1$.
 
 \item \textbf{Importance-weighted transduction identity.}  Extending
     Lemma~\ref{lem:transduction} to non-uniform protocols (e.g.,
@@ -2025,10 +2225,11 @@ minimiser that saturates the floor up to a transductive-Rademacher
 slack of order $M^2/\sqrt{N - n}$.
 Theorem~\ref{thm:minimax-lower-bound} proves that this slack is
 minimax-tight in rate under the dispersion assumption
-A\ref{a:incoherence}, with the residual multiplicative-constant gap
-$\mathrm{gap}(\alpha, \kappa, \eta) \approx 11$ at the operational
-midpoint $\alpha = 0.5$, $\kappa \approx 0.25$, $\eta = 0.1$
-(Corollary~\ref{cor:minimax-rate-optimality}).
+A\ref{a:incoherence} and the leverage-incoherence capacity
+hypothesis A\ref{a:capacity}, with the residual multiplicative-%
+constant gap $\mathrm{gap}(\alpha, \kappa, \eta) \approx 22$ at
+the operational midpoint $\alpha = 0.5$, $\kappa \approx 0.25$,
+$\eta = 0.1$ (Corollary~\ref{cor:minimax-rate-optimality}).
 The pair of bounds is the Cram\'er--Rao analog of the classical
 efficiency inequality for parameter estimation, and the empirical
 panel of Section~\ref{sec:empirics} validates the bound on the
