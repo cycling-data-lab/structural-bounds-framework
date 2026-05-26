@@ -527,15 +527,21 @@ for any exchangeable protocol regardless of $\alpha$.
 \begin{theorem}[Universal spectral lower bound]
 \label{thm:universal-lower-bound}
 Under Assumptions~\ref{a:target}--\ref{a:erm}, for any evaluation
-protocol $\Pi$ satisfying $\E_T[L_T(f)] = L_V(f)$ for all deterministic
-$f \in \R^N$ (in particular $\Pi_{\mathrm{LSO}}$),
+protocol $\Pi$ satisfying $\E_T[L_T(f)] = L_V(f)$ for all
+$T$-independent $f \in \R^N$ (in particular $\Pi_{\mathrm{LSO}}$),
 \begin{equation}
     \E_{T \sim \Dcal_\Pi}\!\big[L_{T^c}(\hat f_\Acal(T))\big]
     \;\geq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by).
     \label{eq:universal-lower-bound}
 \end{equation}
 The bound is \emph{exact in expectation}: there is no concentration
-slack term.
+slack term.  The protocol hypothesis $\E_T[L_T(f)] = L_V(f)$ is
+precisely \emph{spatial exchangeability} of $\Pi$: the marginal
+inclusion probability $\PR_T[v \in T]$ is constant across $v \in V$,
+necessarily equal to $n/N$.  It is satisfied by uniform without-%
+replacement sampling ($\Pi_{\mathrm{LSO}}$), $k$-fold cross-%
+validation, and GroupKFold protocols, and fails for non-uniform
+importance-weighted protocols (cf.\ Section~\ref{subsec:c3}).
 \end{theorem}
 
 \begin{theorem}[Universal upper bound, sharp transductive form]
@@ -546,19 +552,24 @@ Under Assumptions~\ref{a:target}--\ref{a:erm}, with probability $\geq 1
     L_{T^c}(\hat f_\Acal(T))
     \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
         \;+\; 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
-        \;+\; 20.2\, M^2 \sqrt{\frac{(n + u)\log(2/\eta)}{n \cdot u}},
+        \;+\; 23.1\, M^2 \sqrt{\frac{(n + u)\log(2/\eta)}{n \cdot u}},
     \label{eq:universal-upper-bound}
 \end{equation}
 where $u := N - n$ is the held-out cardinality,
 $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)$ is the transductive
 Rademacher complexity of \citet[][\S 3]{ElYanivPechyony2006},
 and $\ell$ is the truncated square loss, bounded in $[0, 4M^2]$.
-The constant $20.2 = 5.05 \cdot 4$ arises by rescaling the
-loss from $[0, 4M^2]$ to the unit interval $[0, 1]$ to apply
-\citet[][Theorem~1]{ElYanivPechyony2006} (whose constant $5.05$ is
-stated for unit-range losses), then rescaling back: the loss-range
-factor is $4M^2$, and dividing by $M^2$ to express the slack per
-unit $M^2$ leaves the multiplicative factor $4$. For learners with
+The constant $23.1$ aggregates two contributions traced in the
+proof of Section~\ref{sec:upper-bound-proof}: (i) the
+$20.2 = 5.05 \cdot 4$ from the transductive Rademacher bound of
+\citet[][Theorem~1]{ElYanivPechyony2006} (rescaled from the
+unit-range hypothesis of their result to the loss range $[0, 4M^2]$
+via the loss-range factor $4M^2/M^2 = 4$), and (ii) an additional
+$2.83 = 4/\sqrt{2}$ factor that strictly upper-bounds and absorbs
+the $O(M^2/\sqrt{n})$ without-replacement Serfling slack of the
+population-risk minimiser, using
+$20.2 + 2.83\sqrt{u/(n+u)} \leq 23.03 \leq 23.1$ since
+$\sqrt{u/(n+u)} \leq 1$. For learners with
 $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d) = O(M\sqrt{d/u})$
 (linear, kernel-ridge, MLP with bounded weights, gradient-boosted
 trees of bounded depth), Talagrand contraction with Lipschitz
@@ -633,23 +644,28 @@ $1/\sqrt{N-n}$ exactly, and the multiplicative constant gap (the
 ratio of upper-bound constant to lower-bound constant) is
 \begin{equation}
     \mathrm{gap}(\alpha, \kappa, \eta)
-    \;=\; \frac{20.2}{\tfrac{1}{2}\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}
-    \;=\; \frac{40.4}{\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}.
+    \;=\; \frac{23.1}{\tfrac{1}{2}\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}
+    \;=\; \frac{46.2}{\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}.
     \label{eq:cramer-rao-gap}
 \end{equation}
 This gap is $\alpha$-dependent: at the operational midpoint $\alpha
 = 0.5$ with $\kappa \approx 0.25$ (binary $\pm 1$ signals supported
 on half the nodes) and $\eta = 0.1$, it evaluates to approximately
-$80$; at the 80/20 split $\alpha = 0.8$ it tightens to $\approx
-60$; in the few-fold $\alpha = 0.95$ regime it falls to $\approx
-54$. The factor-$2$ inflation over the previous value ($\approx
-40$ in the single-budget Berry--Esseen statement) is the price of
-the union bound between Berry--Esseen anticoncentration and the
-oracle-leakage tail of Lemma~\ref{lem:leakage}. The upper-side
-constant tightens to $\sqrt 2 \times 4 \approx 5.66$ via the
+$91$; at the 80/20 split $\alpha = 0.8$ it tightens to $\approx
+72$; in the few-fold $\alpha = 0.95$ regime it falls to $\approx
+66$.  The upper-side constant $23.1 = 20.2 + 2.83$ aggregates the
+\citet{ElYanivPechyony2006} Rademacher constant ($20.2$) and the
+Serfling slack ($2.83$, see proof of
+Theorem~\ref{thm:universal-upper-bound}); the factor-$2$ inflation
+of the overall gap relative to the naive Berry--Esseen value
+($\approx 40$) is the price of the union bound between Berry--%
+Esseen anticoncentration and the oracle-leakage tail of
+Lemma~\ref{lem:leakage}. The upper-side constant tightens to
+$\sqrt 2 \times 4 + \sqrt 2 \approx 7.07$ via the
 \citet{BardenetMaillard2015} without-replacement Bernstein
-refinement (see \S\ref{subsec:open}~item~1), pulling the midpoint
-gap to $\approx 22$.
+refinement applied to both the EYP concentration and the
+Serfling step (see \S\ref{subsec:open}~item~1), pulling the
+midpoint gap to $\approx 28$.
 The empirical-risk-minimising learner is therefore
 \emph{minimax-rate-optimal} on graph-supervised regression
 problems under leave-node-out (matching rate but not matching
@@ -673,8 +689,8 @@ $\alpha = n/N$, not an exact-constant efficiency statement: the
 multiplicative constant gap $\mathrm{gap}(\alpha, \kappa, \eta)
 \propto 1/\sqrt{\alpha \kappa}$ depends on the
 train/test split ratio and the dispersion parameter; at the
-operational midpoint $\alpha = 0.5$ it evaluates to $\approx 80$
-(resp.\ $\approx 22$ after the Bardenet--Maillard tightening),
+operational midpoint $\alpha = 0.5$ it evaluates to $\approx 91$
+(resp.\ $\approx 28$ after the Bardenet--Maillard tightening),
 meaning the analogy is structural,
 not numerical.
 \end{remark}
@@ -726,17 +742,24 @@ $N \cdot L_V(\hat f) = \|\hat f - \by\|^2 \;\geq\; \|f^\star_{\Hcal_d} - \by\|^2
 \end{lemma}
 
 \begin{proof}
-$f^\star_{\Hcal_d}$ is the population-risk minimiser by definition.
-Hence $L_V(\hat f) \geq L_V(f^\star_{\Hcal_d}) = (1 - \Rspec(\Hcal_d,
-\by))\Var(\by)$ for every $\hat f \in \Hcal_d$.  By Assumption~\ref{a:erm},
-$\hat f_\Acal(T) \in \Hcal_d$, so the inequality applies pointwise in $T$.
+The population-risk minimiser $f^\star_{\Hcal_d} := \arg\min_{f \in
+\Hcal_d} L_V(f)$ exists by the extreme value theorem: $\Hcal_d$ is
+closed under truncation to $[-M, M]$ (Definition~\ref{def:learner})
+and therefore embeds as a closed bounded subset of $[-M, M]^N$,
+which is compact in $\R^N$; the loss $L_V$ is continuous as a
+quadratic polynomial in the prediction vector; hence the infimum is
+attained.  By definition of the argmin, $L_V(\hat f) \geq
+L_V(f^\star_{\Hcal_d}) = (1 - \Rspec(\Hcal_d, \by))\Var(\by)$ for
+every $\hat f \in \Hcal_d$.  By Assumption~\ref{a:erm},
+$\hat f_\Acal(T) \in \Hcal_d$, so the inequality applies pointwise
+in $T$.
 \end{proof}
 
 \paragraph{Step 2 — Transduction identity.}
 
 \begin{lemma}[Population--train--holdout decomposition]
 \label{lem:transduction}
-For any deterministic $f \in \R^N$ and any $T \subset V$ with $|T| = n$,
+For any $f \in \R^N$ and any $T \subset V$ with $|T| = n$,
 \begin{equation}
     L_V(f) \;=\; \frac{n}{N}\, L_T(f) \;+\; \frac{N-n}{N}\, L_{T^c}(f),
     \label{eq:transduction-identity}
@@ -766,8 +789,9 @@ $\E_T[L_V(\hat f_\Acal(T))] \geq (1 - \Rspec(\Hcal_d, \by))\Var(\by)$.
 For the $L_T$ term, by Assumption~\ref{a:erm} (ERM property) and
 $f^\star_{\Hcal_d} \in \Hcal_d$,
 $L_T(\hat f_\Acal(T)) \leq L_T(f^\star_{\Hcal_d})$ pointwise in $T$.
-Taking expectation and using the protocol hypothesis $\E_T[L_T(f)] = L_V(f)$
-for deterministic $f$,
+Taking expectation and using the protocol hypothesis $\E_T[L_T(f)]
+= L_V(f)$ applied to the $T$-independent predictor $f^\star_{\Hcal_d}$
+(which is well-defined globally on $V$, not as a function of $T$),
 \begin{equation}
     \E_T[L_T(\hat f_\Acal(T))]
     \;\leq\; \E_T[L_T(f^\star_{\Hcal_d})]
@@ -819,48 +843,80 @@ probability $\geq 1 - \eta/2$ over $T \sim \Pi_{\mathrm{LSO}}$,
     \label{eq:upper-step1-serfling}
 \end{equation}
 
-\paragraph{Step 2 — ERM property.}
+\paragraph{Step 2 — Transductive Rademacher generalisation on $\hat f_\Acal(T)$.}
 
-By Assumption~\ref{a:erm}, $L_T(\hat f_\Acal(T)) \leq L_T(f^\star_{\Hcal_d})$
-pointwise in $T$, since $f^\star_{\Hcal_d} \in \Hcal_d$ and ERM
-minimises $L_T$ over $\Hcal_d$.
-
-\paragraph{Step 3 — Rademacher generalisation.}
-
-The \emph{transductive} Rademacher bound of
-\citet[][Theorem~1]{ElYanivPechyony2006} (rather than the inductive
-Mohri Theorem~3.7 \citealp{Mohri2018book}, which would route the
-argument through population risk $L_V$ and inflate the slack by a
-factor of $\sqrt{\rho(\Pi) - 1}$), combined with the Talagrand
-contraction lemma \citep{Talagrand1996concentration} ($4M$-Lipschitz
-truncated square loss on inputs in $[-M, M]$), yields with
-probability $\geq 1 - \eta/2$:
+The transductive Rademacher bound of
+\citet[][Theorem~1]{ElYanivPechyony2006}, combined with the
+Talagrand contraction lemma \citep{Talagrand1996concentration}
+(the truncated square loss $\ell : (z, y) \mapsto (z - y)^2$ is
+$4M$-Lipschitz in $z$ on $[-M, M]$ when $y \in [-M, M]$, since
+$|\partial_z (z-y)^2| = |2(z-y)| \le 4M$), yields with probability
+$\geq 1 - \eta/2$ over $T \sim \Pi_{\mathrm{LSO}}$:
 \begin{equation}
     L_{T^c}(\hat f_\Acal(T))
-    \;\leq\; L_T^{\pi}(\hat f_\Acal(T))
+    \;\leq\; L_T(\hat f_\Acal(T))
         + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
         + 20.2\, M^2 \sqrt{\frac{(n + u) \log(2/\eta)}{n u}}.
-    \label{eq:upper-step3-trans-rademacher}
+    \label{eq:upper-step2-trans-rademacher}
 \end{equation}
-The constant $20.2$ is the El-Yaniv--Pechyony \citep[][Theorem~1]{ElYanivPechyony2006}
-constant $5.05$ multiplied by the loss range $4M^2$ (which renormalises
-to fit the $[0,1]$ hypothesis of their result).
-Crucially, the transductive bound \emph{directly} controls $L_{T^c} -
-L_T^\pi$, avoiding the intermediate population-risk inflation by
-$\rho(\Pi)$ that the inductive Mohri bound would incur.
+The Rademacher constant $20.2 = 5.05 \cdot 4$ is the unit-range
+El-Yaniv--Pechyony constant $5.05$ multiplied by the loss-range
+factor $4M^2/M^2 = 4$ (the loss $\ell$ takes values in $[0, 4M^2]$
+under $|f|, |y| \le M$; rescaling to $[0, 1]$ via $\ell/(4M^2)$ to
+apply EYP's unit-range result and rescaling back yields the factor
+$4$).  Crucially, this bound \emph{directly} controls
+$L_{T^c} - L_T$, avoiding the $\sqrt{\rho(\Pi) - 1}$ slack inflation
+incurred by the inductive Mohri bound
+\citep[][Theorem~3.7]{Mohri2018book} which would route through the
+population risk $L_V$. Under $\Pi_{\mathrm{LSO}}$, the uniform
+inclusion probability $\pi(v) = n/N$ makes the importance-weighted
+training loss $L_T^\pi(f) := N^{-1}\sum_{v \in T}(f(v)-y_v)^2/\pi(v)$
+coincide with the unweighted $L_T(f)$, so no $\pi$-reweighting is
+needed in either~\eqref{eq:upper-step2-trans-rademacher} or
+Step~3 below.
 
-\paragraph{Step 4 — Conclusion.}
+\paragraph{Step 3 — ERM property and conclusion.}
 
-By Assumption~\ref{a:erm} (ERM property), $L_T^\pi(\hat f_\Acal(T))
-\leq L_T^\pi(f^\star_{\Hcal_d})$.  Combining with
-\eqref{eq:upper-step1-serfling} and \eqref{eq:upper-step3-trans-rademacher},
-$$
-L_{T^c}(\hat f_\Acal(T))
-\;\leq\; (1 - \Rspec(\Hcal_d, \by))\Var(\by)
-    + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
-    + 20.2\, M^2 \sqrt{(n+u)\log(2/\eta)/(nu)},
-$$
-yielding \eqref{eq:universal-upper-bound}.  Figure~\ref{fig:slack-comparison}
+By Assumption~\ref{a:erm} the ERM property gives
+$L_T(\hat f_\Acal(T)) \leq L_T(f^\star_{\Hcal_d})$ pointwise in $T$,
+since $f^\star_{\Hcal_d} \in \Hcal_d$. Combining this with the
+Serfling bound \eqref{eq:upper-step1-serfling} of Step~1 (which
+controls $L_T(f^\star_{\Hcal_d})$ in terms of the population value
+$L_V(f^\star_{\Hcal_d}) = (1-\Rspec(\Hcal_d,\by))\Var(\by)$) and
+the Rademacher bound \eqref{eq:upper-step2-trans-rademacher} of
+Step~2, on the intersection of both high-probability events
+(union bound: total probability $\ge 1 - \eta$),
+\begin{align*}
+    L_{T^c}(\hat f_\Acal(T))
+    &\stackrel{\text{Step 2}}{\leq}
+        L_T(\hat f_\Acal(T)) + 2\mathcal{R}^{\mathrm{trans}}_n(\ell\circ\Hcal_d)
+        + 20.2\, M^2 \sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}\\
+    &\stackrel{\text{ERM}}{\leq}\;
+        L_T(f^\star_{\Hcal_d}) + 2\mathcal{R}^{\mathrm{trans}}_n(\ell\circ\Hcal_d)
+        + 20.2\, M^2 \sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}\\
+    &\stackrel{\text{Step 1}}{\leq}\;
+        (1 - \Rspec(\Hcal_d, \by))\Var(\by)
+        + 2\mathcal{R}^{\mathrm{trans}}_n(\ell\circ\Hcal_d)\\
+    &\qquad+\; 20.2\, M^2 \sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}
+        \;+\; 4 M^2 \sqrt{\tfrac{(1 - (n-1)/N)\log(2/\eta)}{2n}}.
+\end{align*}
+It remains to merge the Serfling and Rademacher slack terms into a
+single expression of the same functional form. Using
+$(1-(n-1)/N) \le 1$ and $4/\sqrt{2} = 2\sqrt{2} \approx 2.83$,
+\[
+    4 M^2 \sqrt{\frac{(1-(n-1)/N)\log(2/\eta)}{2n}}
+    \;\le\; 2.83\, M^2 \sqrt{\frac{\log(2/\eta)}{n}}
+    \;=\; 2.83\,\sqrt{\frac{u}{n+u}}\, M^2 \sqrt{\frac{(n+u)\log(2/\eta)}{nu}},
+\]
+where the last step factors out $\sqrt{(n+u)\log(2/\eta)/(nu)}$.
+Adding the Rademacher term and using $\sqrt{u/(n+u)} \le 1$,
+\[
+    \Big[20.2 + 2.83\sqrt{u/(n+u)}\Big]\, M^2 \sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}
+    \;\le\;\big(20.2 + 2.83\big)\, M^2 \sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}
+    \;\le\; 23.1\, M^2 \sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}},
+\]
+yielding the aggregated slack constant $23.1$ in
+\eqref{eq:universal-upper-bound}.  Figure~\ref{fig:slack-comparison}
 plots the slack rate of (a) the original Mohri-routed bound, (b) the
 sharp transductive form proved here, and (c) the Berry--Esseen minimax
 lower bound of Theorem~\ref{thm:minimax-lower-bound}, illustrating the
@@ -2068,34 +2124,41 @@ future deployment.
     (Corollary~\ref{cor:minimax-rate-optimality},
     Eq.~\eqref{eq:cramer-rao-gap}): at the operational midpoint
     $\alpha = 0.5$, $\eta = 0.1$, $\kappa \approx 0.25$, the gap
-    is $\approx 80$, where the factor-$2$ inflation over the naive
-    Berry--Esseen value ($\approx 40$) is the cost of the union
-    bound between BE anticoncentration and the oracle-leakage
-    tail of Lemma~\ref{lem:leakage}.  The upper side is closed
-    from the post-loss-range
-    \citet[][Thm.~1]{ElYanivPechyony2006} constant $20.2 = 5.05
-    \times 4$ to $\sqrt 2 \times 4 \approx 5.66$ via the
-    without-replacement Bernstein refinement of
-    \citet[][Cor.~2.5]{BardenetMaillard2015}, pulling the
-    midpoint gap to $\approx 22$. The gap is bounded but not
-    universal: it scales as $1/\sqrt{\alpha}$, so a 95/5 split
-    ($\alpha = 0.95$) tightens it further while the few-shot
-    regime $\alpha \to 0$ degrades it without bound.  A tighter
-    leakage bound (e.g.\ via the operator-Bernstein refinement of
-    \citealp{Tropp2015} or via a $\chi^2$-tail concentration
-    instead of Markov) would recover the original factor of $2$
-    and bring the midpoint gap back to $\approx 11$ post-Bardenet--%
-    Maillard.  A previously conjectured factor-$4$ improvement
-    via a multi-coordinate Fano / Assouad construction is
-    \emph{not} achievable: the Berry--Esseen rate originates from
-    the anticoncentration of $|T^c|^{-1}\sum_{T^c} X_v$ on
-    real-valued residuals, whereas Assouad's lemma on the Dirac
-    observations of the leave-node-out protocol reduces to binary
-    coordinate-wise tests whose total-variation distance is in
-    $\{0, 1\}$, with no $1/\sqrt{N-n}$-scale intermediate
-    sensitivity to exploit (\texttt{notes/07}~Proposition~6 in the
-    referenced notes).  The sharp matching constant at the
-    operational midpoint is thus $\approx 22$, not $1$.
+    is $\approx 91$, where the upper-side constant $23.1 = 20.2 +
+    2.83$ aggregates the
+    \citet[][Thm.~1]{ElYanivPechyony2006} Rademacher constant
+    ($20.2 = 5.05 \cdot 4$, post-loss-range rescaling) and the
+    Serfling slack absorption ($2.83 = 4/\sqrt{2}$, see proof of
+    Theorem~\ref{thm:universal-upper-bound}). The factor-$2$
+    inflation over the naive Berry--Esseen value ($\approx 40$)
+    is the cost of the union bound between BE anticoncentration
+    and the oracle-leakage tail of Lemma~\ref{lem:leakage}.  Each
+    of the two concentration sub-steps (EYP and Serfling) can be
+    individually tightened via the without-replacement Bernstein
+    refinement of \citet[][Cor.~2.5]{BardenetMaillard2015}: the
+    EYP factor $20.2 \to \sqrt 2 \cdot 4 \approx 5.66$ and the
+    Serfling factor $2.83 \to \sqrt{2}/\sqrt{2} \cdot 1 \approx
+    1.41$, giving an aggregated upper-side constant
+    $\approx 7.07$ and a midpoint gap $\approx 28$.  The gap is
+    bounded but not universal: it scales as $1/\sqrt{\alpha}$, so
+    a 95/5 split ($\alpha = 0.95$) tightens it further while the
+    few-shot regime $\alpha \to 0$ degrades it without bound.  A
+    tighter leakage bound (e.g.\ via the operator-Bernstein
+    refinement of \citealp{Tropp2015} or a $\chi^2$-tail
+    concentration instead of Markov) would recover the original
+    factor of $2$ and bring the midpoint gap back to $\approx 14$
+    post-Bardenet--Maillard.  A previously conjectured factor-$4$
+    improvement via a multi-coordinate Fano / Assouad
+    construction is \emph{not} achievable: the Berry--Esseen rate
+    originates from the anticoncentration of
+    $|T^c|^{-1}\sum_{T^c} X_v$ on real-valued residuals, whereas
+    Assouad's lemma on the Dirac observations of the
+    leave-node-out protocol reduces to binary coordinate-wise
+    tests whose total-variation distance is in $\{0, 1\}$, with
+    no $1/\sqrt{N-n}$-scale intermediate sensitivity to exploit
+    (\texttt{notes/07}~Proposition~6 in the referenced notes).
+    The sharp matching constant at the operational midpoint is
+    thus $\approx 28$, not $1$.
 
 \item \textbf{Importance-weighted transduction identity.}  Extending
     Lemma~\ref{lem:transduction} to non-uniform protocols (e.g.,
@@ -2227,9 +2290,10 @@ Theorem~\ref{thm:minimax-lower-bound} proves that this slack is
 minimax-tight in rate under the dispersion assumption
 A\ref{a:incoherence} and the leverage-incoherence capacity
 hypothesis A\ref{a:capacity}, with the residual multiplicative-%
-constant gap $\mathrm{gap}(\alpha, \kappa, \eta) \approx 22$ at
+constant gap $\mathrm{gap}(\alpha, \kappa, \eta) \approx 28$ at
 the operational midpoint $\alpha = 0.5$, $\kappa \approx 0.25$,
-$\eta = 0.1$ (Corollary~\ref{cor:minimax-rate-optimality}).
+$\eta = 0.1$ after the Bardenet--Maillard tightening
+(Corollary~\ref{cor:minimax-rate-optimality}).
 The pair of bounds is the Cram\'er--Rao analog of the classical
 efficiency inequality for parameter estimation, and the empirical
 panel of Section~\ref{sec:empirics} validates the bound on the
