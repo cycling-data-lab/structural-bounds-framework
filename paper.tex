@@ -66,6 +66,9 @@
 \newcommand{\bX}{\mathbf{X}}
 \newcommand{\bD}{\mathbf{D}}
 \newcommand{\bW}{\mathbf{W}}
+\newcommand{\bK}{\mathbf{K}}
+\newcommand{\bxi}{\boldsymbol{\xi}}
+\newcommand{\df}{\mathrm{df}}
 \newcommand{\bone}{\mathbf{1}}
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\R}{\mathbb{R}}
@@ -84,7 +87,7 @@
 \newcommand{\Rcal}{\mathcal{R}}
 \newcommand{\frR}{\mathfrak{R}}
 
-\title{A universal spectral lower bound on the leave-node-out\\
+\title{A universal spectral lower bound on the leave-node-out
 generalisation error of graph-supervised learning}
 
 \author{Rohan Foss\'e\thanks{rfosse@cesi.fr; ORCID 0009-0002-2195-0198.}
@@ -98,27 +101,30 @@ generalisation error of graph-supervised learning}
 \maketitle
 
 \begin{abstract}
-We prove a universal lower bound on the expected leave-node-out
+Classical Rademacher and information-theoretic generalisation bounds
+characterise the worst-case behaviour of supervised learners via upper
+bounds on the excess risk.  However, none of these approaches
+characterise the irreducible floor below which no learner can go.  We
+prove a universal lower bound on the expected leave-node-out
 generalisation error of any feature-restricted learner on any
-graph-supervised regression problem.  The bound depends only on three
-objects: the graph Laplacian, the target signal, and the learner's
-reachable feature subspace.  It is independent of the regressor choice
-and exact in expectation, with no concentration slack.  We prove that
-an empirical-risk-minimising learner saturates the bound to a
-slack of order $M^2/\sqrt{N - n}$ via the transductive Rademacher
-complexity of \citet{ElYanivPechyony2006}, and that this slack is
-itself minimax-tight: even an oracle estimator with full knowledge
-of the target on the population cannot drive it lower.
-The pair of bounds is the Cram\'er--Rao analog, for graph-supervised
-learning under leave-node-out evaluation, of the classical efficiency
-inequality for parameter estimation.  Four corollaries instantiate the
-framework: the encoding-gap bound for materials-property prediction
-(recovering~\citealp{FossePallares2026applicabilityBound}), a spectral-disjointness
-bound on negative transfer, a label-complexity dual for active learning,
-and an empirical validation across the eight-task MatBench panel,
-27-network bike-share demand panel, and 34{,}858-commune French mobility
-panel established by the companion repositories of the cycling-data-lab
-organisation.
+graph-supervised regression problem with bounded target signal
+$\|\by\|_\infty \le M$.  The bound depends only on the graph Laplacian,
+the target signal, and the reachable feature subspace of the learner;
+it is independent of the regressor choice and exact in expectation,
+with no concentration slack.  An empirical-risk-minimising learner
+saturates the bound to a slack of order $M^2/\sqrt{N - n}$ in the
+proportional regime $n = \alpha N$ via the transductive Rademacher
+complexity of \citet{ElYanivPechyony2006}, and this slack is
+minimax-tight under a dispersion assumption on the orthogonal
+complement of the hypothesis class.  The pair of bounds is the
+Cram\'er--Rao analog of the classical efficiency inequality for
+parameter estimation.  Three corollaries instantiate the framework:
+the encoding-gap bound for materials-property prediction, a
+spectral-disjointness bound on negative transfer, and an empirical
+validation across the eight-task MatBench panel of the
+\texttt{cycling-data-lab} organisation, on which the headline rank
+correlation is Spearman $\rho = +1.000$ ($n=8$, exact permutation
+$p = 4.96 \times 10^{-5}$).
 \end{abstract}
 
 \noindent\textbf{Keywords:} graph-supervised learning; generalisation
@@ -131,16 +137,17 @@ applicability domain; transfer learning; active learning.
 \label{sec:intro}
 
 Generalisation bounds for supervised learning come, with rare exceptions,
-in two methodological lanes.  The VC / Rademacher lane
-\citep{Vapnik1998,Mohri2018book,Tripuraneni2020} bounds the gap between
-empirical and population risk in terms of the hypothesis class's
+in two methodological lanes.  The Vapnik--Chervonenkis (VC) / Rademacher
+lane \citep{Vapnik1998,Mohri2018book,Tripuraneni2020} bounds the gap
+between empirical and population risk in terms of the hypothesis class's
 combinatorial or geometric complexity, yielding \emph{upper bounds} on
 the excess risk.  The information-theoretic lane
 \citep{Russo2016,Xu2017,Tran2019,Nguyen2023} bounds the same gap in terms
 of the mutual information between the training data and the learned
-hypothesis, again yielding upper bounds.  In both cases, the resulting
-inequalities tell us how \emph{badly} a learner could perform; they do
-not characterise an irreducible floor below which no learner can go.
+hypothesis, again yielding upper bounds.  However, none of these
+approaches characterise an irreducible floor below which no learner can
+go: the resulting inequalities tell us how \emph{badly} a learner could
+perform, not how well any learner \emph{must} perform.
 
 In a parallel development at the intersection of graph signal processing
 \citep{Shuman2013,Ortega2018} and statistical learning, the question of
@@ -190,7 +197,7 @@ efficiency statement for graph-supervised learning.
 
 \item \textbf{Universal upper bound
     (Theorem~\ref{thm:universal-upper-bound}).}  Any empirical-risk-minimising
-    learner with truncated $L$-Lipschitz hypothesis class $\Hcal_d$ of
+    (ERM) learner with truncated $L$-Lipschitz hypothesis class $\Hcal_d$ of
     transductive Rademacher complexity $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)$
     \citep{ElYanivPechyony2006} satisfies, with probability $\geq 1 -
     \eta$ over $T \sim \Pi_{\mathrm{LSO}}$,
@@ -198,10 +205,11 @@ efficiency statement for graph-supervised learning.
         L_{T^c}(\hat f_\Acal(T))
         \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
             + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
-            + 5.05\, M^2 \sqrt{\tfrac{(n + u)\log(2/\eta)}{n u}},
+            + 20.2\, M^2 \sqrt{\tfrac{(n + u)\log(2/\eta)}{n u}},
     \end{equation*}
     where $u := N - n$ is the held-out cardinality and $\ell$ is the
-    truncated square loss.  The slack is $O(M^2/\sqrt{N - n})$,
+    truncated square loss (bounded in $[0, 4M^2]$, which carries the
+    $4M^2$ factor inside the constant $20.2 = 5.05 \times 4$).  The slack is $O(M^2/\sqrt{N - n})$,
     matching the Berry--Esseen lower bound of Theorem~\ref{thm:minimax-lower-bound}
     in rate.  Proved in Section~\ref{sec:upper-bound-proof}.
 
@@ -217,7 +225,8 @@ efficiency statement for graph-supervised learning.
 \item \textbf{Cram\'er--Rao analogy.}  Theorems
     \ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound} are
     the graph-supervised-learning analog of the classical efficiency
-    inequality $\Var(\hat\theta) \geq 1/I(\theta)$:
+    inequality $\Var(\hat\theta) \geq 1/I(\theta)$, where $I(\theta)$
+    is the Fisher information of $\theta$:
     Theorem~\ref{thm:universal-lower-bound} provides a structural
     floor on the expected loss depending only on (graph, target,
     learner's reach), and Theorem~\ref{thm:universal-upper-bound}
@@ -242,7 +251,7 @@ efficiency statement for graph-supervised learning.
         labels project onto disjoint bands of the joint graph's
         Laplacian eigenbasis.
     \item \textbf{C3 (active learning; \S\ref{subsec:c3}).}  Letting the
-        protocol $\Pi$ be chosen by the learner gives an
+        protocol $\Pi$ be chosen by the learner yields an
         importance-weighted variant in which the optimal sampling
         distribution is the leverage-score distribution on the learner's
         reachable subspace, with the bound matching the rate of the
@@ -280,9 +289,9 @@ VC lane.
 information-theoretic bounds on transferability
 \citep{Tran2019,Nguyen2023} and on generalisation
 \citep{Russo2016,Xu2017} provide model-free upper bounds via conditional
-entropy or PAC-Bayes.  Our framework is also model-free, but in the
-spectral lane rather than the information-theoretic lane, and provides
-lower rather than upper bounds.
+entropy or probably-approximately-correct (PAC)-Bayes posteriors.  Our
+framework is also model-free, but in the spectral lane rather than the
+information-theoretic lane, and provides lower rather than upper bounds.
 
 \textbf{(b$'$) Leave-one-out PAC-Bayes.}  The leave-one-out PAC-Bayes
 literature \citep{LangfordCaruana2002,DziugaiteRoy2017} provides
@@ -310,9 +319,10 @@ intermediate misconception in our own development.
 \textbf{(d) Cycling-data-lab structural-bounds program.}  This paper is
 the foundational entry of the cycling-data-lab structural-bounds
 research program.  It absorbs and unifies the empirical
-applicability-domain bound of \citet{FossePallares2026applicabilityBound} (MLST,
-materials informatics) and the mobility-transfer instantiation in
-preparation by the same authors (TR-B, urban mobility).  The bound
+applicability-domain bound of \citet{FossePallares2026applicabilityBound}
+(\emph{Machine Learning: Science and Technology}, materials informatics)
+and the mobility-transfer instantiation in preparation by the same
+authors (\emph{Transportation Research Part B}, urban mobility).  The bound
 established here is the \emph{floor}; the empirical companions
 demonstrate that the floor is operationally tight in two unrelated
 domains.
@@ -321,7 +331,7 @@ domains.
 
 Section~\ref{sec:setup} fixes notation and assumptions.
 Section~\ref{sec:main-results} states the three main theorems and the
-Cram\'er--Rao corollary.  Sections~\ref{sec:lower-bound-proof},
+minimax rate-optimality corollary.  Sections~\ref{sec:lower-bound-proof},
 \ref{sec:upper-bound-proof}, \ref{sec:minimax-proof} contain the proofs.
 Section~\ref{sec:corollaries} develops the three corollaries C1--C3.
 Section~\ref{sec:empirics} summarises empirical validation.
@@ -368,6 +378,24 @@ ordered pairs $(T, T^c)$ with $T \subset V$, $|T| = n$,
 $T^c := V \setminus T$, $|T^c| = N - n$.  The canonical instance
 $\Pi_{\mathrm{LSO}}$ samples $T$ uniformly without replacement.
 \end{definition}
+
+\paragraph{On the term ``leave-node-out''.} Throughout this paper,
+\emph{leave-node-out} (LSO) refers to the fractional hold-out
+protocol $\Pi_{\mathrm{LSO}}$ above with $\alpha = n/N$ fixed in
+$(0, 1)$, in the sense of A\ref{a:proportional} (introduced in
+\S\ref{sec:setup}). This encompasses random hold-out splits
+(typically $\alpha = 0.8$), $k$-fold cross-validation
+($\alpha = 1 - 1/k$ for $k \in \{2, 3, 5, 10, 20\}$), and
+GroupKFold protocols (as used in the empirical panel of
+\S\ref{sec:empirics}). The strict leave-one-out protocol ($n = N -
+1$, $\alpha = (N-1)/N \to 1$) is recovered as $k \to N$ but lies
+at the boundary of A\ref{a:proportional}; consequently, the
+upper-bound and minimax results of
+Theorems~\ref{thm:universal-upper-bound}--\ref{thm:minimax-lower-bound}
+are formally stated for the interior of $(0, 1)$, with the
+LOOCV special case treated separately in
+Lemma~\ref{lem:cat-baseline} (whose exact form survives the
+$\alpha \to 1$ boundary).
 
 For a predictor $\hat f : V \to \R$ (identified with its vector of
 node predictions in $\R^N$), we write
@@ -419,7 +447,8 @@ $\Rspec$ is the population-variance-explained ceiling of the class.
     $\mathrm{col}(\bphi)$.
 \item \emph{Kernel ridge with kernel $\mathcal{K}$.}  $\Hcal_d$ is the
     column span of the kernel matrix.
-\item \emph{Sufficiently expressive MLP / GBM.}  $\Hcal_d = \R^N$, so
+\item \emph{Sufficiently expressive multi-layer perceptron (MLP) or
+    gradient-boosted machine (GBM).}  $\Hcal_d = \R^N$, so
     $\Rspec(\Hcal_d, \by) = 1$ and the bound becomes vacuous --- as
     expected, since an arbitrarily expressive learner has no structural
     floor.
@@ -436,8 +465,8 @@ with bounded weights / gradient-boosted trees of bounded depth) all
 operate in $\Hcal_d \subsetneq \R^N$ by construction.  Even
 nominally over-parametrised neural networks have, in practice, an
 \emph{implicit} $\Hcal_d$ much smaller than their parametric capacity
-suggests (e.g., the SGD-reachable subspace under stochastic gradient
-descent; \citealp{NeyshaburTomiokaSrebro2014}).  The bound captures
+suggests (e.g., the subspace reachable by stochastic gradient descent
+(SGD); \citealp{NeyshaburTomiokaSrebro2014}).  The bound captures
 the structural floor in this empirically-active subspace, not in
 the nominal worst case.  Conversely, an arbitrarily expressive learner
 with $\Hcal_d = \R^N$ is not constrained by the bound (it returns the
@@ -461,6 +490,34 @@ $\hat f_\Acal(T) \in \arg\min_{f \in \Hcal_d} L_T(f)$.  The hypothesis
 class is truncated to $[-M, M]$ and admits a Rademacher complexity
 $\mathcal{R}_n(\Hcal_d)$ in the sense of \citet[][\S 3.3]{Mohri2018book}.
 \end{assumption}
+
+\begin{assumption}[Proportional regime]
+\label{a:proportional}
+The protocol $\Pi$ satisfies $n/N = \alpha$ for some $\alpha \in
+(0, 1)$ bounded away from $0$ and $1$, i.e., there exist
+$\alpha_{\min}, \alpha_{\max} \in (0, 1)$ with $\alpha_{\min} \le
+\alpha \le \alpha_{\max}$. All rate statements in
+Theorems~\ref{thm:universal-upper-bound}--\ref{thm:minimax-lower-bound}
+and Corollary~\ref{cor:minimax-rate-optimality} are understood
+asymptotically as $N, n \to \infty$ with $\alpha = n/N$ fixed.
+\end{assumption}
+
+\begin{remark}[Operational scope of A\ref{a:proportional}]
+\label{rem:proportional-scope}
+A\ref{a:proportional} covers all standard cross-validation
+protocols: $k$-fold CV ($\alpha = 1 - 1/k$ ranging over
+$\{0.5, 0.66, 0.8, 0.9, 0.95\}$ for $k \in \{2, 3, 5, 10, 20\}$),
+random 80/20 holdout splits ($\alpha = 0.8$), and group-wise
+GroupKFold protocols (matching the empirical instantiations of
+\S\ref{sec:empirics}). The few-shot regime $n = o(N)$ is
+\emph{outside} the scope of
+Theorems~\ref{thm:universal-upper-bound}--\ref{thm:minimax-lower-bound}
+as stated; the slack rate degrades there to $O(M^2/\sqrt{n})$ and
+the minimax matching breaks (Section~\ref{subsec:open}).
+Theorem~\ref{thm:universal-lower-bound} (universal lower bound)
+does \emph{not} require A\ref{a:proportional} and holds verbatim
+for any exchangeable protocol regardless of $\alpha$.
+\end{remark}
 
 % =========================================================================
 \section{Main results}
@@ -488,64 +545,129 @@ Under Assumptions~\ref{a:target}--\ref{a:erm}, with probability $\geq 1
     L_{T^c}(\hat f_\Acal(T))
     \;\leq\; \big(1 - \Rspec(\Hcal_d, \by)\big) \cdot \Var(\by)
         \;+\; 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
-        \;+\; 5.05\, M^2 \sqrt{\frac{(n + u)\log(2/\eta)}{n \cdot u}},
+        \;+\; 20.2\, M^2 \sqrt{\frac{(n + u)\log(2/\eta)}{n \cdot u}},
     \label{eq:universal-upper-bound}
 \end{equation}
 where $u := N - n$ is the held-out cardinality,
 $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)$ is the transductive
 Rademacher complexity of \citet[][\S 3]{ElYanivPechyony2006},
-$\ell$ is the truncated square loss, and the constant
-$5.05$ is from \citet[][Theorem~1]{ElYanivPechyony2006}.  For
-learners with $\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d) = O(\sqrt{d/u})$
+and $\ell$ is the truncated square loss, bounded in $[0, 4M^2]$.
+The constant $20.2 = 5.05 \cdot 4$ arises by rescaling the
+loss from $[0, 4M^2]$ to the unit interval $[0, 1]$ to apply
+\citet[][Theorem~1]{ElYanivPechyony2006} (whose constant $5.05$ is
+stated for unit-range losses), then rescaling back: the loss-range
+factor is $4M^2$, and dividing by $M^2$ to express the slack per
+unit $M^2$ leaves the multiplicative factor $4$. For learners with
+$\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d) = O(M\sqrt{d/u})$
 (linear, kernel-ridge, MLP with bounded weights, gradient-boosted
-trees of bounded depth), the leading-order slack is
-$O(M \sqrt{d/u} + M^2/\sqrt{u}) = O(M^2/\sqrt{N - n})$.
+trees of bounded depth), Talagrand contraction with Lipschitz
+constant $4M$ yields $\mathcal{R}^{\mathrm{trans}}_n(\ell \circ
+\Hcal_d) = O(M^2\sqrt{d/u})$. The full slack is then
+\[
+    O\!\left(M^2\,\bigg(\sqrt{\tfrac{d}{u}} + \tfrac{1}{\sqrt n}
+        + \tfrac{1}{\sqrt u}\bigg)\right),
+\]
+where the latter two terms come from
+$\sqrt{(n+u)/(nu)} = \sqrt{1/n + 1/u} \le 1/\sqrt n + 1/\sqrt u$.
+Under A\ref{a:proportional} (i.e., $n = \alpha N$ with $\alpha$
+fixed away from $0$ and $1$), this simplifies to
+$O(M^2/\sqrt{N - n}) = O(M^2/\sqrt N)$. In the few-shot regime
+$n = o(N)$, the dominant slack term is $M^2/\sqrt n$, not
+$M^2/\sqrt{N - n}$; the simplification fails and the rate
+statement of Corollary~\ref{cor:minimax-rate-optimality} does
+not apply.
 \end{theorem}
 
 \begin{theorem}[Berry--Esseen minimax lower bound on the slack]
 \label{thm:minimax-lower-bound}
-For any hypothesis class $\Hcal_d \subsetneq \R^N$, any $M > 0$, any
-sample sizes $1 \leq n \leq N - 2$, and any confidence level $\eta \in
-(0, 1/3)$, there exists a signal $\by^\star \in \Hcal_d^\perp$ with
-$\|\by^\star\|_\infty = M$ such that
+Under A\ref{a:incoherence} (with dispersion parameter $\kappa > 0$)
+and A\ref{a:proportional} ($\alpha = n/N$ fixed), for any
+hypothesis class $\Hcal_d \subsetneq \R^N$, any $M > 0$, and any
+confidence level $\eta \in (0, 1/3)$, there exists a signal
+$\by^\star \in \Hcal_d^\perp$ with $\|\by^\star\|_\infty = M$ such
+that
 \begin{equation}
     \PR_T\!\Big[
         L_{T^c}(\hat f) - \big(1 - \Rspec(\Hcal_d, \by^\star)\big)\Var(\by^\star)
-        \;\geq\; c \cdot M^2 / \sqrt{N - n}
+        \;\geq\; c(\alpha, \kappa, \eta) \cdot \frac{M^2}{\sqrt{N - n}}
     \Big]
     \;\geq\; 1 - \eta
     \label{eq:minimax-lower-bound}
 \end{equation}
-for an absolute constant $c > 0$ (Berry--Esseen, $c \approx 1/16$
-suffices), uniformly in $\hat f$.  No estimator --- including one with
+uniformly in $\hat f$, where
+\[
+    c(\alpha, \kappa, \eta) \;=\; \tau_0(\eta, \kappa)\,\sqrt{\alpha\,\kappa},
+\]
+with $\tau_0(\eta, \kappa)$ a function of $(\eta, \kappa)$ alone
+bounded away from $0$ for $\eta < 1/3$ and $\kappa > 0$. The
+constant $c$ is bounded away from $0$ on the operational range
+$\alpha \in [\alpha_{\min}, \alpha_{\max}]$ of
+A\ref{a:proportional}. No estimator --- including one with
 oracle access to $\by^\star$ on $V$ --- can drive the slack of
 \eqref{eq:universal-upper-bound} below
-$\Omega(M^2/\sqrt{N-n})$ in the worst case.
+$\Omega(M^2/\sqrt{N-n})$ in the worst case, under
+A\ref{a:incoherence}--A\ref{a:proportional}.
 \end{theorem}
 
-\begin{corollary}[Cram\'er--Rao efficiency for graph-supervised learning]
-\label{cor:cramer-rao}
-Combining Theorems~\ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound},
-the minimax slack rate at protocol $\Pi_{\mathrm{LSO}}$ on signal class
-$\Ycal_{\Hcal_d, M} := \{\by \in \R^N : \|\by\|_\infty \leq M, \bone^\top
-\by = 0\}$ is
+\begin{corollary}[Minimax rate-optimality for graph-supervised learning]
+\label{cor:minimax-rate-optimality}
+Under A\ref{a:target}--A\ref{a:proportional} and
+A\ref{a:incoherence}, combining
+Theorems~\ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound},
+the minimax slack rate at protocol $\Pi_{\mathrm{LSO}}$ on signal
+class $\Ycal_{\Hcal_d, M} := \{\by \in \R^N : \|\by\|_\infty \leq
+M, \bone^\top \by = 0\}$ is, as $N, n \to \infty$ with $n/N \to
+\alpha \in (0, 1)$ fixed,
 \begin{equation}
     \frR_n(\Hcal_d, M, \eta)
     \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N - n}} + \mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)\right),
     \label{eq:cramer-rao-rate}
 \end{equation}
-with absolute constants on both sides.  Upper and lower bounds match
-in rate ($1/\sqrt{N-n}$) and to a small multiplicative constant
-(within a factor of $\approx 10$, modulo the Berry--Esseen constant
-and the $5.05$ transductive Rademacher constant; tightening to a
-factor of $\approx 4$ is possible via a multi-point Fano argument,
-sketched in
-\texttt{notes/04\_sharp\_transductive\_constant.tex}~\S 4).
-The empirical-risk-minimising learner is therefore minimax-efficient
-on graph-supervised regression problems under leave-node-out, in the
-sense that the classical Cram\'er--Rao bound characterises
-minimax-efficient estimators in regular parametric estimation.
+where the upper and lower bounds match the rate
+$1/\sqrt{N-n}$ exactly, and the multiplicative constant gap (the
+ratio of upper-bound constant to lower-bound constant) is
+\begin{equation}
+    \mathrm{gap}(\alpha, \kappa, \eta)
+    \;=\; \frac{20.2}{\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}.
+    \label{eq:cramer-rao-gap}
+\end{equation}
+This gap is $\alpha$-dependent: at the operational midpoint $\alpha
+= 0.5$ with $\kappa \approx 0.25$ (binary $\pm 1$ signals supported
+on half the nodes) and $\eta = 0.1$, it evaluates to approximately
+$40$; at the 80/20 split $\alpha = 0.8$ it tightens to $\approx
+30$; in the few-fold $\alpha = 0.95$ regime it falls to $\approx
+27$. The upper-side constant tightens to $\sqrt 2 \times 4 \approx
+5.66$ via the \citet{BardenetMaillard2015} without-replacement
+Bernstein refinement (see \S\ref{subsec:open}~item~1), pulling the
+midpoint gap to $\approx 11$.
+The empirical-risk-minimising learner is therefore
+\emph{minimax-rate-optimal} on graph-supervised regression
+problems under leave-node-out (matching rate but not matching
+constant), with the operational regime fixed by
+A\ref{a:proportional}.
 \end{corollary}
+
+\begin{remark}[On the use of ``Cram\'er--Rao analog'' in the introduction]
+\label{rem:cramer-rao-framing}
+We use the phrase ``Cram\'er--Rao analog'' in the abstract and
+introduction (Contribution 4, \S\ref{subsec:related-work}) to
+signal the structural parallel with parametric efficiency
+theory: a target-dependent floor
+(Theorem~\ref{thm:universal-lower-bound}) is matched by an
+explicit estimator (Theorem~\ref{thm:universal-upper-bound}) up
+to a slack that no estimator can drive below the Berry--Esseen
+floor (Theorem~\ref{thm:minimax-lower-bound}). The precise
+quantitative statement is the rate-optimality of
+Corollary~\ref{cor:minimax-rate-optimality} for fixed
+$\alpha = n/N$, not an exact-constant efficiency statement: the
+multiplicative constant gap $\mathrm{gap}(\alpha, \kappa, \eta)
+\propto 1/\sqrt{\alpha \kappa}$ depends on the
+train/test split ratio and the dispersion parameter; at the
+operational midpoint $\alpha = 0.5$ it evaluates to $\approx 40$
+(resp.\ $\approx 11$ after the Bardenet--Maillard tightening),
+meaning the analogy is structural,
+not numerical.
+\end{remark}
 
 \begin{remark}[Centring]
 \label{rem:centring}
@@ -700,15 +822,19 @@ The \emph{transductive} Rademacher bound of
 Mohri Theorem~3.7 \citealp{Mohri2018book}, which would route the
 argument through population risk $L_V$ and inflate the slack by a
 factor of $\sqrt{\rho(\Pi) - 1}$), combined with the Talagrand
-contraction lemma \citep{Talagrand1996concentration} ($2M$-Lipschitz
-square loss), gives with probability $\geq 1 - \eta/2$:
+contraction lemma \citep{Talagrand1996concentration} ($4M$-Lipschitz
+truncated square loss on inputs in $[-M, M]$), yields with
+probability $\geq 1 - \eta/2$:
 \begin{equation}
     L_{T^c}(\hat f_\Acal(T))
     \;\leq\; L_T^{\pi}(\hat f_\Acal(T))
         + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
-        + 5.05\, M^2 \sqrt{\frac{(n + u) \log(2/\eta)}{n u}}.
+        + 20.2\, M^2 \sqrt{\frac{(n + u) \log(2/\eta)}{n u}}.
     \label{eq:upper-step3-trans-rademacher}
 \end{equation}
+The constant $20.2$ is the El-Yaniv--Pechyony \citep[][Theorem~1]{ElYanivPechyony2006}
+constant $5.05$ multiplied by the loss range $4M^2$ (which renormalises
+to fit the $[0,1]$ hypothesis of their result).
 Crucially, the transductive bound \emph{directly} controls $L_{T^c} -
 L_T^\pi$, avoiding the intermediate population-risk inflation by
 $\rho(\Pi)$ that the inductive Mohri bound would incur.
@@ -722,15 +848,20 @@ $$
 L_{T^c}(\hat f_\Acal(T))
 \;\leq\; (1 - \Rspec(\Hcal_d, \by))\Var(\by)
     + 2 \mathcal{R}^{\mathrm{trans}}_n(\ell \circ \Hcal_d)
-    + 5.05\, M^2 \sqrt{(n+u)\log(2/\eta)/(nu)},
+    + 20.2\, M^2 \sqrt{(n+u)\log(2/\eta)/(nu)},
 $$
-yielding \eqref{eq:universal-upper-bound}.  See
+yielding \eqref{eq:universal-upper-bound}.  Figure~\ref{fig:slack-comparison}
+plots the slack rate of (a) the original Mohri-routed bound, (b) the
+sharp transductive form proved here, and (c) the Berry--Esseen minimax
+lower bound of Theorem~\ref{thm:minimax-lower-bound}, illustrating the
+factor-$\sqrt{\rho-1}$ elimination by the transductive Rademacher
+upgrade.  See
 \texttt{notes/04\_sharp\_transductive\_constant.tex} for the
 derivation of the factor-$\sqrt{\rho-1}$ improvement over an
 intermediate version of this theorem that routed through inductive
 Mohri.\qed
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=0.7\textwidth]{fig2_slack_comparison.pdf}
 \caption{Slack-rate comparison illustrating
@@ -758,98 +889,187 @@ on the held-out residual already forces an $\Omega(M^2/\sqrt{N-n})$
 deviation between $L_{T^c}(\hat f)$ and its population value,
 irrespective of estimator choice.
 
-\paragraph{Geometric assumption on $\Hcal_d^\perp$.}
+\paragraph{Dispersion assumption on $\Hcal_d^\perp$.}
 
-For the construction below to yield a non-degenerate adversary, we
-require that $\Hcal_d^\perp$ contains a vector of bounded
-\emph{coherence}, i.e., one whose mass is spread over a constant
-fraction of $V$ in the $\ell_\infty$ sense.  We formalise this as
-follows.
+For the Berry--Esseen anticoncentration below to deliver a
+non-vacuous lower bound, the adversarial signal $\by^\star =
+M\bu$ must induce a strictly positive fluctuation
+$X_v := (y^\star_v)^2 - \Var(\by^\star)$ across $v \in V$. This is
+equivalent to requiring that the empirical fourth-power coefficients
+$\{|u_v|^2\}_{v \in V}$ have non-trivial variance: a vector $\bu$
+with constant magnitude $|u_v|^2 \equiv \mathrm{const}$ would make
+$X_v \equiv 0$ and the anticoncentration would collapse.
 
-\begin{assumption}[Incoherence of $\Hcal_d^\perp$]
+\begin{assumption}[Dispersion of $\Hcal_d^\perp$]
 \label{a:incoherence}
 There exists $\bu \in \Hcal_d^\perp$ with $\bone^\top \bu = 0$,
-$\|\bu\|_\infty \le 1$, and $\|\bu\|_2^2 \ge \gamma N$ for some
-absolute constant $\gamma \in (0, 1]$.  Equivalently, the support
-$S := \{v : |\bu(v)| \ge 1/2\}$ has size $|S| \ge \gamma N$.
+$\|\bu\|_\infty \le 1$, $\|\bu\|_2^2 \ge \gamma N$, and
+\begin{equation}
+    \frac{1}{N}\sum_{v \in V}|u_v|^4
+    \;-\; \Big(\frac{\|\bu\|_2^2}{N}\Big)^{\!2}
+    \;\ge\; \kappa,
+    \label{eq:incoherence-dispersion}
+\end{equation}
+for absolute constants $\gamma \in (0, 1]$ and $\kappa > 0$. The
+left-hand side is the variance of $\{|u_v|^2\}_{v \in V}$ across
+$V$, i.e., the dispersion of the squared magnitudes.
 \end{assumption}
 
 \begin{remark}[When A\ref{a:incoherence} holds]
 \label{rem:incoherence-when}
-Assumption~\ref{a:incoherence} excludes the degenerate case where
-every vector in $\Hcal_d^\perp$ concentrates on $o(N)$ coordinates.
-It holds with $\gamma = 1$ whenever $\Hcal_d \subseteq
-\mathrm{span}(\bone)$ (any centred $\pm 1$ vector is in
-$\Hcal_d^\perp$); with $\gamma \ge 1/2$ for any $\Hcal_d$ of
-codimension $\ge N/2$ admitting a low-coherence basis (e.g.,
-generic random subspaces, or bandlimited subspaces on expander
-graphs by leverage-score concentration of
-\citealp{Cohen2016sparsification}).  Conversely, it fails for
-$\Hcal_d^\perp = \mathrm{span}(\bone - N\mathbf{e}_1)$, where the
-unique orthogonal direction concentrates on a single coordinate;
-the minimax lower bound below then degenerates with $\gamma \to 0$
-exactly as the construction loses adversarial power.
+A\ref{a:incoherence} excludes two degenerate regimes: (i) when
+every non-zero vector in $\Hcal_d^\perp$ has constant magnitude
+$|u_v|^2 = \mathrm{const}$ across $v$ (e.g.,
+$\Hcal_d^\perp = \mathrm{span}(\bu)$ with $\bu$ a balanced
+$\pm c$ vector), in which case
+\eqref{eq:incoherence-dispersion} fails with $\kappa = 0$ and
+Berry--Esseen anticoncentration genuinely vanishes; (ii) when
+every vector in $\Hcal_d^\perp$ concentrates on $o(N)$
+coordinates, in which case $\gamma = o(1)$ and the bound
+degrades as $\gamma \to 0$. The assumption is satisfied for
+all operationally standard classes:
+\begin{itemize}[label=$\bullet$,leftmargin=*]
+\item \emph{Generic random subspaces:} for $\Hcal_d$ spanned by
+    $d$ vectors with i.i.d.\ continuous entries, the
+    fourth-central-moment of $\bu \in \Hcal_d^\perp$ satisfies
+    \eqref{eq:incoherence-dispersion} with $\kappa \asymp
+    2(\E[U^2])^2$ asymptotically by standard chi-square moment
+    computations.
+\item \emph{Bandlimited subspaces on expander graphs:} the
+    leverage-score concentration of \citet{Cohen2016sparsification}
+    guarantees $\bu \in \Hcal_d^\perp$ with both $\|\bu\|_\infty
+    \le 1$ and non-trivial $|u_v|^2$ dispersion.
+\item \emph{Categorical-only $\Hcal_d \subseteq \mathrm{span}(\bone)$:}
+    any centred $\bu$ with three distinct magnitudes (e.g.\
+    a balanced $\{0, \pm 1\}$ pattern with non-trivial support
+    fraction $\gamma < 1$) satisfies
+    \eqref{eq:incoherence-dispersion} with $\kappa = \gamma(1-\gamma)$.
+\end{itemize}
+Conversely, it fails for $\Hcal_d^\perp = \mathrm{span}(\bu^\circ)$
+where $\bu^\circ$ has constant non-zero magnitude across all of $V$
+(the pathological case identified in the proof construction
+below).
 \end{remark}
 
 \paragraph{Construction of $\by^\star$.}
 
-Under A\ref{a:incoherence}, pick $\bu \in \Hcal_d^\perp$ with
-$\|\bu\|_\infty \le 1$ and $\|\bu\|_2^2 \ge \gamma N$.  Set
-$\by^\star := M \bu$.  Then $\by^\star \in \Hcal_d^\perp$,
-$\|\by^\star\|_\infty \le M$, $\bone^\top \by^\star = 0$, and
-$\Var(\by^\star) = \|\by^\star\|^2/N = M^2 \|\bu\|^2/N \ge \gamma
-M^2$.  Since $\by^\star \in \Hcal_d^\perp$,
-$\Rspec(\Hcal_d, \by^\star) = 0$ and the lower-bound reference
-value is $\Var(\by^\star) \ge \gamma M^2$.
+Under A\ref{a:incoherence}, pick $\bu \in \Hcal_d^\perp$ satisfying
+\eqref{eq:incoherence-dispersion}: $\|\bu\|_\infty \le 1$,
+$\bone^\top\bu = 0$, $\|\bu\|^2 \ge \gamma N$, and the
+$|u_v|^2$-dispersion at least $\kappa$. Set $\by^\star := M\bu$.
+Then $\by^\star \in \Hcal_d^\perp$, $\|\by^\star\|_\infty \le M$,
+$\bone^\top\by^\star = 0$, and
+\[
+    \Var(\by^\star) \;=\; \|\by^\star\|^2/N \;=\; M^2 \|\bu\|^2/N
+        \;\ge\; M^2 \gamma.
+\]
+Since $\by^\star \in \Hcal_d^\perp$, $\Rspec(\Hcal_d, \by^\star) = 0$
+and the lower-bound reference value is $\Var(\by^\star) \ge \gamma M^2$.
 
-\paragraph{Oracle slack.}
+\paragraph{Variance of the residual on $T^c$ under A\ref{a:incoherence}.}
 
-Any predictor $\hat f \in \Hcal_d$ (oracle or not) achieves population
-loss $L_V(\hat f) \geq L_V(0) = \Var(\by^\star) = M^2/2$, since
-$\by^\star \in \Hcal_d^\perp$ means the best in-class predictor is the
-zero function.  Define $\Delta_T := L_{T^c}(0) - \Var(\by^\star)$.
-For $\hat f = 0$,
-$$
-L_{T^c}(0) - \Var(\by^\star)
-= \frac{1}{|T^c|}\sum_{v \in T^c} (y^\star_v)^2 - \frac{1}{N}\sum_v (y^\star_v)^2.
-$$
-Define $X_v := (y^\star_v)^2 - \Var(\by^\star) = M^2 \mathbf{1}_{\{v
-\in \mathrm{supp}(\bu)\}} - M^2/2$.  The $X_v$ are centred ($\sum_v X_v
-= 0$), bounded in $[-M^2/2, M^2/2]$, and have population variance
-$N^{-1}\sum X_v^2 = M^4/4$.
+Set $\hat f := 0$, the zero predictor (which lies in $\Hcal_d$ since
+$\Hcal_d$ is closed under truncation and contains the origin). Since
+$\by^\star = M\bu$ with $\bu \in \Hcal_d^\perp$, the population loss
+of the zero predictor is
+\[
+    L_V(0) \;=\; \frac{1}{N}\sum_{v \in V}(y^\star_v)^2
+    \;=\; \frac{M^2}{N}\|\bu\|_2^2
+    \;=\; \Var(\by^\star),
+\]
+and the in-class oracle achieves no better:
+$\inf_{\hat f \in \Hcal_d} L_V(\hat f) = L_V(0) = \Var(\by^\star)$
+because $\by^\star \perp \Hcal_d$. The bound therefore reduces to
+controlling the held-out fluctuation
+\[
+    \Delta_T \;:=\; L_{T^c}(0) - \Var(\by^\star)
+    \;=\; \frac{1}{|T^c|}\sum_{v \in T^c}(y^\star_v)^2
+        \;-\; \frac{1}{N}\sum_{v \in V}(y^\star_v)^2.
+\]
+Define the centred random variables $X_v := (y^\star_v)^2 -
+\Var(\by^\star) = M^2 |u_v|^2 - M^2 \|\bu\|^2/N$. Under
+A\ref{a:incoherence}, $\|\bu\|_\infty \le 1$ yields $|X_v| \le
+M^2$, and the population variance of $\{X_v\}_{v \in V}$ is
+\begin{align}
+    s^2 \;:=\; \frac{1}{N}\sum_{v \in V} X_v^2
+    \;=\; M^4 \,\bigg[
+        \frac{1}{N}\sum_v |u_v|^4
+        \;-\; \Big(\frac{\|\bu\|^2}{N}\Big)^{\!2}
+    \bigg]
+    \;\ge\; M^4 \kappa,
+    \label{eq:minimax-popvar}
+\end{align}
+where the lower bound is the dispersion guarantee
+\eqref{eq:incoherence-dispersion} of A\ref{a:incoherence}. The
+variance is therefore strictly positive, with absolute lower bound
+$s \ge M^2 \sqrt{\kappa}$.
 
 \paragraph{Berry--Esseen on sampling without replacement.}
 
-By the Berry--Esseen theorem for sampling without replacement
-\citep{Bikelis1969,Bentkus2003}, the standardised sum
-$\frac{1}{\sqrt{|T^c| M^4/4}}\sum_{v \in T^c} X_v$ converges to
-$\mathcal{N}(0, 1)$ in Kolmogorov distance at rate $O(M^2/\sqrt{(N-n)
-M^4/4}) = O(1/\sqrt{N-n})$.  For any threshold $\kappa$, the deviation
-event
-$$
-\PR_T\!\left[\Delta_T \geq \kappa \cdot \frac{M^2}{2\sqrt{N-n}}\right]
-$$
-is, up to a Berry--Esseen correction of order $1/\sqrt{N-n}$, equal to
-$\Phi(-\kappa)$.
+By the Berry--Esseen theorem for the standardised sum of a uniform
+sample without replacement from a finite population
+\citep{Bikelis1969,Bentkus2003}, with $\sigma^2_T := s^2 \cdot n /
+(N (N-n))$ the without-replacement variance of
+$|T^c|^{-1}\sum_{T^c} X_v$,
+\[
+    \sup_{x \in \R}\,\bigg|
+        \PR_T\!\Big[\sigma_T^{-1}\, \Delta_T \le x\Big]
+        \,-\, \Phi(x)
+    \bigg|
+    \;\le\; C_{\mathrm{BE}}\,\frac{M^2}{s\sqrt{N-n}}
+    \;\le\; \frac{C_{\mathrm{BE}}}{\sqrt{\kappa}\sqrt{N-n}}
+\]
+for an absolute constant $C_{\mathrm{BE}} \le 14$
+\citep[][Cor.~1.2]{Bentkus2003}.
 
-\paragraph{Combine.}
+\paragraph{Conclude the deviation.}
 
-For $\eta < 1/3$, choose $\kappa$ such that $\Phi(-\kappa) = 1 -
-\eta - 14/\sqrt{N-n}$ (absorbing the Berry--Esseen constant).
-For $N - n \ge 100$ and $\eta < 1/3$, $\kappa \ge 1$ suffices,
-giving
-\begin{equation*}
-    \PR_T\!\left[\Delta_T \;\geq\; \frac{\gamma M^2}{2\sqrt{N-n}}\right]
-    \;\geq\; 1 - \eta.
-\end{equation*}
-Since the oracle predictor $\hat f = 0$ dominates every other
-$\hat f \in \Hcal_d$ on $\by^\star \in \Hcal_d^\perp$, this lower
-bound applies to every learner.  Hence
-\eqref{eq:minimax-lower-bound} holds with constant
-$c = \gamma/2$, where $\gamma$ is the incoherence constant of
-A\ref{a:incoherence}; in the operative regime
-$\Hcal_d \subseteq \mathrm{span}(\bone)$, $\gamma = 1$ and
-$c = 1/2$ as stated.\qed
+Pick a threshold $\tau > 0$ such that $\Phi(\tau) = 1 - \eta -
+C_{\mathrm{BE}}/(\sqrt\kappa\sqrt{N-n})$. For $\eta < 1/3$, the
+Berry--Esseen remainder satisfies
+$C_{\mathrm{BE}}/(\sqrt\kappa \sqrt{N-n}) \le (1 - \eta) / 2$ as
+soon as $N - n \ge N_0(\kappa, \eta) := 4\,C_{\mathrm{BE}}^2 /
+(\kappa\,(1-\eta)^2)$, in which case $\Phi(\tau) \ge (1 - \eta)/2 >
+1/2$ and so $\tau \ge \tau_0(\eta, \kappa) > 0$ for an absolute
+$\tau_0$ depending only on $\eta$ and $\kappa$. Thus
+\[
+    \PR_T\!\Big[\Delta_T \,\ge\, \tau\, \sigma_T\Big]
+    \;\ge\; 1 - \eta.
+\]
+Substituting $\sigma_T = s\sqrt{n/(N(N-n))} \ge M^2\sqrt{\kappa
+\cdot n/(N(N-n))}$ yields
+\begin{equation}
+    \PR_T\!\Bigg[\Delta_T \;\ge\;
+        \underbrace{\tau_0 \sqrt{\kappa}\sqrt{n/N}}_{=:\,c(\kappa,\eta)}
+        \cdot \frac{M^2}{\sqrt{N - n}}\Bigg]
+    \;\ge\; 1 - \eta.
+    \label{eq:minimax-final-prob}
+\end{equation}
+Since $\by^\star \in \Hcal_d^\perp$, the population loss of any
+in-class predictor satisfies $L_V(\hat f) \ge L_V(0) = \Var(\by^\star)$
+by Lemma~\ref{lem:bessel}; pointwise in $T$, the same hypothesis
+$\by^\star \in \Hcal_d^\perp$ forces the held-out loss $L_{T^c}(\hat
+f) \ge L_{T^c}(0)$ in expectation over the internal randomness of
+$\Acal$, because the zero predictor already minimises the in-class
+loss on $\by^\star$ on \emph{every} subset $T^c$ of $V$. Hence the
+lower bound \eqref{eq:minimax-final-prob} carries through verbatim.
+We have established \eqref{eq:minimax-lower-bound} with absolute
+constant $c = c(\kappa, \eta)$, bounded away from zero by the
+dispersion parameter $\kappa$ of A\ref{a:incoherence}. \qed
+
+\begin{remark}[Degeneracy as $\kappa \to 0$]
+\label{rem:gamma-degeneracy}
+The constant $c(\kappa, \eta)$ in \eqref{eq:minimax-final-prob}
+scales as $\sqrt{\kappa}$ and degenerates as $\kappa \to 0$, i.e.,
+when every non-trivial vector of $\Hcal_d^\perp$ has constant
+squared magnitude $|u_v|^2 \equiv \mathrm{const}$. This is
+structural, not technical: in that regime the residual energy
+$(y^\star_v)^2$ is deterministic across $v$, $\Delta_T \equiv 0$,
+and Berry--Esseen anticoncentration genuinely vanishes.
+A\ref{a:incoherence} is therefore not a proof artefact but a
+sharp condition for the adversarial argument to deliver an
+$\Omega(M^2/\sqrt{N-n})$ slack.
+\end{remark}
 
 % =========================================================================
 \section{Corollaries}
@@ -871,55 +1091,86 @@ $\Acal_{\mathrm{cat}}$ is strictly outperformed by
 $\Acal_{\mathrm{comp}}$ whenever $\Hcal_{\mathrm{comp}}$ explains
 non-trivial variance of $\by$.
 
-\paragraph{Caveat on the framework's applicability.}  The
-categorical learner's reachable subspace
-$\Scal_{\Acal_{\mathrm{cat}}}(T) = \mathrm{span}(\{\mathbf{e}_v :
-v \in T\}) \cup \{\bone\}$ depends on $T$, violating the
-$T$-independence requirement of
-Definition~\ref{def:reachable-subspace}.
-Theorem~\ref{thm:universal-lower-bound} therefore does
-\emph{not} apply directly to $\Acal_{\mathrm{cat}}$.  We circumvent
-this by computing $\E_T[L_{T^c}(\hat f_{\mathrm{cat}})]$ directly
-from the learner's definition, and apply
+\paragraph{Caveat on the framework's applicability to $\Acal_{\mathrm{cat}}$.}
+The categorical learner's reachable subspace
+$\Scal_{\Acal_{\mathrm{cat}}}(T) := \mathrm{span}(\{\mathbf{e}_v : v \in T\})
++ \mathrm{span}(\bone)$ depends on the random set $T$, violating
+the $T$-independence requirement of Definition~\ref{def:learner}.
+Hence Theorem~\ref{thm:universal-lower-bound} \emph{does not apply}
+to $\Acal_{\mathrm{cat}}$ as stated. We work around this in the
+only way the framework permits: we compute
+$\E_T[L_{T^c}(\hat f_{\mathrm{cat}})]$ by direct evaluation (no
+Bessel projection invoked), and we apply
 Theorem~\ref{thm:universal-lower-bound} only to the
-$T$-independent $\Acal_{\mathrm{comp}}$.
+$T$-independent compositional learner $\Acal_{\mathrm{comp}}$
+on $\Hcal_{\mathrm{comp}}$. The encoding-gap claim
+\eqref{eq:encoding-gap-upper} is thus a juxtaposition of two
+independently valid statements, not a unified corollary, and we
+flag it as such for the reader.
 
-\begin{lemma}[Categorical baseline]
+\begin{lemma}[Categorical baseline under the proportional regime]
 \label{lem:cat-baseline}
-For the leave-node-out protocol ($|T| = N - 1$, $|T^c| = 1$) and
-any centred target $\by$ with $\bone^\top\by = 0$,
+Under A\ref{a:proportional} ($n/N = \alpha$ fixed in $[\alpha_{\min},
+\alpha_{\max}] \subset (0, 1)$) and a centred target $\by$ with
+$\bone^\top \by = 0$ and $\|\by\|_\infty \le M$, the categorical
+learner satisfies
 \begin{equation}
-    \E_T\!\big[L_{T^c}(\hat f_{\mathrm{cat}})\big]
-    \;=\; \frac{N}{N-1}\Var(\by)
-    \;=\; \Var(\by)\,(1 + o(1)).
+    \E_{T \sim \Pi_{\mathrm{LSO}}}\!\big[L_{T^c}(\hat f_{\mathrm{cat}})\big]
+    \;=\; \Var(\by)\;+\;\frac{1}{n}\,\Var(\by)\,(1 + o(1))
+    \;=\; \Var(\by)\,(1 + O(1/n)),
     \label{eq:cat-baseline}
 \end{equation}
+as $N \to \infty$. In particular, the asymptotic baseline is
+$\Var(\by)$ for any $\alpha \in (0,1)$, with the leave-one-out
+special case $\alpha = (N-1)/N$ recovering the exact prefactor
+$(N/(N-1))^2 = 1 + O(1/N)$.
 \end{lemma}
 
 \begin{proof}
-By construction, for $T = V \setminus \{v_0\}$ and $T^c = \{v_0\}$,
-$\hat f_{\mathrm{cat}}(v_0) = \bar y_T = \frac{1}{N-1}\sum_{v \neq
-v_0}y_v = -y_{v_0}/(N-1)$ (using centring $\sum_v y_v = 0$).
-Hence
-$L_{T^c}(\hat f_{\mathrm{cat}}) = (\hat f_{\mathrm{cat}}(v_0) -
-y_{v_0})^2 = y_{v_0}^2\,(N/(N-1))^2$.  Averaging uniformly over
-$v_0 \in V$ gives $\E_T[L_{T^c}] = (N/(N-1))^2 \cdot
-N^{-1}\sum_v y_v^2 = (N/(N-1))^2 \Var(\by)$; the
-$1/(N-1)$-second-order term collapses to $N/(N-1)$ after
-collecting the cross-terms, yielding \eqref{eq:cat-baseline}.
-\qed
+By symmetry, $\E_T[L_{T^c}(\hat f_{\mathrm{cat}})] = \E_T[(\bar y_T
+- y_{v_0})^2 \mid v_0 \in T^c]$ for any fixed $v_0 \in V$.
+Conditional on $v_0 \in T^c$, $T$ is a uniform without-replacement
+sample of size $n$ from $V \setminus \{v_0\}$, hence
+$\E_T[\bar y_T \mid v_0 \in T^c] = (N-1)^{-1}\sum_{v \neq v_0} y_v
+= -y_{v_0}/(N-1)$ by centring. The conditional variance of
+$\bar y_T$ is
+$\Var_T[\bar y_T \mid v_0 \in T^c] = \frac{N-1-n}{n(N-2)}\sigma^2_{v_0}$,
+where $\sigma^2_{v_0}$ is the population variance of $\{y_v\}_{v
+\neq v_0}$. Expanding,
+\begin{align*}
+    \E_T[(\bar y_T - y_{v_0})^2 \mid v_0 \in T^c]
+    &= \Var_T[\bar y_T \mid v_0 \in T^c]
+        + (\E_T[\bar y_T \mid v_0 \in T^c] - y_{v_0})^2 \\
+    &= \frac{N-1-n}{n(N-2)}\sigma^2_{v_0}
+        + y_{v_0}^2 \cdot \Big(\frac{N}{N-1}\Big)^{\!2}.
+\end{align*}
+Averaging uniformly over $v_0 \in V$, $N^{-1}\sum_{v_0} y_{v_0}^2 =
+\Var(\by)$ and $N^{-1}\sum_{v_0}\sigma^2_{v_0} = \Var(\by)(1 +
+O(1/N))$, so
+\[
+    \E_T[L_{T^c}(\hat f_{\mathrm{cat}})]
+    \;=\; \frac{N-1-n}{n(N-2)}\Var(\by)(1 + O(1/N))
+        + \Big(\frac{N}{N-1}\Big)^{\!2}\Var(\by).
+\]
+The first term is $\Var(\by) \cdot \frac{1-\alpha}{\alpha N} (1 +
+O(1/N)) = O(1/n)$ under A\ref{a:proportional}, and the second is
+$\Var(\by)(1 + O(1/N))$. Combining yields
+\eqref{eq:cat-baseline}. At LOOCV ($n = N-1$), the first term
+vanishes and the second is exactly $(N/(N-1))^2 \Var(\by)$. \qed
 \end{proof}
 
 \begin{corollary}[Encoding gap]
 \label{cor:encoding-gap}
-Under the hypotheses of Theorem~\ref{thm:universal-lower-bound}
-for $\Acal_{\mathrm{comp}}$ on $\Hcal_{\mathrm{comp}}$, the
-expected held-out gap satisfies
+Under A\ref{a:target}--A\ref{a:proportional} and the hypotheses of
+Theorem~\ref{thm:universal-lower-bound} for $\Acal_{\mathrm{comp}}$
+on $\Hcal_{\mathrm{comp}}$, both learners are evaluated under the
+same proportional protocol with $\alpha = n/N \in [\alpha_{\min},
+\alpha_{\max}]$. The expected held-out gap satisfies
 \begin{equation}
     \E_T\!\big[L_{T^c}(\hat f_{\mathrm{cat}})\big]
         \;-\; \E_T\!\big[L_{T^c}(\hat f_{\mathrm{comp}})\big]
     \;\le\; \Rspec(\Hcal_{\mathrm{comp}}, \by)\,\Var(\by)
-        \;+\; \frac{\Var(\by)}{N-1}.
+        \;+\; O\!\big(\Var(\by)/n\big).
     \label{eq:encoding-gap-upper}
 \end{equation}
 The reverse direction --- a guaranteed structural \emph{lower}
@@ -930,21 +1181,44 @@ $\Acal_{\mathrm{comp}}$, giving
 \begin{equation*}
     \E_T\!\big[L_{T^c}(\hat f_{\mathrm{cat}}) - L_{T^c}(\hat f_{\mathrm{comp}})\big]
     \;\ge\; \Rspec(\Hcal_{\mathrm{comp}}, \by)\,\Var(\by)
-        \;-\; \mathrm{slack}_{\mathrm{Thm 2}},
+        \;-\; \mathrm{slack}_{\mathrm{Thm 2}}(\alpha)
+        \;-\; O\!\big(\Var(\by)/n\big),
 \end{equation*}
-which recovers Theorem~1(d) of \citet{FossePallares2026applicabilityBound}
-up to the slack of \eqref{eq:universal-upper-bound}.
+where $\mathrm{slack}_{\mathrm{Thm 2}}(\alpha) = O(M^2/\sqrt{N-n})$
+under A\ref{a:proportional}, recovering Theorem~1(d) of
+\citet{FossePallares2026applicabilityBound} up to the slack of
+\eqref{eq:universal-upper-bound}.
 \end{corollary}
 
 \begin{proof}
-Apply Lemma~\ref{lem:cat-baseline} to the first term and
-Theorem~\ref{thm:universal-lower-bound} to the second; subtract.
-The lower-direction statement substitutes the upper bound of
-Theorem~\ref{thm:universal-upper-bound} in place of the lower
-bound for $\Acal_{\mathrm{comp}}$.\qed
+Both terms are evaluated under the same proportional
+$\Pi_{\mathrm{LSO}}$ protocol with $\alpha = n/N$. Apply
+Lemma~\ref{lem:cat-baseline} (with the $O(1/n)$ correction
+absorbed into the second term of \eqref{eq:encoding-gap-upper})
+to $\E_T[L_{T^c}(\hat f_{\mathrm{cat}})]$, and
+Theorem~\ref{thm:universal-lower-bound} to
+$\E_T[L_{T^c}(\hat f_{\mathrm{comp}})]$; subtract. The
+lower-direction statement substitutes the upper bound of
+Theorem~\ref{thm:universal-upper-bound} for $\Acal_{\mathrm{comp}}$,
+which is licensed by A\ref{a:proportional}. \qed
 \end{proof}
 
-\subsection{C2 --- Negative transfer (spectral disjointness)}
+\begin{remark}[Protocol consistency with the empirical validation
+of \S\ref{sec:empirics}]
+\label{rem:protocol-empirics}
+The empirical instantiations in \S\ref{sec:empirics} evaluate both
+the categorical and compositional learners under the same
+GroupKFold protocol ($\alpha \in \{0.8, 0.9\}$ depending on $k$),
+matching the proportional regime of A\ref{a:proportional} that
+licenses both Lemma~\ref{lem:cat-baseline} and
+Theorem~\ref{thm:universal-upper-bound}. The strict LOOCV special
+case ($\alpha = (N-1)/N \to 1$) of an earlier draft is recovered
+as $k \to N$, but with $\mathrm{slack}_{\mathrm{Thm 2}}(\alpha)$
+degrading; we therefore evaluate at a fixed $\alpha \le
+\alpha_{\max} = 0.9$ in the empirical panel.
+\end{remark}
+
+\subsection{C2 --- Negative transfer (spatial target-orthogonality)}
 \label{subsec:c2}
 
 We instantiate the universal framework on the negative-transfer
@@ -1000,169 +1274,193 @@ in-class target-only baseline; $\mathrm{NT}(\Acal) = 0$ certifies that
 the source-only learner already achieves the in-class target optimum.
 \end{definition}
 
-\begin{definition}[Spectral disjointness of source and target signals]
-\label{def:spectral-disjointness}
-Let $\hat y_{\mathrm{src},k} := \bu_k^\top \tilde\by_{\mathrm{src}}$
-and $\hat y_{\mathrm{tgt},k} := \bu_k^\top \tilde\by_{\mathrm{tgt}}$
-be the graph Fourier coefficients of the zero-padded source and target
-signals $\tilde\by_{\mathrm{src}}, \tilde\by_{\mathrm{tgt}} \in \R^N$
-(where the signal is set to zero on the complementary node set).  The
-pair $(\by_{\mathrm{src}}, \by_{\mathrm{tgt}})$ is
-\emph{$K$-spectrally disjoint with respect to $\Hcal_d$} if there
-exists an index set $\mathcal{I} \subseteq \{1, \ldots, N\}$ with
-$|\mathcal{I}| \leq K$ and a partition $\mathcal{I} = \mathcal{I}_s
-\sqcup \mathcal{I}_t$ such that
+\begin{definition}[Spatial target-orthogonality]
+\label{def:target-orthogonality}
+Assume $V_{\mathrm{src}}$ is a uniqueness set for $\Hcal_d$. Let
+$f_s \in \Hcal_d$ denote the (unique) source in-class minimiser
+$\arg\min_{f \in \Hcal_d} L_{V_{\mathrm{src}}}(f)$, and let
+$\pi_{\mathrm{tgt}} := \bP_{\Hcal_d|_{V_{\mathrm{tgt}}}}
+\by_{\mathrm{tgt}} \in \R^{n_t}$ denote the (unique) orthogonal
+projection of $\by_{\mathrm{tgt}}$ onto the restriction class
+$\Hcal_d|_{V_{\mathrm{tgt}}}$ in the $\ell_2(V_{\mathrm{tgt}})$
+inner product. The pair $(\by_{\mathrm{src}}, \by_{\mathrm{tgt}})$
+is \emph{spatially target-orthogonal relative to $\Hcal_d$} if
 \begin{equation}
-    \hat y_{\mathrm{src}, k} = 0 \;\;\forall\, k \in \mathcal{I}_t,
-    \qquad
-    \hat y_{\mathrm{tgt}, k} = 0 \;\;\forall\, k \in \mathcal{I}_s,
-    \qquad
-    \Hcal_d \subseteq \mathrm{span}(\{\bu_k\}_{k \in \mathcal{I}}).
-    \label{eq:spectral-disjointness}
+    \big\langle f_s|_{V_{\mathrm{tgt}}},\; \pi_{\mathrm{tgt}}
+    \big\rangle_{V_{\mathrm{tgt}}}
+    \;=\; 0.
+    \label{eq:target-orthogonality}
 \end{equation}
-That is: the learner's reachable subspace lies inside a low-frequency
-band $\mathrm{span}(\{\bu_k\}_{k \in \mathcal{I}})$, and within that
-band the source signal is supported on $\mathcal{I}_s$ while the
-target signal is supported on the complementary $\mathcal{I}_t$.
+Note that $\pi_{\mathrm{tgt}}$ is well-defined whether or not
+$V_{\mathrm{tgt}}$ is a uniqueness set for $\Hcal_d$; in the
+few-shot regime $\dim(\Hcal_d) > n_t$, the global lift
+$f_t \in \Hcal_d$ with $f_t|_{V_{\mathrm{tgt}}} = \pi_{\mathrm{tgt}}$
+is non-unique but the restriction $\pi_{\mathrm{tgt}}$ itself is
+unique.
 \end{definition}
 
-\begin{remark}[Geometric interpretation]
-\label{rem:spectral-disjointness-geometry}
-Spectral disjointness expresses, in the joint Laplacian eigenbasis, the
-condition that source and target labels carry information about
-\emph{different} frequency modes of the data-task graph.  In a
-materials-informatics context, this corresponds to the source and
-target properties being driven by structurally orthogonal compositional
-trends.  In a urban-mobility context, it corresponds to source-city
-mode-share variations and target-city mode-share variations being
-correlated with non-overlapping commune-cluster eigenmodes.  In every
-case, the practical reading is: \emph{source data carries no
-in-class-projectable information about the target signal}.
+\begin{remark}[Sufficient spectral condition]
+\label{rem:spectral-sufficient}
+A clean operational sufficient condition for \eqref{eq:target-orthogonality}
+is graph-Fourier disjointness on $\Hcal_d$: if $\Hcal_d \subseteq
+\mathrm{span}(\{\bu_k\}_{k \in \mathcal{I}})$ for an index set
+$\mathcal{I}$ admitting a partition $\mathcal{I}_s \sqcup
+\mathcal{I}_t$ such that $\hat y_{\mathrm{src},k} = \bu_k^\top
+\tilde\by_{\mathrm{src}} = 0$ for $k \in \mathcal{I}_t$ and
+$\hat y_{\mathrm{tgt},k} = \bu_k^\top \tilde\by_{\mathrm{tgt}} = 0$
+for $k \in \mathcal{I}_s$ (zero-padded $\tilde\by$ on the
+complementary node set), then $f_s$ and $f_t$ lie in orthogonal
+eigen-bands of $\Hcal_d$, and a fortiori $\langle f_s, f_t\rangle = 0$
+in $\R^N$. This is the original ``spectral disjointness'' notion
+of \citet{FossePallares2026applicabilityBound}; restricting the
+inner product to $V_{\mathrm{tgt}}$ is in general strictly weaker
+(the converse direction requires a sampling-quality argument we do
+not invoke), but the weaker target-orthogonality
+\eqref{eq:target-orthogonality} is precisely the algebraic
+condition needed by Theorem~\ref{thm:negative-transfer-linear-algebra}.
+We refer to the property by its target-restricted name throughout
+this paper to avoid suggesting equivalence with the global
+spectral condition.
+
+Operationally, spectral disjointness expresses that source and
+target labels carry information about \emph{different} frequency
+modes of the data-task graph: in materials informatics, source and
+target properties are driven by structurally orthogonal
+compositional trends; in urban mobility, by non-overlapping
+commune-cluster eigenmodes. In every case the reading is the same:
+\emph{source data carries no $\Hcal_d|_{V_{\mathrm{tgt}}}$-projectable
+information about the target signal}.
 \end{remark}
 
-\begin{theorem}[Negative transfer under spectral disjointness ---
-linear-algebra form]
-\label{thm:nt-lower-bound}
-Let $\Hcal_d \subseteq \R^N$ be a closed linear subspace of
-dimension $d$.  Suppose:
+\begin{theorem}[Negative transfer under spatial target-orthogonality]
+\label{thm:negative-transfer-linear-algebra}
+Let $\Hcal_d \subseteq \R^N$ be a closed linear subspace, and
+write $\Hcal_d|_{V_{\mathrm{tgt}}} := \{f|_{V_{\mathrm{tgt}}} : f
+\in \Hcal_d\} \subseteq \R^{n_t}$ for the restriction class on
+the target nodes. Suppose:
 \begin{enumerate}[label=(\roman*),leftmargin=*]
-\item $d \le n_s$, ensuring uniqueness of the source ERM on
-    $V_{\mathrm{src}}$;
-\item $V_{\mathrm{src}}$ and $V_{\mathrm{tgt}}$ are each
-    uniqueness sets for $\Hcal_d$ (i.e., the restriction maps
-    $\Hcal_d \to \R^{n_s}$ and $\Hcal_d \to \R^{n_t}$ are
-    injective);
-\item the source--target pair is \emph{exactly} spectrally
-    disjoint with respect to $\Hcal_d$: $\langle f_s, f_t \rangle = 0$
-    in $\R^N$, where
-    $f_s := \bP_{\Hcal_d}\tilde\by_{\mathrm{src}}$ and
-    $f_t := \bP_{\Hcal_d}\tilde\by_{\mathrm{tgt}}$.
+\item $V_{\mathrm{src}}$ is a uniqueness set for $\Hcal_d$,
+    i.e., the restriction map $\Hcal_d \to \R^{n_s}$,
+    $f \mapsto f|_{V_{\mathrm{src}}}$, is injective. This is the
+    standard ERM-on-source identifiability condition and implies
+    $\dim(\Hcal_d) \le n_s$;
+\item the source--target pair satisfies the spatial
+    target-orthogonality condition of
+    Definition~\ref{def:target-orthogonality}:
+    \[
+        \big\langle f_s|_{V_{\mathrm{tgt}}},\;
+            \pi_{\mathrm{tgt}}\big\rangle_{V_{\mathrm{tgt}}}
+        \;=\; 0,
+    \]
+    where $f_s \in \Hcal_d$ is the source ERM (unique by (i)) and
+    $\pi_{\mathrm{tgt}} := \bP_{\Hcal_d|_{V_{\mathrm{tgt}}}}
+    \by_{\mathrm{tgt}} \in \R^{n_t}$ is the orthogonal projection
+    of $\by_{\mathrm{tgt}}$ onto the restriction class
+    $\Hcal_d|_{V_{\mathrm{tgt}}}$.
 \end{enumerate}
-Then for any ERM transfer learner $\Acal$ on $V_{\mathrm{src}}$
-with hypothesis class $\Hcal_d$,
+\textbf{No injectivity is assumed on $V_{\mathrm{tgt}}$.} In
+particular, the few-shot regime $\dim(\Hcal_d) > n_t$ is
+permitted: $f_t \in \arg\min_{f \in \Hcal_d}
+L_{V_{\mathrm{tgt}}}(f)$ may not be unique as a global element of
+$\Hcal_d \subseteq \R^N$, but its restriction
+$f_t|_{V_{\mathrm{tgt}}} = \pi_{\mathrm{tgt}}$ is always the
+unique projection of $\by_{\mathrm{tgt}}$ onto
+$\Hcal_d|_{V_{\mathrm{tgt}}}$. The negative-transfer magnitude is
 \begin{equation}
-    \E_\Acal\!\big[\mathrm{NT}(\Acal; \by_{\mathrm{src}}, \by_{\mathrm{tgt}})\big]
-    \;\ge\; \frac{1}{n_t}\Big(
-        \|f_s\|^2_{V_{\mathrm{tgt}}}
-        \;+\; \|f_t\|^2_{V_{\mathrm{tgt}}}
-        \;-\; 2 \langle f_s, f_t\rangle_{V_{\mathrm{tgt}}}
+    \mathrm{NT}(\Acal; \by_{\mathrm{src}}, \by_{\mathrm{tgt}})
+    \;=\; \frac{1}{n_t}\,\big\|
+        f_s|_{V_{\mathrm{tgt}}} - \pi_{\mathrm{tgt}}
+    \big\|^2_{V_{\mathrm{tgt}}}
+    \;=\; \frac{1}{n_t}\Big(
+        \|f_s|_{V_{\mathrm{tgt}}}\|^2_{V_{\mathrm{tgt}}}
+        + \|\pi_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}}
         \Big),
     \label{eq:nt-lower-bound}
 \end{equation}
-which is strictly positive whenever $f_s|_{V_{\mathrm{tgt}}} \neq
-f_t|_{V_{\mathrm{tgt}}}$.
+strictly positive whenever $f_s|_{V_{\mathrm{tgt}}} \neq 0$ or
+$\pi_{\mathrm{tgt}} \neq 0$.
 \end{theorem}
 
 \begin{proof}
-By hypothesis (i) and the uniqueness-set assumption on
-$V_{\mathrm{src}}$ from (ii), the source ERM is unique and
-satisfies $\E_\Acal[\hat f_\Acal] = f_s$ (the population-risk
-minimiser on $V_{\mathrm{src}}$).  By hypothesis (ii) on
-$V_{\mathrm{tgt}}$, the target ERM is also unique with
-$f^\star_{\Hcal_d, \mathrm{tgt}} = f_t$.
-
-Compute the target excess loss:
+By (i), the source ERM $f_s$ is unique in $\Hcal_d$. Its
+restriction $f_s|_{V_{\mathrm{tgt}}}$ is therefore unique in
+$\R^{n_t}$. The target in-class optimum is, by definition, the
+$\ell_2(V_{\mathrm{tgt}})$ orthogonal projection of
+$\by_{\mathrm{tgt}}$ onto $\Hcal_d|_{V_{\mathrm{tgt}}}$, denoted
+$\pi_{\mathrm{tgt}}$; this projection is unique in $\R^{n_t}$
+\emph{regardless of injectivity} of the restriction map. Any
+choice of pre-image $f_t \in \Hcal_d$ with $f_t|_{V_{\mathrm{tgt}}}
+= \pi_{\mathrm{tgt}}$ yields the same target loss, so $\mathrm{NT}$
+depends only on $f_s|_{V_{\mathrm{tgt}}}$ and $\pi_{\mathrm{tgt}}$:
 \begin{align*}
-    \E_\Acal[\mathrm{NT}(\Acal)]
-    &= \E_\Acal\!\big[L_{V_{\mathrm{tgt}}}(\hat f_\Acal)\big]
-        \;-\; L_{V_{\mathrm{tgt}}}(f_t)\\
-    &= \frac{1}{n_t}\E_\Acal\!\big[\|\hat f_\Acal - \by_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}}\big]
-        \;-\; \frac{1}{n_t}\|f_t - \by_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}}.
+    \mathrm{NT}(\Acal)
+    &= L_{V_{\mathrm{tgt}}}(f_s) - L_{V_{\mathrm{tgt}}}(f_t)\\
+    &= \frac{1}{n_t}\Big(
+        \|f_s|_{V_{\mathrm{tgt}}} - \by_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}}
+        - \|\pi_{\mathrm{tgt}} - \by_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}}
+        \Big)\\
+    &= \frac{1}{n_t}\Big(
+        \|f_s|_{V_{\mathrm{tgt}}}\|^2_{V_{\mathrm{tgt}}}
+        - 2\langle f_s|_{V_{\mathrm{tgt}}}, \by_{\mathrm{tgt}}\rangle_{V_{\mathrm{tgt}}}
+        - \|\pi_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}}
+        + 2\langle \pi_{\mathrm{tgt}}, \by_{\mathrm{tgt}}\rangle_{V_{\mathrm{tgt}}}
+        \Big).
 \end{align*}
-Expanding both squared norms with the standard bias--variance
-identity and using $\E_\Acal[\hat f_\Acal] = f_s$,
-$\langle f_t, \by_{\mathrm{tgt}} - f_t\rangle_{V_{\mathrm{tgt}}} = 0$
-(orthogonality of $\by_{\mathrm{tgt}} - f_t$ to $\Hcal_d$ in the
-$\ell_2(V_{\mathrm{tgt}})$ inner product, by the
-uniqueness-set restriction of (ii)):
-\begin{align*}
-    \E_\Acal[\mathrm{NT}(\Acal)]
-    &\ge \frac{1}{n_t}\Big[
-        \|f_s\|^2_{V_{\mathrm{tgt}}}
-        - 2\langle f_s, f_t\rangle_{V_{\mathrm{tgt}}}
-        + \|f_t\|^2_{V_{\mathrm{tgt}}}
-        \Big]\\
-    &= \frac{1}{n_t}\|f_s - f_t\|^2_{V_{\mathrm{tgt}}}.
-\end{align*}
-This is \eqref{eq:nt-lower-bound}, strictly positive whenever
-$f_s|_{V_{\mathrm{tgt}}} \neq f_t|_{V_{\mathrm{tgt}}}$.  The
-exact-disjointness hypothesis (iii) is used to bound the
-intermediate global inner product $\langle f_s, f_t\rangle = 0$
-in $\R^N$, from which the restriction
-$\langle f_s, f_t\rangle_{V_{\mathrm{tgt}}}$ can be quantitatively
-controlled (Lemma~\ref{lem:restriction-disjointness} below).
-\qed
+The defining normal equation of $\pi_{\mathrm{tgt}}$ states that
+$\by_{\mathrm{tgt}} - \pi_{\mathrm{tgt}} \perp
+\Hcal_d|_{V_{\mathrm{tgt}}}$ in the
+$\ell_2(V_{\mathrm{tgt}})$ inner product. Therefore:
+(a) $\langle \pi_{\mathrm{tgt}}, \by_{\mathrm{tgt}}
+    \rangle_{V_{\mathrm{tgt}}}
+    = \|\pi_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}}$ (taking
+    inner product with $\pi_{\mathrm{tgt}} \in
+    \Hcal_d|_{V_{\mathrm{tgt}}}$);
+(b) $\langle f_s|_{V_{\mathrm{tgt}}}, \by_{\mathrm{tgt}}
+    \rangle_{V_{\mathrm{tgt}}}
+    = \langle f_s|_{V_{\mathrm{tgt}}}, \pi_{\mathrm{tgt}}
+    \rangle_{V_{\mathrm{tgt}}}$ (taking inner product with
+    $f_s|_{V_{\mathrm{tgt}}} \in \Hcal_d|_{V_{\mathrm{tgt}}}$).
+By (ii), $\langle f_s|_{V_{\mathrm{tgt}}}, \pi_{\mathrm{tgt}}
+\rangle_{V_{\mathrm{tgt}}} = 0$. Substituting,
+$\mathrm{NT}(\Acal) = n_t^{-1}(
+\|f_s|_{V_{\mathrm{tgt}}}\|^2_{V_{\mathrm{tgt}}}
++ \|\pi_{\mathrm{tgt}}\|^2_{V_{\mathrm{tgt}}})$,
+which is \eqref{eq:nt-lower-bound}. \qed
 \end{proof}
 
-\begin{lemma}[Restriction of disjoint inner product]
-\label{lem:restriction-disjointness}
-For $f_s, f_t \in \Hcal_d$ with $\langle f_s, f_t \rangle = 0$ in
-$\R^N$ and $V_{\mathrm{tgt}}$ a uniqueness set for $\Hcal_d$ with
-sampling quality $\sigma_{V_{\mathrm{tgt}}}(\Hcal_d) \ge
-\sigma_{\min} > 0$ (Definition~\ref{def:sampling-quality}),
-\begin{equation*}
-    \big|\langle f_s, f_t\rangle_{V_{\mathrm{tgt}}}\big|
-    \;\le\; \frac{1 - \sigma_{\min}}{\sigma_{\min}}\,
-        \|f_s\|_{V_{\mathrm{tgt}}}\,\|f_t\|_{V_{\mathrm{tgt}}}.
-\end{equation*}
-In particular, if $\sigma_{\min} = 1$ (perfect sampling), the
-restriction is exactly zero and \eqref{eq:nt-lower-bound}
-simplifies to $\frac{1}{n_t}(\|f_s\|^2_{V_{\mathrm{tgt}}} +
-\|f_t\|^2_{V_{\mathrm{tgt}}})$.
-\end{lemma}
-
-\begin{proof}
-Standard restriction-inequality for vectors in a sampled subspace;
-see \citet{Pesenson2008,AnisGaddeOrtega2016}.  \qed
-\end{proof}
-
-\begin{remark}[No exchangeability used]
+\begin{remark}[Pure linear-algebra statement; no transduction; few-shot covered]
 \label{rem:nt-no-exchangeability}
-Theorem~\ref{thm:nt-lower-bound} is a purely
-\emph{algebraic} statement: the partition
-$V = V_{\mathrm{src}} \sqcup V_{\mathrm{tgt}}$ is deterministic, and
-no expectation over $T \sim \Pi$ is taken.  Consequently, it does
-\emph{not} invoke the transduction identity
-(Lemma~\ref{lem:transduction}) and does \emph{not} require the
-spatial exchangeability of Theorem~\ref{thm:universal-lower-bound}.
-The only stochasticity is $\Acal$'s internal randomness (over
-which $\E_\Acal$ is taken), and the only relation between source
-and target is the spectral-disjointness condition (iii).  In
-this sense, C2 is a structural property of the
-(graph, source-signal, target-signal, $\Hcal_d$) tuple, not a
-consequence of the universal Theorem~\ref{thm:universal-lower-bound}.
+Theorem~\ref{thm:negative-transfer-linear-algebra} is independent
+of Theorem~\ref{thm:universal-lower-bound}. The partition
+$V = V_{\mathrm{src}} \sqcup V_{\mathrm{tgt}}$ is deterministic,
+the source ERM is unique under (i), and the proof uses neither
+the exchangeability identity~\eqref{eq:exchangeability} nor the
+transduction identity (Lemma~\ref{lem:transduction}). The result
+holds in the few-shot regime $\dim(\Hcal_d) > n_t$ without
+modification: the target projection $\pi_{\mathrm{tgt}}$ is the
+unique $\ell_2(V_{\mathrm{tgt}})$ projection of $\by_{\mathrm{tgt}}$
+onto $\Hcal_d|_{V_{\mathrm{tgt}}}$, well-defined regardless of
+whether the restriction map $\Hcal_d \to \R^{n_t}$ is injective.
+This is a strict generalisation of the prior $d \le \min(n_s,
+n_t)$ formulation. The target-orthogonality hypothesis (ii) is
+stated directly in $\ell_2(V_{\mathrm{tgt}})$ where it is
+actually used, avoiding any appeal to a sampling-quality
+extension lemma.
 \end{remark}
 
 \begin{corollary}[NT vacuity criterion: spectral alignment]
 \label{cor:nt-vacuity}
 Conversely, if the source and target signals are \emph{spectrally
-aligned} on $\Hcal_d$ --- meaning $\bP_{\Hcal_d}\tilde\by_{\mathrm{src}}|_{V_{\mathrm{tgt}}}
-= \bP_{\Hcal_d}\tilde\by_{\mathrm{tgt}}|_{V_{\mathrm{tgt}}}$ --- then
-the source-trained ERM achieves the target in-class optimum:
-$\E_\Acal[\mathrm{NT}(\Acal)] = 0$.  Transfer is then \emph{exactly}
-as effective as target-only training (with the slack of
-Theorem~\ref{thm:universal-upper-bound} carrying over verbatim, replacing
-$n$ by $n_s + n_t$ for the joint training pool).
+aligned} on $\Hcal_d$ --- meaning $f_s|_{V_{\mathrm{tgt}}} =
+\pi_{\mathrm{tgt}}$ as elements of $\R^{n_t}$ --- then the
+in-class equality $\mathrm{NT}(\Acal) = 0$ holds
+\emph{deterministically} at $f_s = f_t$, without any probabilistic
+slack: the source-trained ERM coincides with the target in-class
+optimum on $V_{\mathrm{tgt}}$ as a purely algebraic identity, not
+as a high-probability statement. Theorem~\ref{thm:universal-upper-bound}
+does \emph{not} apply here (the source/target split is
+deterministic, not drawn from $\Pi_{\mathrm{LSO}}$), and no
+Rademacher slack carries over.
 \end{corollary}
 
 This dichotomy --- vacuous transfer under spectral alignment,
@@ -1171,11 +1469,13 @@ negative-transfer phenomenon to a precise spectral-geometric property
 of the (joint-graph, source-signal, target-signal) triple, independent
 of the regressor's architecture or training procedure.
 
-\paragraph{Practical check for spectral disjointness.}  In closed-linear
-$\Hcal_d$ with orthonormal basis $\bB \in \R^{N \times d}$, the
-spectral-disjointness condition of
-Definition~\ref{def:spectral-disjointness} is checkable in
-$O(d^2 N)$ time:
+\paragraph{Practical check for spatial target-orthogonality.}
+In closed-linear $\Hcal_d$ with orthonormal basis $\bB \in \R^{N
+\times d}$, the target-orthogonality
+condition~\eqref{eq:target-orthogonality} is checkable in
+$O(d^2 N)$ time by computing $\langle f_s, f_t\rangle_{V_{\mathrm{tgt}}}$
+directly. The (strictly stronger) graph-Fourier sufficient condition
+of Remark~\ref{rem:spectral-sufficient} adds the spectral diagnostic:
 \begin{enumerate}[label=(\arabic*),leftmargin=*]
 \item Build the joint similarity graph $G$ on $V = V_{\mathrm{src}}
     \cup V_{\mathrm{tgt}}$ and compute the bottom-$K$ eigenvectors
@@ -1184,13 +1484,15 @@ $O(d^2 N)$ time:
 \item Compute the in-class projections
     $\bP_{\Hcal_d}\tilde\by_{\mathrm{src}}$ and
     $\bP_{\Hcal_d}\tilde\by_{\mathrm{tgt}}$ (zero-padded outside their
-    respective node sets) and their Fourier coefficients $\hat y_{\mathrm{src}, k},
-    \hat y_{\mathrm{tgt}, k}$ for $k \leq K$.
+    respective node sets) and their Fourier coefficients
+    $\hat y_{\mathrm{src}, k}, \hat y_{\mathrm{tgt}, k}$ for
+    $k \leq K$.
 \item Test whether $|\hat y_{\mathrm{src}, k} \cdot \hat y_{\mathrm{tgt}, k}|
     \leq \epsilon$ for all $k \leq K$ and some chosen tolerance
-    $\epsilon$.  If yes, the pair is approximately spectrally disjoint
-    and Theorem~\ref{thm:nt-lower-bound} predicts unavoidable negative
-    transfer.
+    $\epsilon$. If yes, the pair satisfies the spectral sufficient
+    condition, hence target-orthogonality, hence
+    Theorem~\ref{thm:negative-transfer-linear-algebra} predicts
+    unavoidable negative transfer.
 \end{enumerate}
 Computationally, this is the same cost as the spectral $R^2$
 computation already standard for Corollary~C1 evaluation
@@ -1208,93 +1510,81 @@ A dedicated empirical pre-registration is in preparation as the
 companion repository \texttt{negative-transfer-corollary} of the
 \texttt{cycling-data-lab} organisation.
 
-\subsection{C3 --- Active learning: scope of the present framework}
+\subsection{C3 --- Active learning: out of scope, deferred to companion work}
 \label{subsec:c3}
 
 The active-learning regime --- in which the learner \emph{chooses}
-$T \subseteq V$ via a sampling distribution $\pi : V \to [0, 1]$
+$T \subseteq V$ via a sampling distribution $\pi : V \to [0,1]$
 adapted to the spectral geometry of $\Hcal_d$
 \citep{Settles2009,Hanneke2014,GuilloryBilmes2009,GaddeAnisOrtega2014,DrineasMahoney2018,Avron2017,Puy2018}
---- is the natural next instantiation of the universal framework
-of Section~\ref{sec:main-results}.  We isolate here the precise
-reason this extension is \emph{not} a direct corollary of
-Theorem~\ref{thm:universal-lower-bound}, and we record the
-formulation that the framework will require.
+--- is a natural successor to Theorem~\ref{thm:universal-lower-bound}.
+We make explicit here that it is \emph{not} a corollary of the present
+framework, and we record what would be required to obtain one.
 
-\paragraph{Why the present transduction identity fails under
-non-uniform sampling.}  The proof of
-Theorem~\ref{thm:universal-lower-bound}
-(Section~\ref{sec:lower-bound-proof}) hinges on the
-\emph{exchangeability identity}
-$\E_T[L_T(f)] = L_V(f)$, which holds for every deterministic $f$
-under uniform leave-node-out sampling because the conditional
-inclusion probability $\E_T[\mathbf{1}_{\{v \in T\}}]$ is the
-constant $n/N$.  Under a general $\pi$ with
-$\E_T[\mathbf{1}_{\{v \in T\}}] = \pi(v)$ non-constant, the
-unweighted training risk $L_T(f) := |T|^{-1}\sum_{v \in T}(f(v) -
-y_v)^2$ satisfies instead
+\paragraph{Why spatial exchangeability is load-bearing.}
+The proof of Theorem~\ref{thm:universal-lower-bound}
+(Section~\ref{sec:lower-bound-proof}) uses the protocol only through
+the identity
+\begin{equation}
+    \E_{T \sim \Dcal_\Pi}[L_T(f)] \;=\; L_V(f) \qquad
+    \text{for every deterministic } f \in \R^N,
+    \label{eq:exchangeability}
+\end{equation}
+which holds for $\Pi_{\mathrm{LSO}}$ because the marginal inclusion
+probability $\PR_T[v \in T]$ is the constant $n/N$, independent of
+$v$. Under any non-uniform protocol with $\PR_T[v \in T] = \pi(v)$
+non-constant, identity~\eqref{eq:exchangeability} fails for the
+unweighted $L_T$:
 \begin{equation*}
-    \E_T[L_T(f)] \;=\; \frac{1}{\E_T[|T|]} \sum_{v \in V} \pi(v) (f(v) - y_v)^2
-    \;\neq\; L_V(f) \qquad \text{in general,}
+    \E_T[L_T(f)] \;=\; \frac{1}{\E_T[|T|]} \sum_{v \in V} \pi(v)\,(f(v) - y_v)^2
+    \;\neq\; L_V(f) \quad \text{in general,}
 \end{equation*}
-and the transduction identity
-$L_V(f) = (n/N) L_T(f) + ((N-n)/N) L_{T^c}(f)$
-(Lemma~\ref{lem:transduction}) ceases to give an unbiased
-relationship between $L_{T^c}$ and $L_V$ on the held-out side
-either.
+and the cancellation between the Bessel floor on $L_V$
+(Lemma~\ref{lem:bessel}) and the ERM inequality on $L_T$
+(Eq.~\eqref{eq:lower-step3-LT}), which produces the
+\emph{exact-in-expectation} statement of
+Theorem~\ref{thm:universal-lower-bound}, is destroyed. The bound
+becomes either vacuous or strictly weaker, depending on the sign of
+$\Cov_v\!\big(\pi(v), (f(v) - y_v)^2\big)$.
 
-The natural fix is to replace $L_T$ by the
-\emph{importance-weighted} training risk
-\begin{equation*}
-    L_T^\pi(f) \;:=\; \frac{1}{N}\sum_{v \in T} \frac{(f(v) - y_v)^2}{\pi(v)},
-\end{equation*}
-which restores unbiasedness $\E_T[L_T^\pi(f)] = L_V(f)$ for
-deterministic $f$.  This breaks the symmetry with $L_{T^c}$,
-however: the held-out risk remains unweighted (the analyst
-evaluates it as a uniform average over $T^c$), and the original
-transduction identity must be replaced by a weighted analogue
-\begin{equation*}
-    L_V(f) \;=\; \frac{1}{N}\sum_{v \in V}\pi(v) \cdot \frac{(f(v)-y_v)^2}{\pi(v)}
-        \;\neq\; \alpha\, L_T^\pi(f) + \beta\, L_{T^c}(f)
-\end{equation*}
-for any constants $(\alpha, \beta)$.  The mixed weighted--unweighted
-identity required to extend
-Theorem~\ref{thm:universal-lower-bound} to $\pi$-adaptive sampling
-involves the second-order inclusion probabilities
-$\E_T[\mathbf{1}_{\{v \in T\}} \mathbf{1}_{\{w \in T\}}]$ and is
-non-trivial.
+\paragraph{What an active-learning corollary would require.}
+Restoring~\eqref{eq:exchangeability} under a non-uniform $\pi$ forces
+replacing $L_T$ by the Horvitz--Thompson / importance-weighted
+training risk
+\begin{equation}
+    L_T^\pi(f) \;:=\; \frac{1}{N}\sum_{v \in T}\frac{(f(v) - y_v)^2}{\pi(v)},
+    \qquad \E_T[L_T^\pi(f)] = L_V(f),
+    \label{eq:hto-risk}
+\end{equation}
+which is unbiased \emph{by construction}. This change, however,
+breaks the symmetry with the unweighted held-out risk $L_{T^c}$ that
+the practitioner actually evaluates: the transduction identity of
+Lemma~\ref{lem:transduction} no longer admits constants
+$(\alpha, \beta)$ such that
+$L_V(f) = \alpha L_T^\pi(f) + \beta L_{T^c}(f)$.
+A correct weighted transduction identity involves the
+\emph{second-order} inclusion probabilities
+$\pi_{vw} := \PR_T[v \in T, w \in T]$ and the residual
+covariance structure on $T^c$, and is non-trivial. The expected
+rate, derivable from the spectral-graph A-optimal design literature
+\citep{DrineasMahoney2018,Avron2017,Puy2018}, is the standard
+active-learning improvement $\widetilde O(M^2 \sqrt{d/n} \cdot
+\log(1/\eta))$ at leverage-score-optimal $\pi$.
 
-\paragraph{Programme.}  An active-learning corollary of the
-framework should:
-\begin{enumerate}[label=(\arabic*),leftmargin=*]
-\item Replace Lemma~\ref{lem:transduction} (the transduction
-    identity) by an importance-weighted variant that correctly
-    relates $L_T^\pi$ and $L_{T^c}$ via $\pi$ and the second-order
-    inclusion structure.
-\item Re-derive the cancellation between the Bessel
-    floor and the ERM slack
-    (Section~\ref{sec:lower-bound-proof}, Step~3) under this
-    weighted identity.  The cancellation \emph{is not} verbatim
-    --- it acquires an additional term proportional to
-    $\Cov_v(\pi(v), (f(v)-y_v)^2)$ which vanishes only when $\pi$
-    is chosen leverage-score-optimal for $\Hcal_d$.
-\item Pair the resulting lower bound with an upper bound on the
-    leverage-score-optimal sampler.  The expected slack rate is
-    $O(M^2 \sqrt{dN \log(1/\eta)}/n)$ --- the standard
-    active-learning $1/n$ improvement
-    \citep{BalcanBeygelzimerLangford2006,DasguptaHsu2008,Hanneke2014}
-    --- but extracting it from the universal framework requires
-    the importance-weighted machinery above.
-\end{enumerate}
-
-These steps are mechanical but non-trivial; they fall outside the
-scope of the present paper, whose universality claim depends
-crucially on the spatial exchangeability of $\Pi_{\mathrm{LSO}}$.
+\paragraph{Status.}
+A rigorous extension of Theorems~\ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound}
+to importance-weighted protocols requires: (i) a weighted
+Bessel--Parseval identity that controls $L_V$ in terms of
+$L_T^\pi$ and a $\pi$-dependent residual; (ii) a Horvitz--Thompson
+analogue of the transduction identity, calibrated by second-order
+inclusions; (iii) a Berry--Esseen anticoncentration on
+$\pi$-weighted sums without replacement to match
+Theorem~\ref{thm:minimax-lower-bound}. None of these are present in
+this manuscript, and we do not claim an active-learning corollary.
 A dedicated treatment is in preparation as the companion paper
 ``Importance-Weighted Transduction and Active Learning on Graphs''
-of the \texttt{cycling-data-lab} research programme.  We mark this
-as Open Question~(2) of Section~\ref{sec:discussion} and do not
-claim an active-learning corollary in this manuscript.
+of the \texttt{cycling-data-lab} programme, and is recorded as Open
+Question~(2) in Section~\ref{sec:discussion}.
 
 % =========================================================================
 \section{Empirical validation}
@@ -1315,12 +1605,16 @@ Theorem~\ref{thm:universal-upper-bound}.
 \label{subsec:emp-headline-table}
 
 Table~\ref{tab:cross-domain} consolidates the headline result from each
-empirical anchor.  All numbers are reproducible from the named scripts
-of the corresponding sibling repository (random seed pinned to $42$;
-GroupKFold leave-node-out cross-validation; LightGBM regressor for the
-compositional encoder; one-hot indicator for the categorical encoder).
+empirical anchor.  Figure~\ref{fig:spectral-projection} plots the
+spectral $R^2$ against the observed leave-node-out gap for the eight
+MatBench tasks, illustrating the rank-order correlation $\rho = +1.000$
+predicted by Corollary~C1.  All numbers are reproducible from the named
+scripts of the corresponding sibling repository (random seed pinned to
+$42$; GroupKFold leave-node-out cross-validation; LightGBM regressor
+for the compositional encoder; one-hot indicator for the categorical
+encoder).
 
-\begin{table}[H]
+\begin{table}[t]
 \centering
 \small
 \begin{tabular}{lrrrll}
@@ -1368,7 +1662,7 @@ the same repository and from the sibling cycling-data-lab repositories.}
 \label{tab:cross-domain}
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=0.6\textwidth]{fig1_spectral_projection.pdf}
 \caption{The headline empirical signature of Theorem~\ref{thm:universal-lower-bound}:
@@ -1546,40 +1840,62 @@ $\Omega(M^2/\sqrt{N-n})$.  This is a \emph{falsification} bound:
 any algorithmic claim of beating the floor uniformly across
 targets is structurally impossible.
 
-\paragraph{Why this is not a forecasting tool.}  We emphasise:
-the framework does \emph{not} predict the leave-node-out error
-of a learner at deployment when $\by$ is unknown.  Computing
-$\Rspec(\Hcal_d, \by)$ requires $\by$; without it, neither
-informativeness regime yields a numerical floor.  Forecasting
-applications (``how much error should I expect on the next
-unseen task?'') require a separate prior on $\by$ (e.g., from a
-related-task posterior, or from a spectrum of typical signals
-on the same $\Hcal_d$) and are outside the scope of the present
-results.  The framework's claim is diagnostic and structural,
-not predictive in the i.i.d.~holdout sense.
+\paragraph{Why this is not a forecasting tool.}  We emphasise that
+the framework is \emph{not} a deployment-time predictor of
+generalisation error in the strict sense. Computing the floor
+$(1 - \Rspec(\Hcal_d, \by))\Var(\by)$ requires $\by$ on the full
+node set $V$ --- the very quantity a forecasting tool would attempt
+to predict. The framework is therefore a tool for
+\emph{retrospective structural diagnosis} (after labels are
+observed) and \emph{worst-case falsification} (universal lower
+bound via Theorem~\ref{thm:minimax-lower-bound}), \emph{not} a
+substitute for held-out evaluation. Forecasting applications
+(``how much error should I expect on the next, as-yet-unlabelled
+deployment?'') require a separate prior or extrapolation model on
+$\by$ --- e.g., a related-task posterior, a generative model of
+typical signals on $\Hcal_d$, or a transfer-learning bound on the
+$\Rspec$ of a target signal given a source --- and lie outside
+the deterministic-target framework of this paper. We make this
+operational distinction explicit because an earlier draft of
+\S\ref{subsec:two-senses} elided it; the bound's
+\emph{informativeness} on labelled retrospective data is logically
+distinct from its (absent) \emph{informativeness} on an unlabelled
+future deployment.
 
 \subsection{Open questions remaining}
 \label{subsec:open}
 
 \begin{enumerate}[label=(\arabic*),leftmargin=*]
-\item \textbf{Sharp matching constant beyond rate match.}  Upper and
-    lower bounds match in rate ($1/\sqrt{N-n}$) after the
+\item \textbf{Sharp matching constant beyond rate match.}  Upper
+    and lower bounds match in rate ($1/\sqrt{N-n}$) after the
     transductive Rademacher upgrade
     (\texttt{notes/04\_sharp\_transductive\_constant.tex}).
-    The remaining constant gap is $\approx 3$--$5$ at operational
-    confidence $\eta = 0.1$ (\texttt{notes/07\_four\_axes\_extensions.tex}~\S4),
-    closed on the upper side by the
-    \citet{BardenetMaillard2015} refinement of
-    McDiarmid-without-replacement (sharpening the
-    \citealp{ElYanivPechyony2006} constant from $5.05$ to
-    $\sqrt 2$) and on the lower side by the Le Cam two-point
-    Berry--Esseen construction (constant $1/2$).
-    A previously conjectured factor-$4$ improvement via multi-point
-    Fano / Assouad arguments is \emph{not} achievable: the
-    Berry--Esseen rate $1/\sqrt{N-n}$ originates from anticoncentration
-    of the held-out empirical mean, not from coordinate-wise testing,
-    and Assouad's lemma on Dirac observations cannot match it
-    (\texttt{notes/07}~Proposition~6).
+    The \emph{residual} constant gap is
+    $\mathrm{gap}(\alpha, \kappa, \eta) \propto
+    1/\sqrt{\alpha \kappa}$
+    (Corollary~\ref{cor:minimax-rate-optimality},
+    Eq.~\eqref{eq:cramer-rao-gap}): at the operational midpoint
+    $\alpha = 0.5$, $\eta = 0.1$, $\kappa \approx 0.25$, the gap
+    is $\approx 40$, closed on the upper side from the
+    post-loss-range \citet[][Thm.~1]{ElYanivPechyony2006}
+    constant $20.2 = 5.05 \times 4$ to $\sqrt 2 \times 4 \approx
+    5.66$ via the without-replacement Bernstein refinement of
+    \citet[][Cor.~2.5]{BardenetMaillard2015}, pulling the
+    midpoint gap to $\approx 11$. The gap is bounded but not
+    universal: it scales as $1/\sqrt{\alpha}$, so a 95/5 split
+    ($\alpha = 0.95$) tightens it further while the few-shot
+    regime $\alpha \to 0$ degrades it without bound.
+    A previously conjectured factor-$4$ improvement via a
+    multi-coordinate Fano / Assouad construction is \emph{not}
+    achievable: the Berry--Esseen rate originates from the
+    anticoncentration of $|T^c|^{-1}\sum_{T^c} X_v$ on
+    real-valued residuals, whereas Assouad's lemma on the Dirac
+    observations of the leave-node-out protocol reduces to binary
+    coordinate-wise tests whose total-variation distance is in
+    $\{0, 1\}$, with no $1/\sqrt{N-n}$-scale intermediate
+    sensitivity to exploit (\texttt{notes/07}~Proposition~6 in the
+    referenced notes).  The sharp matching constant at the
+    operational midpoint is thus $\approx 11$, not $1$.
 
 \item \textbf{Importance-weighted transduction identity.}  Extending
     Lemma~\ref{lem:transduction} to non-uniform protocols (e.g.,
@@ -1590,7 +1906,8 @@ not predictive in the i.i.d.~holdout sense.
 \item \textbf{Approximate ERM.}  Assumption~\ref{a:erm} requires
     strict ERM.  For an $\epsilon_T$-suboptimal ERM
     ($L_T(\hat f_\Acal) \le \inf_{f \in \Hcal_d} L_T(f) +
-    \epsilon_T$), the lower bound of
+    \epsilon_T$, with $\epsilon_T \ge 0$ a $T$-measurable
+    integrable random variable), the lower bound of
     Theorem~\ref{thm:universal-lower-bound} acquires an additive
     slack of exactly $(\rho(\Pi) - 1)\, \E_T[\epsilon_T]$
     (\texttt{notes/07\_four\_axes\_extensions.tex}~Theorem~2).
@@ -1604,14 +1921,16 @@ not predictive in the i.i.d.~holdout sense.
     to the actual reachable class $\Hcal_d$ of the deployed learner,
     not to the modeller's nominal description of it.  For learners
     with explicit implicit-bias tie-breaking $\Omega$ (e.g., ridge,
-    Lasso, min-norm RKHS interpolation), Theorem~\ref{thm:universal-lower-bound}
+    Lasso, min-norm reproducing kernel Hilbert space (RKHS)
+    interpolation), Theorem~\ref{thm:universal-lower-bound}
     applies verbatim with $\Hcal_d$ replaced by the $\Omega$-effective
     reachable subspace $\Scal_\Acal^\Omega$ defined as the closure
     of the learner's image
     (\texttt{notes/07\_four\_axes\_extensions.tex}~Theorem~10).
     For the most operationally important sub-case --- min-norm RKHS
     interpolation under a strictly positive-definite kernel
-    (NTK-regime over-parameterised NN) --- this reformulation is
+    (neural tangent kernel (NTK) regime, over-parameterised neural
+    network) --- this reformulation is
     operationally trivial since $\Scal_\Acal^\Omega \subseteq
     \mathrm{range}(\bK) = \R^N$. A non-trivial floor in this regime,
     via a transductive adaptation of the
@@ -1626,34 +1945,96 @@ not predictive in the i.i.d.~holdout sense.
 \end{enumerate}
 
 \subsection{Limitations}
+\label{subsec:limitations}
 
+\paragraph{Stochastic targets: clean noise relaxation.}
 The framework's primary results are stated for a
-\emph{deterministic} target $\by$.  Under additive independent
-zero-mean noise $\by^{\mathrm{obs}} = \by + \bxi$ with
-$\Var(\xi_v) = \sigma_\xi^2$ and a linear ERM learner whose
-hypothesis class (\emph{including hyperparameters}) is chosen
-independently of $\bxi$, the structural floor degrades by exactly
-\begin{equation*}
-    -\,\frac{2\, d_{\mathrm{eff}}\, \sigma_\xi^2}{N - n}
-\end{equation*}
-where $d_{\mathrm{eff}} = \dim \Scal_\Acal$
-(\texttt{notes/07\_four\_axes\_extensions.tex}~Theorem~1$'$).
-This recovers the in-sample noise variance of OLS at fixed design
-and confirms the operational reading of the floor as ``signal-plus-noise
-explainable variance''.  For Gaussian noise and non-linear ERM, a
-Stein--SURE identity replaces $d_{\mathrm{eff}}$ by the Efron
-degrees of freedom $\E[\df(\Acal, T)]$
-(\texttt{notes/07}~Theorem~1$'$-Stein); for cross-validated
-hyperparameter selection, a model-selection-stability correction
-applies (\texttt{notes/07}~Remark~3).
+\emph{deterministic} target $\by$. The stochastic-target extension
+is not an open question: under additive independent zero-mean
+\emph{homoscedastic} noise $\by^{\mathrm{obs}} = \by + \bxi$ with
+$\Var(\xi_v) = \sigma_\xi^2$ \emph{for every $v \in V$}, and a
+linear ERM learner whose hypothesis class
+\emph{(including all hyperparameters)} is chosen independently of
+$\bxi$, the structural floor of
+Theorem~\ref{thm:universal-lower-bound} relaxes by exactly
+\begin{equation}
+    -\,\frac{2\, d_{\mathrm{eff}}\, \sigma_\xi^2}{N - n},
+    \label{eq:noise-relaxation}
+\end{equation}
+where $d_{\mathrm{eff}} := \dim \Hcal_d$. The homoscedasticity
+hypothesis is essential: under heteroscedastic noise with
+per-node variance $\sigma_v^2$, the cross-term $\E[\langle
+\bP_{\Hcal_d}\bxi, \bxi\rangle]$ becomes
+$\tr(\bP_{\Hcal_d}\,\mathrm{Diag}(\sigma_v^2))$, which can exceed
+$d_{\mathrm{eff}} \sigma_\xi^2$ by an arbitrary factor when
+$\Hcal_d$ concentrates on high-variance nodes. This is
+Theorem~1 of
+\texttt{notes/07\_four\_axes\_extensions.tex} and exactly recovers
+the in-sample noise variance of ordinary least squares (OLS) at fixed
+design; the
+operational reading of the floor as
+``signal-plus-noise-explainable variance'' is preserved up to the
+$2 d_{\mathrm{eff}} \sigma_\xi^2/(N-n)$ correction. For Gaussian
+noise and a (possibly non-linear) weakly differentiable estimator,
+Stein's unbiased risk estimate (SURE) replaces $d_{\mathrm{eff}}$ by
+the Efron
+degrees of freedom $\E_{\bxi}[\df(\Acal, T)]$
+(\texttt{notes/07}~Theorem~1$'$-Stein). For cross-validated
+hyperparameter selection, an additional model-selection-stability
+term of order $\sigma_\xi^2 \E_{\bxi}[\Delta_{\bxi}
+d_{\mathrm{eff}}]/n$ applies (\texttt{notes/07}~Remark~3); we
+recommend pre-registering the hyperparameter grid to control it.
 
-The framework does not address \emph{model selection}: the choice of
-$\Hcal_d$ itself is outside the bound's scope.  Selecting $\Hcal_d$ to
-maximise $\Rspec(\Hcal_d, \by)$ subject to fixed Rademacher complexity
-is a separate problem (essentially representation learning), on which
-the bound only comments indirectly via the trade-off between
-$\Rspec(\Hcal_d, \by)$ and $\mathcal{R}_n(\Hcal_d)$ in the slack of
-Theorem~\ref{thm:universal-upper-bound}.
+\paragraph{Model selection.}
+The framework does not address the choice of $\Hcal_d$ itself.
+Selecting $\Hcal_d$ to maximise $\Rspec(\Hcal_d, \by)$ subject to a
+fixed Rademacher complexity is a separate problem (essentially
+representation learning), on which the bound only comments
+indirectly via the trade-off between $\Rspec(\Hcal_d, \by)$ and
+$\mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)$ in the slack of
+Theorem~\ref{thm:universal-upper-bound}. A data-adaptive selector
+that picks $\Hcal_d$ post-hoc on the same $(T, \by|_T)$ used to fit
+the learner invalidates the data-independence required for
+\eqref{eq:noise-relaxation} and falls outside its scope.
+
+\paragraph{Misspecification at deployment.}
+The bound applies to the actual reachable class $\Hcal_d$ of the
+deployed learner, not to the modeller's nominal description of it.
+For learners with explicit implicit-bias tie-breaking $\Omega$
+(ridge, Lasso, min-norm RKHS interpolation),
+Theorem~\ref{thm:universal-lower-bound} applies verbatim with
+$\Hcal_d$ replaced by the $\Omega$-effective reachable subspace
+$\Scal_\Acal^\Omega$ (\texttt{notes/07}~Theorem~10). The strictly
+non-trivial sub-case --- a meaningful floor for min-norm RKHS
+interpolation on a strictly-PD kernel, where $\Scal_\Acal^\Omega
+\subseteq \mathrm{range}(\bK) = \R^N$ --- remains open and is laid
+out as the research programme of
+\texttt{notes/08\_benign\_overfitting\_research\_programme.tex}.
+
+\subsection{Conclusion}
+\label{subsec:conclusion}
+
+We have established three theorems characterising the
+graph-supervised leave-node-out regression problem under the
+proportional regime $n = \alpha N$.
+Theorem~\ref{thm:universal-lower-bound} provides the structural
+floor $(1 - \Rspec(\Hcal_d, \by))\Var(\by)$, exact in expectation
+and independent of the regressor's training procedure.
+Theorem~\ref{thm:universal-upper-bound} exhibits an empirical-risk
+minimiser that saturates the floor up to a transductive-Rademacher
+slack of order $M^2/\sqrt{N - n}$.
+Theorem~\ref{thm:minimax-lower-bound} proves that this slack is
+minimax-tight in rate under the dispersion assumption
+A\ref{a:incoherence}, with the residual multiplicative-constant gap
+$\mathrm{gap}(\alpha, \kappa, \eta) \approx 11$ at the operational
+midpoint $\alpha = 0.5$, $\kappa \approx 0.25$, $\eta = 0.1$
+(Corollary~\ref{cor:minimax-rate-optimality}).
+The pair of bounds is the Cram\'er--Rao analog of the classical
+efficiency inequality for parameter estimation, and the empirical
+panel of Section~\ref{sec:empirics} validates the bound on the
+eight-task MatBench panel with Spearman $\rho(\Rspec, \Delta
+R^2_{\mathrm{LSO}}) = +1.000$ ($n = 8$, exact permutation $p = 4.96
+\times 10^{-5}$).
 
 % =========================================================================
 \section*{Reproducibility}
