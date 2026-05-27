@@ -877,10 +877,16 @@ probability $\geq 1 - \eta/2$ over $T \sim \Pi_{\mathrm{LSO}}$,
 
 The transductive Rademacher bound of
 \citet[][Theorem~1]{ElYanivPechyony2006}, combined with the
-Talagrand contraction lemma \citep{Talagrand1996concentration}
-(the truncated square loss $\ell : (z, y) \mapsto (z - y)^2$ is
-$4M$-Lipschitz in $z$ on $[-M, M]$ when $y \in [-M, M]$, since
-$|\partial_z (z-y)^2| = |2(z-y)| \le 4M$), yields with probability
+contraction principle for transductive Rademacher complexity
+\citep[][\S 3, Lemma~1]{ElYanivPechyony2006} (the truncated
+square loss $\ell : (z, y) \mapsto (z - y)^2$ is $4M$-Lipschitz
+in $z$ on $[-M, M]$ when $y \in [-M, M]$, since $|\partial_z
+(z-y)^2| = |2(z-y)| \le 4M$; the classical Talagrand contraction
+of \citet{Talagrand1996concentration} for i.i.d.\ Rademacher
+variables transfers verbatim to the transductive setting by
+conditioning on the support of the ternary perturbation
+variables $\sigma_v \in \{-1, +1, 0\}$, on which the non-zero
+$\sigma_v$ are i.i.d.\ uniform), yields with probability
 $\geq 1 - \eta/2$ over $T \sim \Pi_{\mathrm{LSO}}$:
 \begin{equation}
     L_{T^c}(\hat f_\Acal(T))
@@ -1240,8 +1246,14 @@ $\by^\star = M\bu$ on $T^c \sim \Pi_{\mathrm{LSO}}$ satisfies
     \label{eq:leakage-bound}
 \end{equation}
 provided the matrix Chernoff regime $u = N - n \ge C_\mathrm{MC}\,
-\mu\, d \log d$ holds for an absolute constant $C_\mathrm{MC} > 0$
-\citep[Theorem~1.1]{Tropp2015}. Consequently, by Markov,
+\mu\, d \log N$ holds for an absolute constant $C_\mathrm{MC} > 0$
+\citep[Theorem~1.1]{Tropp2015}. The $\log N$ (rather than the
+weaker $\log d$ obtained from a naive matrix-Bernstein argument)
+is required to drive the Chernoff failure probability to
+$\le 1/N$, so that the truncation contribution to
+$\E_T[\mathrm{leak}(T)]$ is $O(M^2/N)$ and is dominated by the
+leading $O(M^2 d/N)$ term; see the proof below.
+Consequently, by Markov,
 \begin{equation}
     \PR_T\!\Big[
         \mathrm{leak}(T;\, \Hcal_d, \by^\star)
@@ -1290,12 +1302,24 @@ Next, by the matrix Chernoff inequality
 $\bB^\top \bP_{T^c}\bB = \sum_{v \in T^c} \bb_v\bb_v^\top$ with
 $\|\bb_v\bb_v^\top\|_2 = \ell_v \le \mu d/N$ (using A\ref{a:capacity})
 and expected sum $(u/N) I_d$, in the regime $u \ge C_\mathrm{MC}\,
-\mu\, d \log d$,
-\[
+\mu\, d \log N$,
+\begin{equation}
     \bB^\top \bP_{T^c}\bB \;\succeq\; \tfrac{1}{2}\, \tfrac{u}{N}\, I_d
-    \qquad\text{w.p.}\;\ge\; 1 - 1/(2d).
-\]
-On this event,
+    \qquad\text{w.p.}\;\ge\; 1 - 1/N.
+    \label{eq:chernoff-event}
+\end{equation}
+The strengthened tail $1/N$ (versus the naive $1/(2d)$ at
+$u \ge C_\mathrm{MC}\mu d\log d$) is needed for the truncation
+step below to deliver an $O(M^2/N)$ error rather than the
+$O(M^2/d)$ that would dominate the leading $O(M^2 d/N)$ term
+for any $d \le \sqrt N$.  Tropp's matrix Chernoff with relative
+deviation $1/2$ and failure probability $\delta$ requires
+$u \ge (C_0/\mu d^{-1})\log(d/\delta) = C_0 \mu d \log(d/\delta)$
+for an absolute $C_0$; setting $\delta = 1/N$ and absorbing
+$\log d \le \log N$ yields the stated regime $u \ge C_\mathrm{MC}
+\mu d \log N$ with $C_\mathrm{MC} = 2 C_0$.
+
+On the event \eqref{eq:chernoff-event},
 \[
     \mathrm{leak}(T) \;=\;
     \frac{1}{|T^c|}\,
@@ -1303,22 +1327,44 @@ On this event,
     \;\le\; \frac{2N}{u\,|T^c|}\,\|\bB^\top\bP_T\by^\star\|_2^2
     \;=\; \frac{2N}{u^2}\,\|\bB^\top\bP_T\by^\star\|_2^2,
 \]
-where we used $|T^c| = u$. Taking expectation, absorbing the
-Chernoff failure event by truncation of the integrable bound
-$\mathrm{leak}(T) \le N M^2$ (since
-$\|\Pi_{\Hcal_d|_{T^c}}\by^\star\|^2 \le \|\by^\star\|^2 \le N M^2$),
+where we used $|T^c| = u$. On the complementary (Chernoff-failure)
+event, $\mathrm{leak}(T)$ is bounded by the deterministic
+truncation
+\begin{equation}
+    \mathrm{leak}(T)
+    \;=\; \frac{\|\Pi_{\Hcal_d|_{T^c}}\by^\star|_{T^c}\|^2_{T^c}}{|T^c|}
+    \;\le\; \frac{\|\by^\star|_{T^c}\|^2_{T^c}}{|T^c|}
+    \;\le\; \frac{u M^2}{u}
+    \;=\; M^2,
+    \label{eq:leak-trunc}
+\end{equation}
+where the first inequality uses non-expansiveness of the
+$\ell_2(T^c)$ projection $\Pi_{\Hcal_d|_{T^c}}$ and the second
+uses $|y^\star_v| \le M$ pointwise.  The bound $\mathrm{leak}(T)
+\le M^2$ (and \emph{not} the looser $\|\Pi\by^\star\|^2 \le NM^2$
+arising from the ambient $\ell_2(V)$ norm) is the correct
+truncation: $\Pi_{\Hcal_d|_{T^c}}\by^\star|_{T^c}$ lives in
+$\R^{T^c}$ with $u$ entries, and the normalisation by $|T^c|=u$
+absorbs the dimension factor.
+
+Combining \eqref{eq:chernoff-event} and \eqref{eq:leak-trunc} and
+taking expectation,
 \[
     \E_T\!\big[\mathrm{leak}(T)\big]
     \;\le\; \frac{2N}{u^2}\,\E_T\!\big[\|\bB^\top\bP_T\by^\star\|_2^2\big]
-        \;+\; \frac{M^2 N}{2d}
-    \;\le\; \frac{2N}{u^2}\,\frac{n(N-n)\,M^2\,d}{N(N-1)} + o(1)
-    \;=\; \frac{2\,M^2\, d\, n}{u\,(N-1)},
+        \;+\; M^2 \cdot \frac{1}{N}
+    \;\le\; \frac{2N}{u^2}\,\frac{n(N-n)\,M^2\,d}{N(N-1)} + \frac{M^2}{N}
+    \;=\; \frac{2\,M^2\, d\, n}{u\,(N-1)} + \frac{M^2}{N}.
 \]
-where the leading term dominates the truncation error in the
-regime $u \ge C_\mathrm{MC}\,\mu\,d\log d$. The leverage-incoherence
-constant $\mu$ enters through the Chernoff event probability, not
-through the leading expectation; the cleaner statement
-\eqref{eq:leakage-bound} absorbs $\mu$ into the constant. Markov's
+The leading term is $\Theta(M^2 d / N)$ in the proportional
+regime $n=\alpha N$; the truncation contribution $M^2/N$ is
+dominated by it for every $d \ge 2$.  Absorbing the $M^2/N$
+truncation into the constant of the leading term yields
+\eqref{eq:leakage-bound}.  The leverage-incoherence constant $\mu$
+enters through the Chernoff event probability (via the regime
+$u \ge C_\mathrm{MC}\mu d\log N$), not through the leading
+expectation; the cleaner statement \eqref{eq:leakage-bound}
+absorbs $\mu$ into the multiplicative constant.  Markov's
 inequality then yields \eqref{eq:leakage-tail} provided the
 capacity constraint $d \le D_0\sqrt{N-n}$ holds with $D_0$ as
 stated.\qed
