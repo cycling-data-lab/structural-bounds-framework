@@ -116,8 +116,11 @@ with no concentration slack.  An empirical-risk-minimising learner
 saturates the bound to a slack of order $M^2/\sqrt{N - n}$ in the
 proportional regime $n = \alpha N$ via the transductive Rademacher
 complexity of \citet{ElYanivPechyony2006}, and this slack is
-minimax-tight under a dispersion assumption on the orthogonal
-complement of the hypothesis class.  The pair of bounds is the
+minimax-tight in rate under a dispersion assumption on the
+orthogonal complement of the hypothesis class and a
+leverage-incoherence condition on the class itself: no estimator
+can drive the held-out error lower with probability bounded away
+from zero.  The pair of bounds is the
 Cram\'er--Rao analog of the classical efficiency inequality for
 parameter estimation.  Three corollaries instantiate the framework:
 the encoding-gap bound for materials-property prediction, a
@@ -217,11 +220,16 @@ efficiency statement for graph-supervised learning.
 \item \textbf{Minimax tightness (Theorem~\ref{thm:minimax-lower-bound}).}
     No estimator --- including an oracle with full population knowledge
     of $\by$ --- can drive the slack of Theorem~\ref{thm:universal-upper-bound}
-    below $\Omega(M^2/\sqrt{N-n})$ in the worst case over signals.  The
-    argument is a Berry--Esseen anticoncentration on the residual energy
+    below $\Omega(M^2/\sqrt{N-n})$ with probability bounded away from
+    zero, in the worst case over signals.  The argument is a
+    Berry--Esseen \emph{anti-concentration} on the residual energy
     $\|\by^\star_\perp\|^2_{T^c}$, the fluctuation of which is intrinsic
-    to the random test set, not estimator-dependent.  Proved in
-    Section~\ref{sec:minimax-proof}.
+    to the random test set, not estimator-dependent.  Since the
+    fluctuation is centred, no high-probability one-sided lower bound
+    can hold for a positive threshold; the constant-probability
+    statement at $c' \ge 1/10$ is the correct asymptotic regime,
+    matching the rate of the upper bound at $\Theta(M^2/\sqrt{N-n})$.
+    Proved in Section~\ref{sec:minimax-proof}.
 
 \item \textbf{Cram\'er--Rao analogy.}  Theorems
     \ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound} are
@@ -596,81 +604,96 @@ Under A\ref{a:incoherence} (with dispersion parameter $\kappa > 0$),
 A\ref{a:proportional} ($\alpha = n/N$ fixed), and
 A\ref{a:capacity} (with leverage-incoherence parameter $\mu \ge 1$
 and dimension $d = \dim \Hcal_d$ satisfying
-$d \le D_0(\alpha, \kappa, \eta, \mu)\sqrt{N-n}$ for an explicit
-$D_0$ given by Lemma~\ref{lem:leakage} below), for any $M > 0$ and
-any confidence level $\eta \in (0, 1/3)$, there exists a signal
+$d \le D_0(\alpha, \kappa, \mu)\sqrt{N-n}$ for an explicit
+$D_0$ given by Lemma~\ref{lem:leakage} below), and provided
+$N - n \ge N_0(\kappa) := 100\, C_{\mathrm{BE}}^2/\kappa$ for the
+without-replacement Berry--Esseen constant $C_{\mathrm{BE}} \le 14$,
+for any $M > 0$, there exists a signal
 $\by^\star \in \Hcal_d^\perp$ with $\|\by^\star\|_\infty = M$ such
-that, for every estimator $\hat f \in \Hcal_d$ \emph{(possibly with
-oracle access to $\by^\star$ on $V$)},
+that, for every estimator $\hat f \in \Hcal_d$ \emph{(including
+one with oracle access to $\by^\star$ on $V$)},
 \begin{equation}
     \PR_T\!\Big[
         L_{T^c}(\hat f) - \big(1 - \Rspec(\Hcal_d, \by^\star)\big)\Var(\by^\star)
-        \;\geq\; c(\alpha, \kappa, \eta) \cdot \frac{M^2}{\sqrt{N - n}}
+        \;\geq\; c(\alpha, \kappa) \cdot \frac{M^2}{\sqrt{N - n}}
     \Big]
-    \;\geq\; 1 - \eta,
+    \;\geq\; c',
     \label{eq:minimax-lower-bound}
 \end{equation}
 where
 \[
-    c(\alpha, \kappa, \eta) \;=\; \tfrac{1}{2}\,\tau_0(\eta, \kappa)\,\sqrt{\alpha\,\kappa},
+    c(\alpha, \kappa) \;:=\; \tfrac{1}{2}\,\tau\,\sqrt{\alpha\,\kappa},
+    \qquad
+    \tau \;:=\; \Phi^{-1}(3/4) \;\approx\; 0.674,
 \]
-with $\tau_0(\eta, \kappa)$ a function of $(\eta, \kappa)$ alone
-bounded away from $0$ for $\eta < 1/3$ and $\kappa > 0$. The
-constant $c$ is bounded away from $0$ on the operational range
-$\alpha \in [\alpha_{\min}, \alpha_{\max}]$ of
-A\ref{a:proportional}. Consequently, no estimator --- including
-one with oracle access to $\by^\star$ on $V$ --- can overfit the
-held-out residual fluctuation below the Berry--Esseen floor
-$\Omega(M^2/\sqrt{N-n})$, provided the hypothesis-class capacity
-is bounded as in A\ref{a:capacity}.
+is bounded away from $0$ on the operational range
+$\alpha \in [\alpha_{\min}, \alpha_{\max}]$ of A\ref{a:proportional},
+and $c' \ge 1/10$ is an absolute constant bounded away from $0$.
+Consequently, no estimator --- including one with oracle access to
+$\by^\star$ on $V$ --- can drive the held-out error below the
+Berry--Esseen floor $\Omega(M^2/\sqrt{N-n})$ \emph{with probability
+bounded away from zero}, provided the hypothesis-class capacity is
+bounded as in A\ref{a:capacity}.  This is a one-sided anti-%
+concentration statement at constant probability: combined with the
+high-probability upper bound of Theorem~\ref{thm:universal-upper-bound},
+it establishes rate-optimality of the slack at $\Theta(M^2/\sqrt{N-n})$,
+in the sense of Corollary~\ref{cor:minimax-rate-optimality}.
 \end{theorem}
 
 \begin{corollary}[Minimax rate-optimality for graph-supervised learning]
 \label{cor:minimax-rate-optimality}
 Under A\ref{a:target}--A\ref{a:proportional},
 A\ref{a:incoherence}, and A\ref{a:capacity}, combining
-Theorems~\ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound},
-the minimax slack rate at protocol $\Pi_{\mathrm{LSO}}$ on signal
-class $\Ycal_{\Hcal_d, M} := \{\by \in \R^N : \|\by\|_\infty \leq
-M, \bone^\top \by = 0\}$ is, as $N, n \to \infty$ with $n/N \to
-\alpha \in (0, 1)$ fixed,
+Theorems~\ref{thm:universal-lower-bound}--\ref{thm:minimax-lower-bound}:
+the empirical-risk-minimising learner achieves the structural floor
+of Theorem~\ref{thm:universal-lower-bound} up to a
+\emph{high-probability slack} of $O(M^2/\sqrt{N-n})$
+(Theorem~\ref{thm:universal-upper-bound}), while no estimator can
+avoid a slack of $\Omega(M^2/\sqrt{N-n})$ \emph{with at least
+constant probability $c' \ge 1/10$} (Theorem~\ref{thm:minimax-lower-bound}).
+As $N, n \to \infty$ with $n/N \to \alpha \in (0, 1)$ fixed, the
+slack rate at protocol $\Pi_{\mathrm{LSO}}$ on signal class
+$\Ycal_{\Hcal_d, M} := \{\by \in \R^N : \|\by\|_\infty \le M,
+\bone^\top \by = 0\}$ is therefore
 \begin{equation}
-    \frR_n(\Hcal_d, M, \eta)
-    \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N - n}} + \mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)\right),
+    \frR_n(\Hcal_d, M)
+    \;=\; \Theta\!\left(\frac{M^2}{\sqrt{N - n}}
+        + \mathcal{R}^{\mathrm{trans}}_n(\Hcal_d)\right),
     \label{eq:cramer-rao-rate}
 \end{equation}
-where the upper and lower bounds match the rate
-$1/\sqrt{N-n}$ exactly, and the multiplicative constant gap (the
-ratio of upper-bound constant to lower-bound constant) is
+in the sense that the upper bound holds with high probability over
+$T$ and the lower bound holds with at least constant probability
+$c' \ge 1/10$ over $T$ uniformly in $\hat f$.  The empirical-risk-%
+minimising learner is therefore \emph{minimax-rate-optimal} on
+graph-supervised regression problems under leave-node-out
+evaluation in the operational regime fixed by
+A\ref{a:proportional}--A\ref{a:capacity}.
+
+The multiplicative constant gap between upper and lower bounds (at
+the matched rate) is
 \begin{equation}
-    \mathrm{gap}(\alpha, \kappa, \eta)
-    \;=\; \frac{23.1}{\tfrac{1}{2}\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}
-    \;=\; \frac{46.2}{\tau_0(\eta, \kappa)\sqrt{\alpha \kappa}}.
+    \mathrm{gap}(\alpha, \kappa)
+    \;=\; \frac{23.1}{\tfrac{1}{2}\tau\sqrt{\alpha \kappa}}
+    \;=\; \frac{46.2}{\tau\sqrt{\alpha \kappa}}
+    \;\approx\; \frac{68.5}{\sqrt{\alpha \kappa}},
     \label{eq:cramer-rao-gap}
 \end{equation}
-This gap is $\alpha$-dependent: at the operational midpoint $\alpha
-= 0.5$ with $\kappa \approx 0.25$ (binary $\pm 1$ signals supported
-on half the nodes) and $\eta = 0.1$, it evaluates to approximately
-$91$; at the 80/20 split $\alpha = 0.8$ it tightens to $\approx
-72$; in the few-fold $\alpha = 0.95$ regime it falls to $\approx
-66$.  The upper-side constant $23.1 = 20.2 + 2.83$ aggregates the
+with $\tau = \Phi^{-1}(3/4) \approx 0.674$.  This gap is
+$\alpha$-dependent: at the operational midpoint $\alpha = 0.5$
+with $\kappa \approx 0.25$ (binary $\pm 1$ signals supported on
+half the nodes), it evaluates to approximately $194$; at the 80/20
+split $\alpha = 0.8$ it tightens to $\approx 153$; in the few-fold
+$\alpha = 0.95$ regime it falls to $\approx 140$.  The upper-side
+constant $23.1 = 20.2 + 2.83$ aggregates the
 \citet{ElYanivPechyony2006} Rademacher constant ($20.2$) and the
-Serfling slack ($2.83$, see proof of
-Theorem~\ref{thm:universal-upper-bound}); the factor-$2$ inflation
-of the overall gap relative to the naive Berry--Esseen value
-($\approx 40$) is the price of the union bound between Berry--%
-Esseen anticoncentration and the oracle-leakage tail of
-Lemma~\ref{lem:leakage}. The upper-side constant tightens to
-$\sqrt 2 \times 4 + \sqrt 2 \approx 7.07$ via the
+Serfling slack ($2.83$); each tightens to
+$\sqrt{2} \times 4 + \sqrt 2 \approx 7.07$ via the
 \citet{BardenetMaillard2015} without-replacement Bernstein
-refinement applied to both the EYP concentration and the
-Serfling step (see \S\ref{subsec:open}~item~1), pulling the
-midpoint gap to $\approx 28$.
-The empirical-risk-minimising learner is therefore
-\emph{minimax-rate-optimal} on graph-supervised regression
-problems under leave-node-out (matching rate but not matching
-constant), with the operational regime fixed by
-A\ref{a:proportional}--A\ref{a:capacity}.
+refinement (see \S\ref{subsec:open}~item~1), pulling the midpoint
+gap to $\approx 59$.  The gap is bounded but not universal: it
+scales as $1/\sqrt{\alpha\kappa}$, so it tightens at high $\alpha$
+and on classes with large dispersion parameter $\kappa$, and
+degrades as $\kappa \to 0$ or $\alpha \to 0$.
 \end{corollary}
 
 \begin{remark}[On the use of ``Cram\'er--Rao analog'' in the introduction]
@@ -680,19 +703,26 @@ introduction (Contribution 4, \S\ref{subsec:related-work}) to
 signal the structural parallel with parametric efficiency
 theory: a target-dependent floor
 (Theorem~\ref{thm:universal-lower-bound}) is matched by an
-explicit estimator (Theorem~\ref{thm:universal-upper-bound}) up
-to a slack that no estimator can drive below the Berry--Esseen
-floor (Theorem~\ref{thm:minimax-lower-bound}). The precise
-quantitative statement is the rate-optimality of
+explicit estimator (Theorem~\ref{thm:universal-upper-bound}) at
+the rate $M^2/\sqrt{N-n}$, and no estimator can drive the slack
+below the same rate with probability bounded away from zero
+(Theorem~\ref{thm:minimax-lower-bound}).  The precise quantitative
+statement is the rate-optimality of
 Corollary~\ref{cor:minimax-rate-optimality} for fixed
 $\alpha = n/N$, not an exact-constant efficiency statement: the
-multiplicative constant gap $\mathrm{gap}(\alpha, \kappa, \eta)
-\propto 1/\sqrt{\alpha \kappa}$ depends on the
-train/test split ratio and the dispersion parameter; at the
-operational midpoint $\alpha = 0.5$ it evaluates to $\approx 91$
-(resp.\ $\approx 28$ after the Bardenet--Maillard tightening),
-meaning the analogy is structural,
-not numerical.
+multiplicative constant gap $\mathrm{gap}(\alpha, \kappa)
+\propto 1/\sqrt{\alpha\kappa}$ depends on the train/test split
+ratio and the dispersion parameter; at the operational midpoint
+$\alpha = 0.5$ it evaluates to $\approx 194$ (resp.\ $\approx 59$
+after the Bardenet--Maillard tightening), meaning the analogy is
+\emph{structural}, not numerical.  A further subtlety distinguishes
+the two sides: the upper bound is a \emph{high-probability}
+statement on the slack of the ERM, while the lower bound is a
+\emph{constant-probability} anti-concentration statement on the
+held-out residual fluctuation (Remark~\ref{rem:constant-probability}).
+This asymmetry is intrinsic to the problem: the slack of a
+centred random fluctuation cannot have a positive one-sided
+lower bound at high probability, only at constant probability.
 \end{remark}
 
 \begin{remark}[Centring]
@@ -1138,27 +1168,39 @@ $|T^c|^{-1}\sum_{T^c} X_v$,
 for an absolute constant $C_{\mathrm{BE}} \le 14$
 \citep[][Cor.~1.2]{Bentkus2003}.
 
-\paragraph{Anticoncentration of $\Delta_T$ with budget $\eta/2$.}
+\paragraph{Anticoncentration of $\Delta_T$ at constant probability.}
 
-Pick a threshold $\tau > 0$ such that $\Phi(\tau) = 1 - \eta/2 -
-C_{\mathrm{BE}}/(\sqrt\kappa\sqrt{N-n})$. For $\eta/2 < 1/3$ (i.e.\
-$\eta < 2/3$), the Berry--Esseen remainder satisfies
-$C_{\mathrm{BE}}/(\sqrt\kappa \sqrt{N-n}) \le (1 - \eta/2) / 2$ as
-soon as $N - n \ge N_0(\kappa, \eta) := 4\,C_{\mathrm{BE}}^2 /
-(\kappa\,(1-\eta/2)^2)$, in which case $\Phi(\tau) \ge (1 -
-\eta/2)/2 > 1/2$ and so $\tau \ge \tau_0(\eta, \kappa) > 0$ for an
-absolute $\tau_0$ depending only on $\eta$ and $\kappa$. Thus
+Since $\Delta_T$ is centred (cf.\ Step~``Population floor''), no
+\emph{one-sided high-probability} lower bound of the form
+$\PR[\Delta_T \ge t] \ge 1 - \eta$ can hold for any positive $t$:
+the upper tail $\PR[\Delta_T \ge t]$ is at most $1/2 + O(\delta_{\mathrm{BE}})$
+for $t > 0$.  Berry--Esseen anti-concentration instead yields a
+\emph{constant-probability} statement, sufficient to certify the
+$\Omega(M^2/\sqrt{N-n})$ minimax rate.
+
+Pick the fixed positive threshold $\tau := \Phi^{-1}(3/4) \approx
+0.674$, chosen so that $1 - \Phi(\tau) = 1/4$.  By the Berry--Esseen
+bound above,
 \[
-    \PR_T\!\Big[\Delta_T \,\ge\, \tau\, \sigma_T\Big]
-    \;\ge\; 1 - \eta/2.
+    \PR_T[\Delta_T \ge \tau\sigma_T]
+    \;=\; 1 - \PR_T[\Delta_T < \tau\sigma_T]
+    \;\ge\; 1 - \Phi(\tau) - \delta_{\mathrm{BE}}
+    \;=\; \tfrac{1}{4} - \delta_{\mathrm{BE}},
 \]
+where $\delta_{\mathrm{BE}} := C_{\mathrm{BE}}/(\sqrt\kappa\sqrt{N-n})$.
+Under the hypothesis $N - n \ge N_0(\kappa) := 100\,C_{\mathrm{BE}}^2/\kappa$
+of Theorem~\ref{thm:minimax-lower-bound}, the remainder satisfies
+$\delta_{\mathrm{BE}} \le 1/10$, hence $\PR_T[\Delta_T \ge \tau\sigma_T]
+\ge 1/4 - 1/10 = 3/20$.
+
 Substituting $\sigma_T = s\sqrt{n/(N(N-n))} \ge M^2\sqrt{\kappa
-\cdot n/(N(N-n))}$ yields, with $c_0(\alpha,\kappa,\eta) := \tau_0
-\sqrt{\kappa\, \alpha}$,
+n/(N(N-n))} = M^2\sqrt{\alpha\kappa}/\sqrt{N-n}$ (using $s \ge
+M^2\sqrt{\kappa}$ from \eqref{eq:minimax-popvar} and $n/N = \alpha$)
+yields, with $c_0(\alpha, \kappa) := \tau \sqrt{\alpha\kappa}$,
 \begin{equation}
-    \PR_T\!\Bigg[\Delta_T \;\ge\; c_0(\alpha, \kappa, \eta)
+    \PR_T\!\Bigg[\Delta_T \;\ge\; c_0(\alpha, \kappa)
         \cdot \frac{M^2}{\sqrt{N - n}}\Bigg]
-    \;\ge\; 1 - \eta/2.
+    \;\ge\; \tfrac{3}{20}.
     \label{eq:minimax-be-prob}
 \end{equation}
 
@@ -1203,14 +1245,22 @@ provided the matrix Chernoff regime $u = N - n \ge C_\mathrm{MC}\,
 \begin{equation}
     \PR_T\!\Big[
         \mathrm{leak}(T;\, \Hcal_d, \by^\star)
-        \;\ge\; \frac{c_0(\alpha,\kappa,\eta)}{2}\cdot \frac{M^2}{\sqrt{N-n}}
+        \;\ge\; \frac{c_0(\alpha,\kappa)}{2}\cdot \frac{M^2}{\sqrt{N-n}}
     \Big]
-    \;\le\; \eta/2,
+    \;\le\; \tfrac{1}{20},
     \label{eq:leakage-tail}
 \end{equation}
 whenever the capacity hypothesis A\ref{a:capacity} holds with
-$D_0(\alpha, \kappa, \eta, \mu) := c_0(\alpha,\kappa,\eta)\,
-(1-\alpha)/(4\mu)$ in \eqref{eq:capacity-leverage}.
+\begin{equation}
+    D_0(\alpha, \kappa, \mu) \;:=\; \frac{\tau\,\sqrt{\kappa}}{80\,\mu\,\sqrt{\alpha}}
+    \label{eq:D0-explicit}
+\end{equation}
+in \eqref{eq:capacity-leverage}, where $\tau = \Phi^{-1}(3/4)$
+matches Theorem~\ref{thm:minimax-lower-bound}.  Indeed, by Markov,
+$\PR[\mathrm{leak} \ge (c_0/2) M^2/\sqrt{N-n}] \le \E[\mathrm{leak}]
+\cdot 2\sqrt{N-n}/(c_0 M^2)$, and substituting
+\eqref{eq:leakage-bound} together with
+$d \le D_0\sqrt{N-n}$ yields the right-hand side $\le 1/20$.
 \end{lemma}
 
 \begin{proof}[Proof of Lemma~\ref{lem:leakage}]
@@ -1274,25 +1324,48 @@ capacity constraint $d \le D_0\sqrt{N-n}$ holds with $D_0$ as
 stated.\qed
 \end{proof}
 
-\paragraph{Union bound: defeating the oracle.}
+\paragraph{Intersection of events: defeating the oracle.}
 
-Combine \eqref{eq:minimax-be-prob} (Berry--Esseen anticoncentration
-of $\Delta_T$, w.p.\ $\ge 1 - \eta/2$) with \eqref{eq:leakage-tail}
-(leakage tail, w.p.\ $\ge 1 - \eta/2$). On their intersection,
-which holds w.p.\ $\ge 1 - \eta$ by union bound, the oracle
-decomposition \eqref{eq:oracle-decomposition} delivers
+Let $A := \{\Delta_T \ge c_0(\alpha,\kappa) M^2/\sqrt{N-n}\}$ and
+$B := \{\mathrm{leak}(T) \le (c_0/2) M^2/\sqrt{N-n}\}$.  By
+\eqref{eq:minimax-be-prob}, $\PR(A) \ge 3/20$.  By
+\eqref{eq:leakage-tail}, $\PR(B^c) \le 1/20$, hence $\PR(B) \ge 19/20$.
+By the Bonferroni inequality
+$\PR(A \cap B) \ge \PR(A) + \PR(B) - 1 \ge 3/20 + 19/20 - 1 = 1/10$.
+On the event $A \cap B$, the oracle decomposition
+\eqref{eq:oracle-decomposition} delivers
 \[
     L_{T^c}(\hat f) - \Var(\by^\star)
     \;\ge\; \Delta_T - \mathrm{leak}(T)
     \;\ge\; c_0\frac{M^2}{\sqrt{N-n}} \;-\; \tfrac{c_0}{2}\,\frac{M^2}{\sqrt{N-n}}
-    \;=\; \frac{c_0(\alpha,\kappa,\eta)}{2}\,\frac{M^2}{\sqrt{N - n}},
+    \;=\; \frac{c_0(\alpha,\kappa)}{2}\,\frac{M^2}{\sqrt{N - n}},
 \]
-uniformly in $\hat f \in \Hcal_d$ (the bound on $\hat f$ enters
-\emph{only} through the in-class infimum $\inf_{f \in \Hcal_d}
-L_{T^c}(f)$, which is the oracle's loss). Setting
-$c(\alpha,\kappa,\eta) := c_0(\alpha,\kappa,\eta)/2 = \tfrac{1}{2}
-\tau_0(\eta,\kappa)\sqrt{\alpha\kappa}$ recovers
-\eqref{eq:minimax-lower-bound}.\qed
+uniformly in $\hat f \in \Hcal_d$ (the dependence on $\hat f$
+enters \emph{only} through the in-class infimum $\inf_{f \in \Hcal_d}
+L_{T^c}(f)$, which is the oracle's loss).  Setting
+$c(\alpha,\kappa) := c_0(\alpha,\kappa)/2 = \tfrac{1}{2}\tau\sqrt{\alpha\kappa}$
+with $\tau = \Phi^{-1}(3/4)$, and $c' := 1/10$, recovers
+\eqref{eq:minimax-lower-bound}. \qed
+
+\begin{remark}[Why constant probability is the right notion]
+\label{rem:constant-probability}
+The slack lower bound \eqref{eq:minimax-lower-bound} is a
+\emph{one-sided constant-probability} statement: the slack exceeds
+$c(\alpha,\kappa) M^2/\sqrt{N-n}$ with probability at least $1/10$.
+A high-probability statement of the form $\PR[\cdots] \ge 1-\eta$
+with $\eta$ small \emph{cannot} hold for any positive threshold,
+because the deviation $\Delta_T$ is exactly centred at $0$ under
+$\Pi_{\mathrm{LSO}}$ (the upper tail of a centred random variable
+carries at most half the probability mass).  This matches the
+standard minimax framework of \citet{Tsybakov2009}: a
+constant-probability lower bound, combined with a
+high-probability upper bound (Theorem~\ref{thm:universal-upper-bound}),
+suffices to certify rate-optimality at $\Theta(M^2/\sqrt{N-n})$
+(Corollary~\ref{cor:minimax-rate-optimality}). Anti-concentration
+of the held-out residual is the right tool for the lower side;
+concentration of the supremum process is the right tool for the
+upper side.
+\end{remark}
 
 \begin{remark}[Degeneracy as $\kappa \to 0$ or capacity exceeds $\sqrt{N-n}$]
 \label{rem:gamma-degeneracy}
@@ -2119,34 +2192,34 @@ future deployment.
     transductive Rademacher upgrade
     (\texttt{notes/04\_sharp\_transductive\_constant.tex}).
     The \emph{residual} constant gap is
-    $\mathrm{gap}(\alpha, \kappa, \eta) \propto
-    1/\sqrt{\alpha \kappa}$
+    $\mathrm{gap}(\alpha, \kappa) \propto 1/\sqrt{\alpha \kappa}$
     (Corollary~\ref{cor:minimax-rate-optimality},
     Eq.~\eqref{eq:cramer-rao-gap}): at the operational midpoint
-    $\alpha = 0.5$, $\eta = 0.1$, $\kappa \approx 0.25$, the gap
-    is $\approx 91$, where the upper-side constant $23.1 = 20.2 +
-    2.83$ aggregates the
-    \citet[][Thm.~1]{ElYanivPechyony2006} Rademacher constant
-    ($20.2 = 5.05 \cdot 4$, post-loss-range rescaling) and the
-    Serfling slack absorption ($2.83 = 4/\sqrt{2}$, see proof of
-    Theorem~\ref{thm:universal-upper-bound}). The factor-$2$
-    inflation over the naive Berry--Esseen value ($\approx 40$)
-    is the cost of the union bound between BE anticoncentration
-    and the oracle-leakage tail of Lemma~\ref{lem:leakage}.  Each
-    of the two concentration sub-steps (EYP and Serfling) can be
+    $\alpha = 0.5$, $\kappa \approx 0.25$, the gap is $\approx
+    194$, where the upper-side constant $23.1 = 20.2 + 2.83$
+    aggregates the \citet[][Thm.~1]{ElYanivPechyony2006}
+    Rademacher constant ($20.2 = 5.05 \cdot 4$, post-loss-range
+    rescaling) and the Serfling slack absorption ($2.83 =
+    4/\sqrt{2}$, see proof of
+    Theorem~\ref{thm:universal-upper-bound}). The lower-side
+    constant $\tau/2 = \Phi^{-1}(3/4)/2 \approx 0.337$ is fixed
+    independent of $\eta$, since the lower bound is a
+    \emph{constant-probability} anti-concentration statement at
+    $c' \ge 1/10$ rather than a high-probability statement
+    (Remark~\ref{rem:constant-probability}).  Each of the two
+    upper-side concentration sub-steps (EYP and Serfling) can be
     individually tightened via the without-replacement Bernstein
     refinement of \citet[][Cor.~2.5]{BardenetMaillard2015}: the
     EYP factor $20.2 \to \sqrt 2 \cdot 4 \approx 5.66$ and the
-    Serfling factor $2.83 \to \sqrt{2}/\sqrt{2} \cdot 1 \approx
-    1.41$, giving an aggregated upper-side constant
-    $\approx 7.07$ and a midpoint gap $\approx 28$.  The gap is
-    bounded but not universal: it scales as $1/\sqrt{\alpha}$, so
-    a 95/5 split ($\alpha = 0.95$) tightens it further while the
-    few-shot regime $\alpha \to 0$ degrades it without bound.  A
-    tighter leakage bound (e.g.\ via the operator-Bernstein
-    refinement of \citealp{Tropp2015} or a $\chi^2$-tail
-    concentration instead of Markov) would recover the original
-    factor of $2$ and bring the midpoint gap back to $\approx 14$
+    Serfling factor $2.83 \to \sqrt 2 \approx 1.41$, giving an
+    aggregated upper-side constant $\approx 7.07$ and a midpoint
+    gap $\approx 59$.  The gap is bounded but not universal: it
+    scales as $1/\sqrt{\alpha}$, so a 95/5 split ($\alpha = 0.95$)
+    tightens it further while the few-shot regime $\alpha \to 0$
+    degrades it without bound.  A tighter leakage bound (e.g.\ via
+    the operator-Bernstein refinement of \citealp{Tropp2015} or a
+    $\chi^2$-tail concentration instead of Markov) would shave
+    the leakage budget and bring the midpoint gap closer to $30$
     post-Bardenet--Maillard.  A previously conjectured factor-$4$
     improvement via a multi-coordinate Fano / Assouad
     construction is \emph{not} achievable: the Berry--Esseen rate
@@ -2158,7 +2231,7 @@ future deployment.
     no $1/\sqrt{N-n}$-scale intermediate sensitivity to exploit
     (\texttt{notes/07}~Proposition~6 in the referenced notes).
     The sharp matching constant at the operational midpoint is
-    thus $\approx 28$, not $1$.
+    thus $\approx 59$, not $1$.
 
 \item \textbf{Importance-weighted transduction identity.}  Extending
     Lemma~\ref{lem:transduction} to non-uniform protocols (e.g.,
@@ -2287,12 +2360,13 @@ Theorem~\ref{thm:universal-upper-bound} exhibits an empirical-risk
 minimiser that saturates the floor up to a transductive-Rademacher
 slack of order $M^2/\sqrt{N - n}$.
 Theorem~\ref{thm:minimax-lower-bound} proves that this slack is
-minimax-tight in rate under the dispersion assumption
+minimax-tight in rate (one-sided, constant-probability anti-%
+concentration with $c' \ge 1/10$) under the dispersion assumption
 A\ref{a:incoherence} and the leverage-incoherence capacity
 hypothesis A\ref{a:capacity}, with the residual multiplicative-%
-constant gap $\mathrm{gap}(\alpha, \kappa, \eta) \approx 28$ at
-the operational midpoint $\alpha = 0.5$, $\kappa \approx 0.25$,
-$\eta = 0.1$ after the Bardenet--Maillard tightening
+constant gap $\mathrm{gap}(\alpha, \kappa) \approx 59$ at the
+operational midpoint $\alpha = 0.5$, $\kappa \approx 0.25$ after
+the Bardenet--Maillard tightening
 (Corollary~\ref{cor:minimax-rate-optimality}).
 The pair of bounds is the Cram\'er--Rao analog of the classical
 efficiency inequality for parameter estimation, and the empirical
