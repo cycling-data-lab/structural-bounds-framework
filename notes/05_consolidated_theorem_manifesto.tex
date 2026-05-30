@@ -79,7 +79,7 @@ $\rho(\Pi) := N/u$.
 & paper §5; notes/01\\
 \midrule
 \textbf{Theorem~2} (Sharp transductive UB)
-& $L_{T^c}(\hat f_\Acal(T)) \leq (1 - \Rspec)\Var(\by) + 2\Rcal_n^{\mathrm{trans}}(\Hcal_d) + 5.05 M^2\sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}$, with $\Rcal_n^{\mathrm{trans}}$ the transductive Rademacher of \citet*{ElYanivPechyony2006}
+& $L_{T^c}(\hat f_\Acal(T)) \leq (1 - \Rspec)\Var(\by) + 2\Rcal_n^{\mathrm{trans}}(\Hcal_d) + 23.1 M^2\sqrt{\tfrac{(n+u)\log(2/\eta)}{nu}}$ (constant $23.1 = 20.2 + 2.83$), with $\Rcal_n^{\mathrm{trans}}$ the transductive Rademacher of \citet*{ElYanivPechyony2006}
 & proved
 & paper §6; notes/02, 03, 04\\
 \midrule
@@ -108,10 +108,10 @@ $\rho(\Pi) := N/u$.
 & direct
 & paper §8.2\\
 \midrule
-\textbf{Theorem~7 / C3} (Active learning)
-& Importance-weighted ERM under leverage-score sampling $\pi^\star(v) \propto \|\bB(v, :)\|^2$ achieves slack $O(M^2 \sqrt{dN \log(1/\eta)}/n)$, i.e.\ rate $1/n$ (parametric) instead of passive $1/\sqrt{n}$
-& proved
-& paper §8.3\\
+\textbf{C3} (Active learning)
+& Importance-weighted ERM under leverage-score sampling $\pi^\star(v) \propto \|\bB(v, :)\|^2$ is \emph{conjectured} to achieve slack $O(M^2 \sqrt{dN \log(1/\eta)}/n)$, i.e.\ rate $1/n$ (parametric) instead of passive $1/\sqrt{n}$
+& \textcolor{red!50!black}{out of scope}
+& paper §8.3 (\emph{not} claimed)\\
 \midrule
 \textbf{Withdrawn} (Conj. 1, notes/02 §3)
 & Non-realisable minimax rate has factor $\sigma_\Pi^{-1}$

@@ -95,7 +95,7 @@ generalisation error of graph-supervised learning}
 \and Ga\"el Pallares\thanks{ORCID 0009-0002-8680-604X.}\\
 \small CESI LINEACT (EA 7527), Montpellier, France}
 
-\date{Working draft v0.1 --- May 2026}
+\date{Working draft v0.11 --- May 2026}
 
 \begin{document}
 
@@ -120,15 +120,24 @@ minimax-tight in rate under a dispersion assumption on the
 orthogonal complement of the hypothesis class and a
 leverage-incoherence condition on the class itself: no estimator
 can drive the held-out error lower with probability bounded away
-from zero.  The pair of bounds is the
-Cram\'er--Rao analog of the classical efficiency inequality for
-parameter estimation.  Three corollaries instantiate the framework:
-the encoding-gap bound for materials-property prediction, a
-spectral-disjointness bound on negative transfer, and an empirical
-validation across the eight-task MatBench panel of the
-\texttt{cycling-data-lab} organisation, on which the headline rank
-correlation is Spearman $\rho = +1.000$ ($n=8$, exact permutation
-$p = 4.96 \times 10^{-5}$).
+from zero.  The pair of bounds is a \emph{structural}, rate-level
+analog of the classical Cram\'er--Rao efficiency inequality: upper
+and lower bounds match in rate (at $\Theta(M^2/\sqrt{N-n})$), but the
+multiplicative constant gap is $\approx 59$--$194$ at the operational
+midpoint, so the analogy is structural, not numerical.  Three
+corollaries instantiate the framework: the encoding-gap bound for
+materials-property prediction, a spectral-disjointness bound on
+negative transfer, and an empirical validation across the eight-task
+MatBench panel of the \texttt{cycling-data-lab} organisation.  Because
+the categorical baseline predicts a constant out-of-sample, the
+held-out encoding gap reduces to the compositional held-out $R^2$, so
+the \emph{raw} rank correlation between the spectral $R^2$ and the gap
+is near-deterministic (Spearman $\rho = +1.000$, $n=8$) and carries
+little evidential weight; the substantive test is the
+confounder-controlled partial correlation, which remains positive
+(partial Spearman $\rho = +0.79$, $p = 0.032$, controlling for
+$\log N$ and $\log\Var(\by)$) and collapses on a degree-matched null
+graph ($\rho = +0.25$, $p = 0.31$).
 \end{abstract}
 
 \noindent\textbf{Keywords:} graph-supervised learning; generalisation
@@ -256,8 +265,10 @@ efficiency statement for graph-supervised learning.
         $V = V_{\mathrm{src}} \cup V_{\mathrm{tgt}}$ and $\Pi$ the
         leave-task-out protocol, the bound recovers a structural
         \emph{spectral-disjointness} criterion for negative transfer:
-        transfer is unavoidably harmful when the source and target
-        labels project onto disjoint bands of the joint graph's
+        relative to the (generally unattainable) target-only in-class
+        optimum, source-trained transfer is \emph{irreducibly
+        suboptimal}, with a closed-form excess, when the source and
+        target labels project onto disjoint bands of the joint graph's
         Laplacian eigenbasis.
     \item \textbf{C3 (active learning; \S\ref{subsec:c3}).}  Letting the
         protocol $\Pi$ be chosen by the learner yields an
@@ -1639,6 +1650,14 @@ $\mathrm{NT}(\Acal) > 0$ certifies that transferring source-trained
 information \emph{harms} target performance relative to the best
 in-class target-only baseline; $\mathrm{NT}(\Acal) = 0$ certifies that
 the source-only learner already achieves the in-class target optimum.
+Note that $\mathrm{NT}(\Acal) \ge 0$ holds \emph{by construction},
+since $f^\star_{\Hcal_d, \mathrm{tgt}}$ is by definition in-class
+optimal on the target; the content of
+Theorem~\ref{thm:negative-transfer-linear-algebra} is therefore not
+the \emph{sign} of $\mathrm{NT}$ but its exact closed-form
+\emph{magnitude}, and the baseline against which transfer is
+``harmful'' is the (source-blind, generally unattainable) target-only
+in-class optimum, not a naive untrained predictor.
 \end{definition}
 
 \begin{definition}[Spatial target-orthogonality]
@@ -1830,8 +1849,9 @@ deterministic, not drawn from $\Pi_{\mathrm{LSO}}$), and no
 Rademacher slack carries over.
 \end{corollary}
 
-This dichotomy --- vacuous transfer under spectral alignment,
-unavoidable harm under spectral disjointness --- localises the
+This dichotomy --- vacuous excess under spectral alignment, irreducible
+(closed-form) suboptimality relative to the target-only in-class
+optimum under spectral disjointness --- localises the
 negative-transfer phenomenon to a precise spectral-geometric property
 of the (joint-graph, source-signal, target-signal) triple, independent
 of the regressor's architecture or training procedure.
@@ -1974,8 +1994,17 @@ Theorem~\ref{thm:universal-upper-bound}.
 Table~\ref{tab:cross-domain} consolidates the headline result from each
 empirical anchor.  Figure~\ref{fig:spectral-projection} plots the
 spectral $R^2$ against the observed leave-node-out gap for the eight
-MatBench tasks, illustrating the rank-order correlation $\rho = +1.000$
-predicted by Corollary~C1.  All numbers are reproducible from the named
+MatBench tasks.  The raw rank-order correlation is $\rho = +1.000$, but
+this figure is \emph{largely mechanical} and should not be read as the
+primary evidence for Corollary~C1: the categorical baseline predicts a
+constant out-of-sample, so $\Delta R^2_{\mathrm{LSO}} \approx
+R^2_{\mathrm{LSO}}(\hat f_{\mathrm{comp}})$, and the raw correlation
+merely confirms that the in-population approximation power of a subspace
+($\Rspec$) tracks the held-out predictive power of the \emph{same}
+subspace.  The substantive evidence for Corollary~C1 is the
+confounder-controlled partial correlation and the null-graph contrast of
+\S\ref{subsec:emp-falsifiability} (F2--F3), not the raw $\rho$.  All
+numbers are reproducible from the named
 scripts of the corresponding sibling repository (random seed pinned to
 $42$; GroupKFold leave-node-out cross-validation; LightGBM regressor
 for the compositional encoder; one-hot indicator for the categorical
@@ -2059,7 +2088,14 @@ supported:
     R^2_{\mathrm{LSO}})$ on the 8-task MatBench panel should be
     significantly positive.  \emph{Observed: $\rho = +1.000$, exact
     $p = 4.96 \times 10^{-5}$ (40,320-permutation; see d20
-    of \texttt{materials-applicability-bound}).}
+    of \texttt{materials-applicability-bound}).}  We caution that this
+    raw correlation is \emph{near-mechanical}: since the categorical
+    baseline reduces $\Delta R^2_{\mathrm{LSO}}$ to the compositional
+    held-out $R^2$, F1 is close to a tautology and the perfect value is
+    expected rather than surprising.  The evidential weight therefore
+    rests on F2 (confounder-controlled partial correlation) and F3
+    (null-graph contrast), which can fail and would falsify the
+    framework's chemistry-graph claim.
 \item \textbf{Confounder robustness}: partial Spearman controlling
     for $\log N$ and $\log \Var(\by)$ on a chemistry-grounded graph
     should remain significantly positive.  \emph{Observed: partial

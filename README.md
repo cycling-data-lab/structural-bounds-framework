@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/MIT)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
-[![Status: working draft v0.5](https://img.shields.io/badge/Status-working%20draft%20v0.5-orange.svg)](./paper.tex)
+[![Status: working draft v0.11](https://img.shields.io/badge/Status-working%20draft%20v0.11-orange.svg)](./paper.tex)
 [![Target: JMLR / FoCM](https://img.shields.io/badge/Target-JMLR%20%2F%20FoCM-blue.svg)](./paper.tex)
 [![DOI](https://img.shields.io/badge/DOI-pending%20Zenodo-blue.svg)](./CITATION.cff)
 
@@ -15,11 +15,11 @@ This repository develops the foundational theoretical paper of the [cycling-data
 |Theorem|Statement|Status|
 |:---|:---|:---:|
 | **Universal lower bound** (Thm 1) | `E[L_{T^c}(f̂)] ≥ (1 - R²_spec(H_d, y)) · Var(y)` — exact in expectation, no concentration slack | proved (notes/01) |
-| **Universal upper bound** (Thm 2, sharp transductive form) | ERM saturates the lower bound to `2·R^trans_n(H_d) + 5.05·M²·√((n+u)·log(2/η)/(n·u))`; rho factor eliminated via El-Yaniv-Pechyony 2006 (notes/04) | proved (notes/02, 04) |
+| **Universal upper bound** (Thm 2, sharp transductive form) | ERM saturates the lower bound to `2·R^trans_n(H_d) + 23.1·M²·√((n+u)·log(2/η)/(n·u))` (constant `23.1 = 20.2 + 2.83`, post loss-range rescaling + Serfling absorption); rho factor eliminated via El-Yaniv-Pechyony 2006 (notes/04) | proved (notes/02, 04) |
 | **Berry–Esseen minimax tightness** (Thm 3) | No estimator can drive the slack below `Ω(M²/√(N-n))` in the worst case, even with oracle access to `y` on `V` | proved (notes/02) |
-| **Cramér–Rao analog** (Cor 1) | The pair of bounds is the graph-supervised-learning analog of `Var(θ̂) ≥ 1/I(θ)`; rates and constants match to a factor ≤ 10 | direct corollary |
-| **Negative transfer** (Thm 6, Cor 2 = C2) | Under spectral disjointness, `E[NT] ≥ (‖P_{H_d}y_src‖² + ‖P_{H_d}y_tgt‖²)/n_t`; transfer is unavoidably harmful | proved (paper §C2) |
-| **Active learning** (Thm 7, Cor C3) | Importance-weighted leverage-score sampling achieves rate `O(M²·√(d·N·log(1/η))/n)` — parametric `1/n` instead of passive `1/√n` | proved (paper §C3) |
+| **Cramér–Rao analog** (Cor 1) | The pair of bounds is the graph-supervised-learning analog of `Var(θ̂) ≥ 1/I(θ)`; upper and lower bounds match in **rate** at `Θ(M²/√(N−n))`, but the multiplicative **constant** gap is `≈ 59–194` at the operational midpoint (scaling as `1/√(α·κ)`) — the analogy is structural, not numerical | direct corollary |
+| **Negative transfer** (C2) | Under spatial target-orthogonality, `NT = (‖f_s restricted to tgt‖² + ‖π_tgt‖²)/n_t` (exact closed form). `NT ≥ 0` holds *by construction* (excess over the source-blind, unattainable target-only in-class optimum); the result is its *magnitude*, not its sign — source-trained transfer is *irreducibly suboptimal*, not "harmful" vs a naive baseline | proved (paper §C2) |
+| **Active learning** (C3) | Importance-weighted leverage-score sampling is *conjectured* to achieve rate `O(M²·√(d·N·log(1/η))/n)` — parametric `1/n` instead of passive `1/√n` | **out of scope** — *not* a corollary of this framework; deferred to a companion paper (paper §8.3 explicitly does not claim it) |
 
 The bound is *learner-specific*: `R²_spec(H_d, y) := 1 - L_V(f*_{H_d}) / Var(y)` where `f*_{H_d} := argmin_{f ∈ H_d} L_V(f)` is the population-risk minimiser of the learner's hypothesis class. For closed linear `H_d`, this reduces to the projection-`R²` of `y` on `H_d` in the eigenbasis of the graph Laplacian.
 
@@ -27,11 +27,10 @@ The bound is *learner-specific*: `R²_spec(H_d, y) := 1 - L_V(f*_{H_d}) / Var(y)
 
 ```text
 structural-bounds-framework/
-├── paper.tex                              # Main manuscript (working draft v0.5, 21 pages, C1+C2+C3 full, 2 figures, full empirical section, 4 P-polish edits from notes/06 applied)
+├── paper.tex                              # Main manuscript (working draft v0.11, 21 pages, C1+C2 full, C3 deferred (out of scope), 2 figures, full empirical section)
 ├── paper.pdf                              # Compiled manuscript (regenerable via pdflatex)
-├── paper_si.tex                           # Supplementary Information (5 appendices, 5 pages compiled)
+├── paper_si.tex                           # Supplementary Information (5 appendices: A Pesenson lemma, B Rademacher constants, C NT conditions, D reproducibility map, E inverse-problem comparison)
 ├── paper_si.pdf                           # Compiled SI
-├── paper_si.tex                           # Supplementary Information (stub)
 ├── notes/                                 # Research notes — formal proofs
 │   ├── 01_universal_bound_proof.tex         # Theorem 1 (universal LB)
 │   ├── 02_minimax_saturation.tex            # Theorem 2 (UB) + Theorem 3 (BE)
